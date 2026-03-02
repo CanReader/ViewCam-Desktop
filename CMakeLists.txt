@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
 # ── Find Dependencies ──────────────────────────────────────────
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network LinguistTools)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SPDLOG REQUIRED spdlog)
 
@@ -19,6 +19,8 @@ set(SOURCES
     src/ui/MainWindow.cpp
     src/ui/CameraPreviewWidget.cpp
     src/ui/ConnectionPanel.cpp
+    src/ui/AudioTab.cpp
+    src/ui/SettingsTab.cpp
     src/network/StreamReceiver.cpp
     src/network/DeviceDiscovery.cpp
     src/network/FrameDecoder.cpp
@@ -32,6 +34,8 @@ set(HEADERS
     include/ui/MainWindow.h
     include/ui/CameraPreviewWidget.h
     include/ui/ConnectionPanel.h
+    include/ui/AudioTab.h
+    include/ui/SettingsTab.h
     include/network/StreamReceiver.h
     include/network/DeviceDiscovery.h
     include/network/FrameDecoder.h
@@ -57,6 +61,127 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Network
     ${SPDLOG_LIBRARIES}
 )
+
+# ── Deploy (portable bin/ directory) ──────────────────────────
+set(DEPLOY_DIR "${CMAKE_SOURCE_DIR}/bin")
+set(DEPLOY_LIB_DIR "${DEPLOY_DIR}/lib")
+set(DEPLOY_PLUGINS_DIR "${DEPLOY_DIR}/plugins/platforms")
+set(DEPLOY_RESOURCES_DIR "${DEPLOY_DIR}/resources/icons")
+set(DEPLOY_TRANSLATIONS_DIR "${DEPLOY_DIR}/translations")
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${DEPLOY_DIR}"
+)
+
+# Resolve Qt library and plugin paths
+get_target_property(_qt_core_loc Qt6::Core LOCATION)
+get_filename_component(QT_LIB_DIR "${_qt_core_loc}" DIRECTORY)
+find_path(QT_PLUGINS_DIR NAMES platforms
+    PATHS
+        "${QT_LIB_DIR}/../plugins"
+        "${QT_LIB_DIR}/qt6/plugins"
+        "${QT_LIB_DIR}/qt/plugins"
+    NO_DEFAULT_PATH
+)
+
+# Resolve spdlog/fmt library paths
+pkg_get_variable(SPDLOG_LIBDIR spdlog libdir)
+
+# Create directory structure at build time
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    # Create directories
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_LIB_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_PLUGINS_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_RESOURCES_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_TRANSLATIONS_DIR}"
+
+    # Copy Qt shared libraries
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${QT_LIB_DIR}/libQt6Core.so.6"
+        "${QT_LIB_DIR}/libQt6Widgets.so.6"
+        "${QT_LIB_DIR}/libQt6Network.so.6"
+        "${QT_LIB_DIR}/libQt6Gui.so.6"
+        "${QT_LIB_DIR}/libQt6DBus.so.6"
+        "${DEPLOY_LIB_DIR}"
+
+    # Copy spdlog + fmt shared libraries
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SPDLOG_LIBDIR}/libspdlog.so"
+        "${SPDLOG_LIBDIR}/libfmt.so"
+        "${DEPLOY_LIB_DIR}"
+
+    COMMENT "Deploying shared libraries to bin/lib/"
+)
+
+# Copy Qt platform plugins (safe — skips missing ones)
+set(_qt_platform_plugins libqxcb.so libqwayland.so)
+foreach(_plugin ${_qt_platform_plugins})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+            -Dsrc=${QT_PLUGINS_DIR}/platforms/${_plugin}
+            -Ddst=${DEPLOY_PLUGINS_DIR}
+            -P ${CMAKE_SOURCE_DIR}/cmake/copy_if_exists.cmake
+        COMMENT "Copying platform plugin ${_plugin} (if present)"
+    )
+endforeach()
+
+# Generate launcher script at configure time
+file(WRITE "${DEPLOY_DIR}/viewcam.sh"
+[=[#!/bin/bash
+# ViewCam launcher — sets up library paths for portable deployment
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+export LD_LIBRARY_PATH="$SCRIPT_DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export QT_PLUGIN_PATH="$SCRIPT_DIR/plugins"
+exec "$SCRIPT_DIR/ViewCam" "$@"
+]=])
+file(CHMOD "${DEPLOY_DIR}/viewcam.sh"
+    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                GROUP_READ GROUP_EXECUTE
+                WORLD_READ WORLD_EXECUTE
+)
+
+# Generate placeholder app icon at configure time
+file(WRITE "${DEPLOY_DIR}/resources/icons/viewcam.svg"
+[=[<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="4" y="14" width="40" height="36" rx="4" fill="#2196F3"/>
+  <polygon points="48,22 60,14 60,50 48,42" fill="#1976D2"/>
+  <circle cx="24" cy="32" r="10" fill="#fff" opacity="0.9"/>
+  <circle cx="24" cy="32" r="5" fill="#2196F3"/>
+</svg>
+]=])
+
+# ── Translations ──────────────────────────────────────────────
+set(TS_FILES
+    translations/viewcam_en.ts
+    translations/viewcam_tr.ts
+    translations/viewcam_de.ts
+    translations/viewcam_fr.ts
+)
+
+# Compile .ts -> .qm
+foreach(_ts ${TS_FILES})
+    get_filename_component(_ts_name "${_ts}" NAME_WE)
+    set(_qm "${CMAKE_BINARY_DIR}/${_ts_name}.qm")
+    add_custom_command(
+        OUTPUT "${_qm}"
+        COMMAND Qt6::lrelease "${CMAKE_SOURCE_DIR}/${_ts}" -qm "${_qm}"
+        DEPENDS "${CMAKE_SOURCE_DIR}/${_ts}"
+        COMMENT "Compiling ${_ts} -> ${_ts_name}.qm"
+    )
+    list(APPEND QM_FILES "${_qm}")
+endforeach()
+
+add_custom_target(translations ALL DEPENDS ${QM_FILES})
+add_dependencies(${PROJECT_NAME} translations)
+
+# Deploy .qm files to bin/translations/
+foreach(_qm ${QM_FILES})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_qm}" "${DEPLOY_TRANSLATIONS_DIR}"
+        COMMENT "Deploying ${_qm} to bin/translations/"
+    )
+endforeach()
 
 # ── Install ────────────────────────────────────────────────────
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
