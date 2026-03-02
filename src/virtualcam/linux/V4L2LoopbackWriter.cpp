@@ -2,11 +2,13 @@
 #include "core/Logger.h"
 
 #include <QProcess>
+#include <QPainter>
 
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <linux/videodev2.h>
+#include <algorithm>
 #include <cstring>
 #include <filesystem>
 #include <thread>
@@ -242,7 +244,17 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
     }
 
     if (w != m_width || h != m_height) {
-        rgb = rgb.scaled(m_width, m_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        // Crop-to-fill: scale up to cover the target, then center-crop
+        // This mimics how a real webcam always fills the frame
+        double scaleX = static_cast<double>(m_width) / w;
+        double scaleY = static_cast<double>(m_height) / h;
+        double scale = std::max(scaleX, scaleY);
+        int scaledW = static_cast<int>(w * scale);
+        int scaledH = static_cast<int>(h * scale);
+        QImage scaled = rgb.scaled(scaledW, scaledH, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        int cropX = (scaledW - m_width) / 2;
+        int cropY = (scaledH - m_height) / 2;
+        rgb = scaled.copy(cropX, cropY, m_width, m_height);
         if (rgb.format() != QImage::Format_RGB888)
             rgb = rgb.convertToFormat(QImage::Format_RGB888);
         w = m_width;
