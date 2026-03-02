@@ -17,7 +17,7 @@ Application::Application(QObject *parent)
     , m_receiver(std::make_unique<StreamReceiver>(this))
     , m_discovery(std::make_unique<DeviceDiscovery>(this))
     , m_decoder(std::make_unique<FrameDecoder>(this))
-    , m_window(std::make_unique<MainWindow>())
+    , m_window(std::make_unique<MainWindow>(m_settings.get()))
 #ifdef __linux__
     , m_vcamWriter(std::make_unique<V4L2LoopbackWriter>(this))
 #endif
@@ -57,24 +57,28 @@ void Application::init() {
     }
 #endif
 
-    // Connection state
+    // Connection state -> status bar
     connect(m_receiver.get(), &StreamReceiver::connected, this, [this]() {
         VC_INFO("Stream connected");
         m_window->connectionPanel()->setConnected(true);
+        m_window->setStatusText(tr("Connected"));
     });
     connect(m_receiver.get(), &StreamReceiver::disconnected, this, [this]() {
         VC_INFO("Stream disconnected");
         m_window->connectionPanel()->setConnected(false);
+        m_window->setStatusText(tr("Disconnected"));
+        m_window->setFpsText("");
     });
-    connect(m_receiver.get(), &StreamReceiver::errorOccurred, this, [](const QString &err) {
+    connect(m_receiver.get(), &StreamReceiver::errorOccurred, this, [this](const QString &err) {
         VC_ERROR("Stream error: {}", err.toStdString());
+        m_window->setStatusText(tr("Error: ") + err);
     });
 
     // Restore last connection
     auto host = m_settings->lastHost();
     if (!host.isEmpty()) {
         VC_INFO("Restoring last device: {}:{}", host.toStdString(), m_settings->port());
-        m_window->connectionPanel()->addDevice("Last", host, m_settings->port());
+        m_window->connectionPanel()->addDevice(tr("Last"), host, m_settings->port());
     }
 
     m_discovery->start();
