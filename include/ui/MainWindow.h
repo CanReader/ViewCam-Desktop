@@ -20,6 +20,7 @@ public:
 
     CameraPreviewWidget *previewWidget() const { return m_preview; }
     ConnectionPanel *connectionPanel() const { return m_connectionPanel; }
+    SettingsTab *settingsTab() const { return m_settingsTab; }
 
     void setStatusText(const QString &text);
     void setFpsText(const QString &text);
