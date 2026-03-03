@@ -1,9 +1,11 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QStackedWidget>
 
-class QTabWidget;
+class QPushButton;
 class QLabel;
+class QFrame;
 class CameraPreviewWidget;
 class ConnectionPanel;
 class AudioTab;
@@ -23,11 +25,32 @@ public:
     void setFpsText(const QString &text);
 
 private:
-    QTabWidget *m_tabWidget;
+    void applyTheme(bool dark);
+    QPushButton *createNavButton(const QString &text, int index);
+
+    bool m_isDark = true;
+
+    // Sidebar
+    QWidget *m_sidebar;
+    QFrame *m_sidebarBrand;
+    QPushButton *m_navButtons[3];
+    int m_activeNav = 0;
+
+    // Content
+    QStackedWidget *m_stack;
     CameraPreviewWidget *m_preview;
     ConnectionPanel *m_connectionPanel;
     AudioTab *m_audioTab;
     SettingsTab *m_settingsTab;
+
+    // Info bar
+    QLabel *m_vcamChip;
+    QLabel *m_resChip;
+    QLabel *m_codecChip;
     QLabel *m_statusBarLabel;
     QLabel *m_fpsBarLabel;
+
+    // Theme toggle
+    QPushButton *m_darkBtn;
+    QPushButton *m_lightBtn;
 };
