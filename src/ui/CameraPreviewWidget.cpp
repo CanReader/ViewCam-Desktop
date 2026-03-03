@@ -2,17 +2,35 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QFont>
+#include <cmath>
 
 CameraPreviewWidget::CameraPreviewWidget(QWidget *parent)
     : QWidget(parent)
 {
     setMinimumSize(320, 240);
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QSizePolicy sp(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    sp.setHeightForWidth(true);
+    setSizePolicy(sp);
 }
 
 void CameraPreviewWidget::updateFrame(const QImage &image) {
     m_currentFrame = image;
+    if (!image.isNull() && image.height() > 0) {
+        double newRatio = static_cast<double>(image.width()) / image.height();
+        if (std::abs(newRatio - m_aspectRatio) > 0.01) {
+            m_aspectRatio = newRatio;
+            updateGeometry();
+        }
+    }
     update();
+}
+
+bool CameraPreviewWidget::hasHeightForWidth() const {
+    return true;
+}
+
+int CameraPreviewWidget::heightForWidth(int w) const {
+    return static_cast<int>(w / m_aspectRatio);
 }
 
 void CameraPreviewWidget::paintEvent(QPaintEvent *event) {
