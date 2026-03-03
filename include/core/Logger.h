@@ -19,8 +19,9 @@ public:
     static std::shared_ptr<spdlog::logger>& get();
 };
 
-// Strip path to filename only
-#define VC_FILE (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+// Strip path to filename only (handles both / and \ separators)
+#define VC_FILE (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : \
+                 strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 
 #define VC_TRACE(...)    SPDLOG_LOGGER_CALL(Logger::get(), spdlog::level::trace,    __VA_ARGS__)
 #define VC_DEBUG(...)    SPDLOG_LOGGER_CALL(Logger::get(), spdlog::level::debug,    __VA_ARGS__)
