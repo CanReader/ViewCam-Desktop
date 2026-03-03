@@ -4,40 +4,17 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QFrame>
-#include <QGraphicsDropShadowEffect>
-
-static QGraphicsDropShadowEffect *createCardShadow(QWidget *parent) {
-    auto *shadow = new QGraphicsDropShadowEffect(parent);
-    shadow->setBlurRadius(20);
-    shadow->setColor(QColor(0, 0, 0, 30));
-    shadow->setOffset(0, 2);
-    return shadow;
-}
+#include <QScrollArea>
 
 static QFrame *createSettingsCard(QWidget *parent) {
     auto *card = new QFrame(parent);
     card->setObjectName("settingsCard");
-    card->setStyleSheet(
-        "#settingsCard {"
-        "  background-color: #FFFFFF;"
-        "  border: 1px solid #E8EAF0;"
-        "  border-radius: 12px;"
-        "  color: #3D4055;"
-        "}"
-        "#settingsCard * {"
-        "  background-color: transparent;"
-        "}"
-    );
-    card->setGraphicsEffect(createCardShadow(card));
     return card;
 }
 
 static QLabel *createSectionHeader(const QString &text, QWidget *parent) {
     auto *label = new QLabel(text, parent);
-    label->setStyleSheet(
-        "font-size: 11px; font-weight: 700; color: #8B90A0;"
-        "letter-spacing: 1px; text-transform: uppercase;"
-    );
+    label->setObjectName("sectionHeader");
     return label;
 }
 
@@ -47,10 +24,10 @@ static QWidget *createSettingsRow(const QString &label, const QString &value, QW
     layout->setContentsMargins(0, 10, 0, 10);
 
     auto *labelWidget = new QLabel(label, row);
-    labelWidget->setStyleSheet("font-size: 13px; color: #1A1A2E; font-weight: 500; border: none;");
+    labelWidget->setObjectName("settingsLabel");
 
     auto *valueWidget = new QLabel(value, row);
-    valueWidget->setStyleSheet("font-size: 13px; color: #8B90A0; border: none;");
+    valueWidget->setObjectName("settingsValue");
 
     layout->addWidget(labelWidget);
     layout->addStretch();
@@ -61,8 +38,8 @@ static QWidget *createSettingsRow(const QString &label, const QString &value, QW
 
 static QFrame *createDivider(QWidget *parent) {
     auto *line = new QFrame(parent);
+    line->setObjectName("settingsDivider");
     line->setFrameShape(QFrame::HLine);
-    line->setStyleSheet("border: none; border-top: 1px solid #F0F1F4;");
     line->setFixedHeight(1);
     return line;
 }
@@ -70,20 +47,27 @@ static QFrame *createDivider(QWidget *parent) {
 SettingsTab::SettingsTab(Settings *settings, QWidget *parent)
     : QWidget(parent)
 {
-    setStyleSheet("background-color: #ECEEF1;");
+    setObjectName("settingsPage");
 
-    auto *layout = new QVBoxLayout(this);
+    auto *scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setObjectName("settingsPage");
+
+    auto *scrollContent = new QWidget();
+    scrollContent->setObjectName("settingsPage");
+    auto *layout = new QVBoxLayout(scrollContent);
     layout->setContentsMargins(24, 28, 24, 24);
     layout->setSpacing(14);
 
-    auto *header = new QLabel(tr("Settings"), this);
-    header->setStyleSheet("font-size: 20px; font-weight: 700; color: #1A1A2E;");
+    auto *header = new QLabel(tr("Settings"), scrollContent);
+    header->setObjectName("pageHeader");
     layout->addWidget(header);
 
     // Virtual Camera section
-    layout->addWidget(createSectionHeader(tr("VIRTUAL CAMERA"), this));
+    layout->addWidget(createSectionHeader(tr("VIRTUAL CAMERA"), scrollContent));
     {
-        auto *card = createSettingsCard(this);
+        auto *card = createSettingsCard(scrollContent);
         auto *cardLayout = new QVBoxLayout(card);
         cardLayout->setContentsMargins(20, 6, 20, 6);
         cardLayout->setSpacing(0);
@@ -99,9 +83,9 @@ SettingsTab::SettingsTab(Settings *settings, QWidget *parent)
     }
 
     // Connection section
-    layout->addWidget(createSectionHeader(tr("CONNECTION"), this));
+    layout->addWidget(createSectionHeader(tr("CONNECTION"), scrollContent));
     {
-        auto *card = createSettingsCard(this);
+        auto *card = createSettingsCard(scrollContent);
         auto *cardLayout = new QVBoxLayout(card);
         cardLayout->setContentsMargins(20, 6, 20, 6);
         cardLayout->setSpacing(0);
@@ -115,9 +99,9 @@ SettingsTab::SettingsTab(Settings *settings, QWidget *parent)
     }
 
     // About section
-    layout->addWidget(createSectionHeader(tr("ABOUT"), this));
+    layout->addWidget(createSectionHeader(tr("ABOUT"), scrollContent));
     {
-        auto *card = createSettingsCard(this);
+        auto *card = createSettingsCard(scrollContent);
         auto *cardLayout = new QVBoxLayout(card);
         cardLayout->setContentsMargins(20, 6, 20, 6);
         cardLayout->setSpacing(0);
@@ -132,4 +116,10 @@ SettingsTab::SettingsTab(Settings *settings, QWidget *parent)
     }
 
     layout->addStretch();
+
+    scrollArea->setWidget(scrollContent);
+
+    auto *outerLayout = new QVBoxLayout(this);
+    outerLayout->setContentsMargins(0, 0, 0, 0);
+    outerLayout->addWidget(scrollArea);
 }

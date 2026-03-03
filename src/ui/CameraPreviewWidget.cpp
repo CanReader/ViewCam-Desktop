@@ -8,7 +8,6 @@ CameraPreviewWidget::CameraPreviewWidget(QWidget *parent)
 {
     setMinimumSize(320, 240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    setStyleSheet("background-color: #0D0D0D; border-radius: 10px;");
 }
 
 void CameraPreviewWidget::updateFrame(const QImage &image) {
@@ -24,36 +23,31 @@ void CameraPreviewWidget::paintEvent(QPaintEvent *event) {
 
     // Clip to rounded rect
     QPainterPath clipPath;
-    clipPath.addRoundedRect(rect(), 10, 10);
+    clipPath.addRoundedRect(rect(), 14, 14);
     painter.setClipPath(clipPath);
 
     if (m_currentFrame.isNull()) {
-        // Modern "No signal" state
-        painter.fillRect(rect(), QColor(0x12, 0x12, 0x18));
+        // Dark "No signal" state
+        painter.fillRect(rect(), QColor(0x06, 0x0a, 0x14));
 
         int cx = width() / 2;
         int cy = height() / 2 - 20;
 
-        // Outer ring
-        painter.setPen(QPen(QColor(0x2A, 0x2D, 0x3A), 2));
-        painter.setBrush(Qt::NoBrush);
-        painter.drawEllipse(QPoint(cx, cy), 28, 28);
-
         // Camera body
         painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(0x2A, 0x2D, 0x3A));
+        painter.setBrush(QColor(0x17, 0x20, 0x33));
         painter.drawRoundedRect(cx - 22, cy - 14, 44, 28, 6, 6);
 
         // Lens outer
-        painter.setBrush(QColor(0x3D, 0x40, 0x55));
+        painter.setBrush(QColor(0x1e, 0x29, 0x3b));
         painter.drawEllipse(QPoint(cx, cy), 11, 11);
 
-        // Lens inner (dark)
-        painter.setBrush(QColor(0x12, 0x12, 0x18));
+        // Lens inner
+        painter.setBrush(QColor(0x06, 0x0a, 0x14));
         painter.drawEllipse(QPoint(cx, cy), 6, 6);
 
         // Lens highlight
-        painter.setBrush(QColor(0x4D, 0x51, 0x65));
+        painter.setBrush(QColor(0x4f, 0xc3, 0xf7, 80));
         painter.drawEllipse(QPoint(cx - 2, cy - 2), 2, 2);
 
         // "No Signal" text
@@ -61,14 +55,14 @@ void CameraPreviewWidget::paintEvent(QPaintEvent *event) {
         font.setPixelSize(15);
         font.setWeight(QFont::DemiBold);
         painter.setFont(font);
-        painter.setPen(QColor(0x6B, 0x6F, 0x82));
+        painter.setPen(QColor(0x7a, 0x8b, 0xaa));
         painter.drawText(QRect(0, cy + 36, width(), 24), Qt::AlignHCenter, tr("No Signal"));
 
         // Subtitle
         font.setPixelSize(12);
         font.setWeight(QFont::Normal);
         painter.setFont(font);
-        painter.setPen(QColor(0x4D, 0x51, 0x65));
+        painter.setPen(QColor(0x47, 0x55, 0x69));
         painter.drawText(QRect(0, cy + 56, width(), 20), Qt::AlignHCenter, tr("Waiting for connection\xe2\x80\xa6"));
         return;
     }
@@ -81,6 +75,6 @@ void CameraPreviewWidget::paintEvent(QPaintEvent *event) {
         scaled.height()
     );
 
-    painter.fillRect(rect(), QColor(0x0D, 0x0D, 0x0D));
+    painter.fillRect(rect(), QColor(0x00, 0x00, 0x00));
     painter.drawImage(target, m_currentFrame);
 }
