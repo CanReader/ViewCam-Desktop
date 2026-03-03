@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
 # ── Find Dependencies ──────────────────────────────────────────
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg LinguistTools)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SPDLOG REQUIRED spdlog)
 
@@ -59,6 +59,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Network
+    Qt6::Svg
     ${SPDLOG_LIBRARIES}
 )
 
@@ -102,6 +103,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${QT_LIB_DIR}/libQt6Network.so.6"
         "${QT_LIB_DIR}/libQt6Gui.so.6"
         "${QT_LIB_DIR}/libQt6DBus.so.6"
+        "${QT_LIB_DIR}/libQt6Svg.so.6"
         "${DEPLOY_LIB_DIR}"
 
     # Copy spdlog + fmt shared libraries
@@ -125,6 +127,17 @@ foreach(_plugin ${_qt_platform_plugins})
     )
 endforeach()
 
+# Copy SVG icon plugin (needed for QIcon to render SVG)
+set(DEPLOY_IMAGEFORMATS_DIR "${DEPLOY_DIR}/plugins/imageformats")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_IMAGEFORMATS_DIR}"
+    COMMAND ${CMAKE_COMMAND}
+        -Dsrc=${QT_PLUGINS_DIR}/imageformats/libqsvg.so
+        -Ddst=${DEPLOY_IMAGEFORMATS_DIR}
+        -P ${CMAKE_SOURCE_DIR}/cmake/copy_if_exists.cmake
+    COMMENT "Copying SVG icon plugin (if present)"
+)
+
 # Generate launcher script at configure time
 file(WRITE "${DEPLOY_DIR}/viewcam.sh"
 [=[#!/bin/bash
@@ -140,16 +153,11 @@ file(CHMOD "${DEPLOY_DIR}/viewcam.sh"
                 WORLD_READ WORLD_EXECUTE
 )
 
-# Generate placeholder app icon at configure time
-file(WRITE "${DEPLOY_DIR}/resources/icons/viewcam.svg"
-[=[<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect x="4" y="14" width="40" height="36" rx="4" fill="#2196F3"/>
-  <polygon points="48,22 60,14 60,50 48,42" fill="#1976D2"/>
-  <circle cx="24" cy="32" r="10" fill="#fff" opacity="0.9"/>
-  <circle cx="24" cy="32" r="5" fill="#2196F3"/>
-</svg>
-]=])
+# Copy app icon from project root
+file(COPY "${CMAKE_SOURCE_DIR}/../Logo.svg"
+     DESTINATION "${DEPLOY_DIR}/resources/icons/")
+file(RENAME "${DEPLOY_DIR}/resources/icons/Logo.svg"
+     "${DEPLOY_DIR}/resources/icons/viewcam.svg")
 
 # ── Translations ──────────────────────────────────────────────
 set(TS_FILES

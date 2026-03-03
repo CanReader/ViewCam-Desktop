@@ -2,6 +2,8 @@
 #include <QTranslator>
 #include <QLocale>
 #include <QDir>
+#include <QIcon>
+#include <QFile>
 #include "core/Logger.h"
 #include "core/Application.h"
 
@@ -12,6 +14,11 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName("ViewCam");
     app.setOrganizationName("ViewCam");
+
+    QString iconPath = QApplication::applicationDirPath() + "/resources/icons/viewcam.svg";
+    if (QFile::exists(iconPath)) {
+        app.setWindowIcon(QIcon(iconPath));
+    }
 
     QTranslator translator;
     QString translationsDir = QApplication::applicationDirPath() + "/translations";
