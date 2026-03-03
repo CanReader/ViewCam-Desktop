@@ -135,8 +135,14 @@ MainWindow::MainWindow(Settings *settings, QWidget *parent)
     toggleLayout->addWidget(m_lightBtn);
     titleBarLayout->addWidget(themeToggle);
 
-    connect(m_darkBtn, &QPushButton::clicked, this, [this]() { applyTheme(true); });
-    connect(m_lightBtn, &QPushButton::clicked, this, [this]() { applyTheme(false); });
+    connect(m_darkBtn, &QPushButton::clicked, this, [this]() {
+        applyTheme(true);
+        m_settingsTab->setThemeIndex(1);
+    });
+    connect(m_lightBtn, &QPushButton::clicked, this, [this]() {
+        applyTheme(false);
+        m_settingsTab->setThemeIndex(2);
+    });
 
     rootLayout->addWidget(titleBar);
 
@@ -202,7 +208,7 @@ MainWindow::MainWindow(Settings *settings, QWidget *parent)
     camLayout->setContentsMargins(0, 0, 0, 0);
 
     m_preview = new CameraPreviewWidget(camFrame);
-    camLayout->addWidget(m_preview);
+    camLayout->addWidget(m_preview, 0, Qt::AlignCenter);
     playerLayout->addWidget(camFrame, 1);
 
     // Info bar
@@ -241,6 +247,30 @@ MainWindow::MainWindow(Settings *settings, QWidget *parent)
     // Settings tab
     m_settingsTab = new SettingsTab(settings);
     m_stack->addWidget(m_settingsTab);
+
+    // Wire settings theme combo to applyTheme
+    connect(m_settingsTab, &SettingsTab::themeChanged, this, [this](int index) {
+        if (index == 0) {
+            // Auto — detect system
+            bool systemDark = true;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+            systemDark = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+#else
+            auto bg = QGuiApplication::palette().color(QPalette::Window);
+            systemDark = bg.lightness() < 128;
+#endif
+            applyTheme(systemDark);
+        } else {
+            applyTheme(index == 1); // 1=Dark, 2=Light
+        }
+        // Sync title bar toggle buttons
+        m_darkBtn->setObjectName(m_isDark ? "themeOptActive" : "themeOpt");
+        m_lightBtn->setObjectName(m_isDark ? "themeOpt" : "themeOptActive");
+        m_darkBtn->style()->unpolish(m_darkBtn);
+        m_darkBtn->style()->polish(m_darkBtn);
+        m_lightBtn->style()->unpolish(m_lightBtn);
+        m_lightBtn->style()->polish(m_lightBtn);
+    });
 
     mainLayout->addWidget(m_stack);
     bodyLayout->addWidget(mainArea, 1);
