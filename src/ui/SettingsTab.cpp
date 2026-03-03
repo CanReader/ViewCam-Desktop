@@ -64,6 +64,39 @@ SettingsTab::SettingsTab(Settings *settings, QWidget *parent)
     header->setObjectName("pageHeader");
     layout->addWidget(header);
 
+    // Appearance section
+    layout->addWidget(createSectionHeader(tr("APPEARANCE"), scrollContent));
+    {
+        auto *card = createSettingsCard(scrollContent);
+        auto *cardLayout = new QVBoxLayout(card);
+        cardLayout->setContentsMargins(20, 6, 20, 6);
+        cardLayout->setSpacing(0);
+
+        auto *themeRow = new QWidget(card);
+        auto *themeRowLayout = new QHBoxLayout(themeRow);
+        themeRowLayout->setContentsMargins(0, 10, 0, 10);
+
+        auto *themeLabel = new QLabel(tr("Theme"), themeRow);
+        themeLabel->setObjectName("settingsLabel");
+
+        m_themeCombo = new QComboBox(themeRow);
+        m_themeCombo->addItem(tr("Auto"));
+        m_themeCombo->addItem(tr("Dark"));
+        m_themeCombo->addItem(tr("Light"));
+        m_themeCombo->setMinimumHeight(32);
+        m_themeCombo->setMinimumWidth(100);
+
+        connect(m_themeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &SettingsTab::themeChanged);
+
+        themeRowLayout->addWidget(themeLabel);
+        themeRowLayout->addStretch();
+        themeRowLayout->addWidget(m_themeCombo);
+
+        cardLayout->addWidget(themeRow);
+        layout->addWidget(card);
+    }
+
     // Virtual Camera section
     layout->addWidget(createSectionHeader(tr("VIRTUAL CAMERA"), scrollContent));
     {
@@ -122,4 +155,10 @@ SettingsTab::SettingsTab(Settings *settings, QWidget *parent)
     auto *outerLayout = new QVBoxLayout(this);
     outerLayout->setContentsMargins(0, 0, 0, 0);
     outerLayout->addWidget(scrollArea);
+}
+
+void SettingsTab::setThemeIndex(int index) {
+    m_themeCombo->blockSignals(true);
+    m_themeCombo->setCurrentIndex(index);
+    m_themeCombo->blockSignals(false);
 }
