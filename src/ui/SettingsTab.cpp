@@ -5,6 +5,10 @@
 #include <QLabel>
 #include <QFrame>
 #include <QScrollArea>
+#include <QPushButton>
+#ifdef _WIN32
+#include "virtualcam/FilterRegistrar.h"
+#endif
 
 static QFrame *createSettingsCard(QWidget *parent) {
     auto *card = new QFrame(parent);
@@ -109,8 +113,89 @@ SettingsTab::SettingsTab(Settings *settings, QWidget *parent)
         cardLayout->addWidget(createSettingsRow(tr("Backend"), "v4l2loopback", card));
         cardLayout->addWidget(createDivider(card));
         cardLayout->addWidget(createSettingsRow(tr("Device"), "/dev/video10", card));
-#else
+#elif defined(_WIN32)
         cardLayout->addWidget(createSettingsRow(tr("Backend"), "DirectShow", card));
+        cardLayout->addWidget(createDivider(card));
+
+        // Filter Status row
+        {
+            auto *row = new QWidget(card);
+            auto *rowLayout = new QHBoxLayout(row);
+            rowLayout->setContentsMargins(0, 10, 0, 10);
+
+            auto *label = new QLabel(tr("Filter Status"), row);
+            label->setObjectName("settingsLabel");
+
+            m_filterStatusLabel = new QLabel(tr("Checking..."), row);
+            m_filterStatusLabel->setObjectName("settingsValue");
+
+            rowLayout->addWidget(label);
+            rowLayout->addStretch();
+            rowLayout->addWidget(m_filterStatusLabel);
+            cardLayout->addWidget(row);
+        }
+        cardLayout->addWidget(createDivider(card));
+
+        // Filter DLL path row
+        {
+            auto *row = new QWidget(card);
+            auto *rowLayout = new QHBoxLayout(row);
+            rowLayout->setContentsMargins(0, 10, 0, 10);
+
+            auto *label = new QLabel(tr("Filter DLL"), row);
+            label->setObjectName("settingsLabel");
+
+            m_filterPathLabel = new QLabel("", row);
+            m_filterPathLabel->setObjectName("settingsValue");
+            m_filterPathLabel->setWordWrap(true);
+
+            rowLayout->addWidget(label);
+            rowLayout->addStretch();
+            rowLayout->addWidget(m_filterPathLabel);
+            cardLayout->addWidget(row);
+        }
+        cardLayout->addWidget(createDivider(card));
+
+        // Install / Uninstall buttons row
+        {
+            auto *row = new QWidget(card);
+            auto *rowLayout = new QHBoxLayout(row);
+            rowLayout->setContentsMargins(0, 10, 0, 10);
+
+            m_installBtn = new QPushButton(tr("Install Filter"), row);
+            m_installBtn->setObjectName("connectBtn");
+            m_installBtn->setCursor(Qt::PointingHandCursor);
+            m_installBtn->setFixedHeight(34);
+            m_installBtn->setFixedWidth(130);
+
+            m_uninstallBtn = new QPushButton(tr("Uninstall Filter"), row);
+            m_uninstallBtn->setObjectName("disconnectBtn");
+            m_uninstallBtn->setCursor(Qt::PointingHandCursor);
+            m_uninstallBtn->setFixedHeight(34);
+            m_uninstallBtn->setFixedWidth(130);
+
+            connect(m_installBtn, &QPushButton::clicked, this, [this]() {
+                m_installBtn->setEnabled(false);
+                m_filterStatusLabel->setText(tr("Registering..."));
+                FilterRegistrar::registerFilter();
+                updateFilterStatus();
+                m_installBtn->setEnabled(true);
+            });
+
+            connect(m_uninstallBtn, &QPushButton::clicked, this, [this]() {
+                m_uninstallBtn->setEnabled(false);
+                m_filterStatusLabel->setText(tr("Unregistering..."));
+                FilterRegistrar::unregisterFilter();
+                updateFilterStatus();
+                m_uninstallBtn->setEnabled(true);
+            });
+
+            rowLayout->addStretch();
+            rowLayout->addWidget(m_installBtn);
+            rowLayout->addSpacing(8);
+            rowLayout->addWidget(m_uninstallBtn);
+            cardLayout->addWidget(row);
+        }
 #endif
         layout->addWidget(card);
     }
@@ -162,3 +247,37 @@ void SettingsTab::setThemeIndex(int index) {
     m_themeCombo->setCurrentIndex(index);
     m_themeCombo->blockSignals(false);
 }
+
+#ifdef _WIN32
+void SettingsTab::updateFilterStatus() {
+    auto status = FilterRegistrar::checkStatus();
+    QString text = FilterRegistrar::statusText(status);
+
+    // Color-code the status text
+    switch (status) {
+    case FilterRegistrar::Status::Registered:
+        m_filterStatusLabel->setStyleSheet("color: #22c55e; font-weight: 600;");
+        break;
+    case FilterRegistrar::Status::RegisteredStale:
+        m_filterStatusLabel->setStyleSheet("color: #fbbf24; font-weight: 600;");
+        break;
+    case FilterRegistrar::Status::NotRegistered:
+        m_filterStatusLabel->setStyleSheet("color: #ef4444; font-weight: 600;");
+        break;
+    }
+    m_filterStatusLabel->setText(text);
+
+    // Show registered path or expected path
+    QString regPath = FilterRegistrar::registeredDllPath();
+    if (regPath.isEmpty()) {
+        m_filterPathLabel->setText(FilterRegistrar::expectedDllPath());
+    } else {
+        m_filterPathLabel->setText(regPath);
+    }
+
+    // Enable/disable buttons based on status
+    bool installed = (status == FilterRegistrar::Status::Registered);
+    m_installBtn->setEnabled(!installed);
+    m_uninstallBtn->setEnabled(status != FilterRegistrar::Status::NotRegistered);
+}
+#endif
