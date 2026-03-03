@@ -10,6 +10,9 @@ class FrameDecoder;
 class MainWindow;
 #ifdef __linux__
 class V4L2LoopbackWriter;
+#elif defined(_WIN32)
+class DirectShowVirtualCam;
+class FilterRegistrar;
 #endif
 
 class Application : public QObject {
@@ -34,5 +37,7 @@ private:
     std::unique_ptr<MainWindow> m_window;
 #ifdef __linux__
     std::unique_ptr<V4L2LoopbackWriter> m_vcamWriter;
+#elif defined(_WIN32)
+    std::unique_ptr<DirectShowVirtualCam> m_vcamWriter;
 #endif
 };

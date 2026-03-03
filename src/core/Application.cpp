@@ -9,7 +9,11 @@
 #include "ui/ConnectionPanel.h"
 #ifdef __linux__
 #include "virtualcam/V4L2LoopbackWriter.h"
+#elif defined(_WIN32)
+#include "virtualcam/DirectShowVirtualCam.h"
+#include "virtualcam/FilterRegistrar.h"
 #endif
+#include "ui/SettingsTab.h"
 
 Application::Application(QObject *parent)
     : QObject(parent)
@@ -20,6 +24,8 @@ Application::Application(QObject *parent)
     , m_window(std::make_unique<MainWindow>(m_settings.get()))
 #ifdef __linux__
     , m_vcamWriter(std::make_unique<V4L2LoopbackWriter>(this))
+#elif defined(_WIN32)
+    , m_vcamWriter(std::make_unique<DirectShowVirtualCam>(this))
 #endif
 {
     VC_DEBUG("Application created");
@@ -52,6 +58,33 @@ void Application::init() {
     if (m_vcamWriter->open()) {
         connect(m_decoder.get(), &FrameDecoder::imageReady,
                 m_vcamWriter.get(), &V4L2LoopbackWriter::writeFrame);
+    } else {
+        VC_WARN("Virtual camera not available, preview only");
+    }
+#elif defined(_WIN32)
+    // Auto-register DirectShow filter if needed
+    {
+        auto status = FilterRegistrar::checkStatus();
+        VC_INFO("Filter status: {}", FilterRegistrar::statusText(status).toStdString());
+
+        if (status == FilterRegistrar::Status::NotRegistered ||
+            status == FilterRegistrar::Status::RegisteredStale) {
+            VC_INFO("Attempting filter registration (UAC prompt)...");
+            if (FilterRegistrar::registerFilter()) {
+                status = FilterRegistrar::checkStatus();
+                VC_INFO("Filter registration result: {}",
+                        FilterRegistrar::statusText(status).toStdString());
+            }
+        }
+
+        // Pass registrar info to settings tab
+        m_window->settingsTab()->updateFilterStatus();
+    }
+
+    if (m_vcamWriter->open()) {
+        connect(m_decoder.get(), &FrameDecoder::imageReady,
+                m_vcamWriter.get(), &DirectShowVirtualCam::writeFrame);
+        VC_INFO("DirectShow virtual camera active (shared memory)");
     } else {
         VC_WARN("Virtual camera not available, preview only");
     }
