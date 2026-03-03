@@ -32,5 +32,7 @@ private:
     QPushButton *m_connectBtn;
     QLabel *m_fpsLabel;
     QLabel *m_statusLabel;
+    QLabel *m_deviceDot;
+    QLabel *m_deviceNameLabel;
     bool m_connected = false;
 };
