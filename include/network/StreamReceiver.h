@@ -18,6 +18,7 @@ public:
 
 signals:
     void frameReceived(const FrameData &frame);
+    void sessionLimitReached();
     void connected();
     void disconnected();
     void errorOccurred(const QString &error);

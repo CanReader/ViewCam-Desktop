@@ -90,6 +90,13 @@ void Application::init() {
     }
 #endif
 
+    // Session limit (free tier) -> status update
+    connect(m_receiver.get(), &StreamReceiver::sessionLimitReached, this, [this]() {
+        VC_INFO("Session limit reached (Free tier)");
+        m_window->connectionPanel()->showSessionLimitMessage();
+        m_window->setStatusText(tr("Session ended (Free tier limit)"));
+    });
+
     // Connection state -> status bar
     connect(m_receiver.get(), &StreamReceiver::connected, this, [this]() {
         VC_INFO("Stream connected");

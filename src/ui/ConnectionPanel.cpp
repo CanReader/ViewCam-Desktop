@@ -118,6 +118,11 @@ void ConnectionPanel::onConnectClicked() {
     }
 }
 
+void ConnectionPanel::showSessionLimitMessage() {
+    m_statusLabel->setText(tr("Session ended (Free tier limit)"));
+    m_statusLabel->setStyleSheet("color: #FFB800; font-weight: bold;");
+}
+
 void ConnectionPanel::onDeviceSelected(int index) {
     auto data = m_deviceCombo->itemData(index).toString();
     if (data.isEmpty()) return;

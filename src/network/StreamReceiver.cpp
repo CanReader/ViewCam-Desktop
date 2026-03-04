@@ -1,6 +1,8 @@
 #include "network/StreamReceiver.h"
 #include "core/Logger.h"
 #include <QtEndian>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 StreamReceiver::StreamReceiver(QObject *parent)
     : QObject(parent)
@@ -69,7 +71,8 @@ bool StreamReceiver::parseFrame() {
     uint64_t timestamp = qFromLittleEndian<uint64_t>(data + 8);
     uint16_t width = qFromLittleEndian<uint16_t>(data + 16);
     uint16_t height = qFromLittleEndian<uint16_t>(data + 18);
-    // byte 20: format (0=MJPEG), bytes 21-23: reserved
+    uint8_t format = data[20];
+    // bytes 21-23: reserved
 
     if (frameSize > 10 * 1024 * 1024) {
         VC_ERROR("Frame size {} exceeds 10MB, likely corrupted, skipping", frameSize);
@@ -79,6 +82,22 @@ bool StreamReceiver::parseFrame() {
 
     int totalSize = HEADER_SIZE + static_cast<int>(frameSize);
     if (m_buffer.size() < totalSize) return false;
+
+    // Handle control frames (format 0xFE)
+    if (format == 0xFE) {
+        QByteArray payload = m_buffer.mid(HEADER_SIZE, frameSize);
+        m_buffer.remove(0, totalSize);
+
+        QJsonDocument doc = QJsonDocument::fromJson(payload);
+        if (doc.isObject()) {
+            QString reason = doc.object().value("reason").toString();
+            VC_INFO("Control frame received: reason={}", reason.toStdString());
+            if (reason == "session_limit") {
+                emit sessionLimitReached();
+            }
+        }
+        return true;
+    }
 
     FrameData frame;
     frame.jpegData = m_buffer.mid(HEADER_SIZE, frameSize);

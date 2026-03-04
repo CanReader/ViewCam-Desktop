@@ -16,6 +16,7 @@ public:
     void addDevice(const QString &name, const QString &host, int port);
     void setConnected(bool connected);
     void setFps(int fps);
+    void showSessionLimitMessage();
 
 signals:
     void connectRequested(const QString &host, int port);
