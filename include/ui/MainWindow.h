@@ -3,13 +3,15 @@
 #include <QMainWindow>
 #include <QStackedWidget>
 
-class QPushButton;
 class QLabel;
+class QPushButton;
 class QFrame;
+class QPropertyAnimation;
+class QGraphicsOpacityEffect;
 class CameraPreviewWidget;
 class ConnectionPanel;
-class AudioTab;
 class SettingsTab;
+class AudioTab;
 class Settings;
 
 class MainWindow : public QMainWindow {
@@ -19,39 +21,67 @@ public:
     explicit MainWindow(Settings *settings, QWidget *parent = nullptr);
 
     CameraPreviewWidget *previewWidget() const { return m_preview; }
-    ConnectionPanel *connectionPanel() const { return m_connectionPanel; }
-    SettingsTab *settingsTab() const { return m_settingsTab; }
+    ConnectionPanel     *connectionPanel() const { return m_connectionPanel; }
+    SettingsTab         *settingsTab() const { return m_settingsTab; }
 
     void setStatusText(const QString &text);
     void setFpsText(const QString &text);
 
+    // New navigation API
+    void showCameraScreen(const QString &deviceName);
+    void showDevicesScreen();
+    void setVirtualCamStatus(bool active, bool error = false);
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
+private slots:
+    void onSettingsRequested();
+    void onBackFromSettings();
+
 private:
-    void applyTheme(bool dark);
-    QPushButton *createNavButton(const QString &text, int index);
+    void buildDevicesScreen(QWidget *parent);
+    void buildCameraScreen(QWidget *parent);
+    void buildSettingsPage(QWidget *parent);
+    void applyGlobalStyle();
+    void fadeToIndex(int index);
 
-    bool m_isDark = true;
+    // Screens container
+    QStackedWidget *m_stack = nullptr;
 
-    // Sidebar
-    QWidget *m_sidebar;
-    QFrame *m_sidebarBrand;
-    QPushButton *m_navButtons[3];
-    int m_activeNav = 0;
+    // Devices screen (index 0) widgets
+    QWidget     *m_devicesScreen   = nullptr;
+    QLabel      *m_vcamStatusDot   = nullptr;
+    QLabel      *m_vcamStatusLabel = nullptr;
 
-    // Content
-    QStackedWidget *m_stack;
-    CameraPreviewWidget *m_preview;
-    ConnectionPanel *m_connectionPanel;
-    AudioTab *m_audioTab;
-    SettingsTab *m_settingsTab;
+    // Camera screen (index 1) widgets
+    QWidget             *m_cameraScreen    = nullptr;
+    CameraPreviewWidget *m_preview         = nullptr;
+    QLabel              *m_deviceNameLabel = nullptr;
+    QLabel              *m_fpsChip         = nullptr;
+    QLabel              *m_resChip         = nullptr;
+    QLabel              *m_codecChip       = nullptr;
+    QLabel              *m_camVcamPill     = nullptr;
 
-    // Info bar
-    QLabel *m_vcamChip;
-    QLabel *m_resChip;
-    QLabel *m_codecChip;
-    QLabel *m_statusBarLabel;
-    QLabel *m_fpsBarLabel;
+    // Settings screen (index 2)
+    QWidget     *m_settingsPage = nullptr;
+    SettingsTab *m_settingsTab  = nullptr;
 
-    // Theme toggle
-    QPushButton *m_darkBtn;
-    QPushButton *m_lightBtn;
+    // ConnectionPanel lives inside devices screen
+    ConnectionPanel *m_connectionPanel = nullptr;
+
+    // Unused legacy members kept to avoid breaking anything that forward-references them
+    AudioTab *m_audioTab = nullptr;
+
+    // Track which screen we came from before entering settings
+    int m_previousScreenIndex = 0;
+
+    // Settings* stored so buildSettingsPage can access it
+    Settings *m_settingsPtr = nullptr;
+
+    // Fade overlay — a solid-color widget that sits on top of everything.
+    // Animating ITS opacity avoids touching CameraPreviewWidget's painter.
+    QWidget                *m_fadeOverlay  = nullptr;
+    QGraphicsOpacityEffect *m_fadeEffect   = nullptr;
+    QPropertyAnimation     *m_fadeAnim     = nullptr;
 };

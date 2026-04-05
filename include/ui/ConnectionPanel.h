@@ -1,11 +1,12 @@
 #pragma once
 
 #include <QWidget>
-#include <QComboBox>
 #include <QLineEdit>
-#include <QSpinBox>
 #include <QPushButton>
-#include <QLabel>
+
+class QVBoxLayout;
+class QLabel;
+class QFrame;
 
 class ConnectionPanel : public QWidget {
     Q_OBJECT
@@ -13,27 +14,47 @@ class ConnectionPanel : public QWidget {
 public:
     explicit ConnectionPanel(QWidget *parent = nullptr);
 
+    // Public API — must stay unchanged for Application.cpp
     void addDevice(const QString &name, const QString &host, int port);
     void setConnected(bool connected);
     void setFps(int fps);
     void showSessionLimitMessage();
 
+    // Called by MainWindow's back button to trigger a disconnect
+    void triggerDisconnect();
+
 signals:
     void connectRequested(const QString &host, int port);
     void disconnectRequested();
+    // NEW: emitted when a discovered-device card is clicked
+    void deviceCardClicked(const QString &name, const QString &host, int port);
 
 private slots:
-    void onConnectClicked();
-    void onDeviceSelected(int index);
+    void onManualConnectClicked();
 
 private:
-    QComboBox *m_deviceCombo;
-    QLineEdit *m_hostEdit;
-    QSpinBox *m_portSpin;
-    QPushButton *m_connectBtn;
-    QLabel *m_fpsLabel;
-    QLabel *m_statusLabel;
-    QLabel *m_deviceDot;
-    QLabel *m_deviceNameLabel;
-    bool m_connected = false;
+    // Cards section
+    QWidget     *m_cardsContainer   = nullptr;
+    QVBoxLayout *m_cardsLayout      = nullptr;
+    QWidget     *m_emptyState       = nullptr;
+
+    // Manual connect
+    QLineEdit   *m_hostEdit         = nullptr;
+    QPushButton *m_connectBtn       = nullptr;
+
+    // State
+    bool         m_connected        = false;
+    QString      m_connectedHost;
+    int          m_connectedPort    = 0;
+
+    // Card tracking — avoid duplicates
+    struct DeviceEntry {
+        QString name;
+        QString host;
+        int     port;
+    };
+    QList<DeviceEntry> m_entries;
+
+    void updateEmptyState();
+    QWidget *createDeviceCard(const QString &name, const QString &host, int port);
 };

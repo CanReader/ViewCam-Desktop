@@ -1,3 +1,14 @@
+/*
+ * MainWindow.cpp
+ *
+ * Two-screen layout:
+ *   index 0  — Devices screen  (ConnectionPanel + header bar + status bar)
+ *   index 1  — Camera screen   (full-window preview + overlay bars)
+ *   index 2  — Settings page   (SettingsTab wrapped in a back-navigable page)
+ *
+ * Transitions use QGraphicsOpacityEffect + QPropertyAnimation for cross-fades.
+ */
+
 #include "ui/MainWindow.h"
 #include "ui/CameraPreviewWidget.h"
 #include "ui/ConnectionPanel.h"
@@ -5,590 +16,563 @@
 #include "ui/SettingsTab.h"
 #include "core/Logger.h"
 #include "core/Settings.h"
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QStackedWidget>
 #include <QLabel>
 #include <QFrame>
 #include <QPushButton>
-#include <QGraphicsDropShadowEffect>
+#include <QScrollArea>
+#include <QGraphicsOpacityEffect>
+#include <QPropertyAnimation>
 #include <QFont>
-#include <QPalette>
-#include <QGuiApplication>
-#include <QStyleHints>
+#include <QSizePolicy>
+#include <QTimer>
+#include <QResizeEvent>
+#include <QEvent>
 
-// ── Theme color structs ──
-struct ThemeColors {
-    QString bg0, bg1, bg2, bg3, bg4;
-    QString bgInput;
-    QString border1, border2, border3, borderAccent;
-    QString text0, text1, text2, text3;
-    QString cyan, gold, red, green;
-    QString camBg, overlayBg;
-    QString shadowSm, shadowMd;
-};
-
-static ThemeColors darkTheme() {
-    return {
-        "#060a14", "#0b1120", "#111827", "#172033", "#1e293b",
-        "#0f172a",
-        "rgba(255,255,255,0.04)", "rgba(255,255,255,0.08)", "rgba(255,255,255,0.12)", "rgba(79,195,247,0.2)",
-        "#f1f5f9", "#cbd5e1", "#7a8baa", "#475569",
-        "#4fc3f7", "#ffd54f", "#ef4444", "#22c55e",
-        "#000000", "rgba(6,10,20,0.7)",
-        "rgba(0,0,0,0.3)", "rgba(0,0,0,0.4)"
-    };
+// ─────────────────────────────────────────────────────────────────────────────
+// Color palette constants
+// ─────────────────────────────────────────────────────────────────────────────
+namespace Pal {
+    static constexpr const char *BgBase        = "#0D0D0F";
+    static constexpr const char *BgElevated    = "#141417";
+    static constexpr const char *Surface       = "#1C1C21";
+    static constexpr const char *SurfaceRaised = "#232329";
+    static constexpr const char *Accent        = "#3B82F6";
+    static constexpr const char *AccentHover   = "#60A5FA";
+    static constexpr const char *TextPrimary   = "rgba(255,255,255,0.92)";
+    static constexpr const char *TextSecondary = "rgba(255,255,255,0.56)";
+    static constexpr const char *TextMuted     = "rgba(255,255,255,0.34)";
+    static constexpr const char *Success       = "#22C55E";
+    static constexpr const char *Error_        = "#EF4444";
+    static constexpr const char *Warning       = "#F59E0B";
+    static constexpr const char *BorderSubtle  = "rgba(255,255,255,0.06)";
+    static constexpr const char *BorderDefault = "rgba(255,255,255,0.10)";
 }
 
-static ThemeColors lightTheme() {
-    return {
-        "#f0f4f8", "#f8fafc", "#ffffff", "#f1f5f9", "#e8edf4",
-        "#f1f5f9",
-        "rgba(0,0,0,0.04)", "rgba(0,0,0,0.08)", "rgba(0,0,0,0.12)", "rgba(2,136,209,0.25)",
-        "#0f172a", "#334155", "#64748b", "#94a3b8",
-        "#0288d1", "#e6a700", "#d32f2f", "#2e7d32",
-        "#0a0a0a", "rgba(0,0,0,0.55)",
-        "rgba(0,0,0,0.06)", "rgba(0,0,0,0.08)"
-    };
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+static QLabel *makeChip(const QString &text, const QString &bgColor,
+                        const QString &fgColor, const QString &borderColor,
+                        QWidget *parent)
+{
+    auto *chip = new QLabel(text, parent);
+    chip->setStyleSheet(QString(
+        "QLabel {"
+        "  background: %1;"
+        "  color: %2;"
+        "  border: 1px solid %3;"
+        "  border-radius: 10px;"
+        "  padding: 3px 10px;"
+        "  font-size: 11px;"
+        "  font-weight: 600;"
+        "}"
+    ).arg(bgColor, fgColor, borderColor));
+    chip->setFixedHeight(22);
+    return chip;
 }
 
-static QString buildGlobalStyle(const ThemeColors &c) {
-    return QString(R"(
-        * {
-            font-family: "Segoe UI", "SF Pro Display", "Helvetica Neue", "Noto Sans", sans-serif;
-        }
-        QMainWindow {
-            background-color: %1;
-        }
-
-        /* ── Scrollbar ── */
-        QScrollBar:vertical {
-            background: transparent;
-            width: 8px;
-            margin: 0;
-        }
-        QScrollBar::handle:vertical {
-            background: %2;
-            border-radius: 4px;
-            min-height: 30px;
-        }
-        QScrollBar::handle:vertical:hover {
-            background: %3;
-        }
-        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-            height: 0;
-        }
-    )").arg(c.bg0, c.text3, c.text2);
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// MainWindow constructor
+// ─────────────────────────────────────────────────────────────────────────────
 MainWindow::MainWindow(Settings *settings, QWidget *parent)
     : QMainWindow(parent)
+    , m_settingsPtr(settings)
 {
-    setWindowTitle(tr("ViewCam"));
+    setWindowTitle("ViewCam");
     resize(960, 640);
+    setMinimumSize(640, 480);
 
-    auto *central = new QWidget(this);
-    auto *rootLayout = new QVBoxLayout(central);
+    // Apply global style to main window and all child widgets
+    applyGlobalStyle();
+
+    // Root: a stacked widget that holds all three screens
+    m_stack = new QStackedWidget(this);
+    m_stack->setObjectName("rootStack");
+    setCentralWidget(m_stack);
+
+    // ── Screen 0: Devices ────────────────────────────────────────────────────
+    m_devicesScreen = new QWidget();
+    m_devicesScreen->setObjectName("devicesScreen");
+    buildDevicesScreen(m_devicesScreen);
+    m_stack->addWidget(m_devicesScreen);   // index 0
+
+    // ── Screen 1: Camera ─────────────────────────────────────────────────────
+    m_cameraScreen = new QWidget();
+    m_cameraScreen->setObjectName("cameraScreen");
+    buildCameraScreen(m_cameraScreen);
+    m_stack->addWidget(m_cameraScreen);    // index 1
+
+    // ── Screen 2: Settings ───────────────────────────────────────────────────
+    m_settingsPage = new QWidget();
+    m_settingsPage->setObjectName("settingsPage");
+    buildSettingsPage(m_settingsPage);
+    m_stack->addWidget(m_settingsPage);    // index 2
+
+    // Start on devices screen
+    m_stack->setCurrentIndex(0);
+
+    // Fade overlay: a solid bg-colored widget that covers the entire central widget.
+    // We animate ITS opacity to create a fade-to-black-then-back-to-content transition
+    // without ever attaching a QGraphicsOpacityEffect to m_stack or CameraPreviewWidget,
+    // which would cause QPainter conflicts when video frames arrive at 30fps.
+    auto *central = centralWidget();
+    m_fadeOverlay = new QWidget(central);
+    m_fadeOverlay->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_fadeOverlay->setStyleSheet(QString("background: %1;").arg(Pal::BgBase));
+    m_fadeOverlay->raise();
+    m_fadeOverlay->hide();
+
+    m_fadeEffect = new QGraphicsOpacityEffect(m_fadeOverlay);
+    m_fadeEffect->setOpacity(0.0);
+    m_fadeOverlay->setGraphicsEffect(m_fadeEffect);
+
+    m_fadeAnim = new QPropertyAnimation(m_fadeEffect, "opacity", this);
+    m_fadeAnim->setDuration(200);
+
+    // Install event filter on centralWidget so we can keep the overlay sized correctly
+    centralWidget()->installEventFilter(this);
+
+    VC_DEBUG("MainWindow created (two-screen layout, 960x640)");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Screen builders
+// ─────────────────────────────────────────────────────────────────────────────
+void MainWindow::buildDevicesScreen(QWidget *screen) {
+    auto *rootLayout = new QVBoxLayout(screen);
     rootLayout->setContentsMargins(0, 0, 0, 0);
     rootLayout->setSpacing(0);
 
-    // ── Title bar ──
-    auto *titleBar = new QFrame(central);
-    titleBar->setObjectName("titleBar");
-    titleBar->setFixedHeight(38);
-    auto *titleBarLayout = new QHBoxLayout(titleBar);
-    titleBarLayout->setContentsMargins(14, 0, 14, 0);
-    titleBarLayout->setSpacing(7);
+    // ── Header bar (56px) ────────────────────────────────────────────────────
+    auto *header = new QFrame(screen);
+    header->setObjectName("devicesHeader");
+    header->setFixedHeight(56);
+    header->setStyleSheet(QString(
+        "QFrame#devicesHeader {"
+        "  background: %1;"
+        "  border-bottom: 1px solid %2;"
+        "}"
+    ).arg(Pal::BgElevated, Pal::BorderSubtle));
 
-    // Window dots (decorative)
-    for (auto color : {"#ef4444", "#fbbf24", "#22c55e"}) {
-        auto *dot = new QFrame(titleBar);
-        dot->setFixedSize(11, 11);
-        dot->setStyleSheet(QString("background: %1; border-radius: 5px; border: none;").arg(color));
-        titleBarLayout->addWidget(dot);
-    }
+    auto *headerLayout = new QHBoxLayout(header);
+    headerLayout->setContentsMargins(24, 0, 20, 0);
+    headerLayout->setSpacing(0);
 
-    auto *titleText = new QLabel(tr("ViewCam"), titleBar);
-    titleText->setObjectName("titleBarText");
-    titleText->setAlignment(Qt::AlignCenter);
-    titleBarLayout->addStretch();
-    titleBarLayout->addWidget(titleText);
-    titleBarLayout->addStretch();
+    // Wordmark: "View" in accent, "Cam" in primary
+    auto *wordmark = new QLabel(header);
+    wordmark->setObjectName("wordmark");
+    wordmark->setTextFormat(Qt::RichText);
+    wordmark->setText(QString(
+        "<span style='color:%1; font-size:18px; font-weight:800; letter-spacing:-0.5px;'>View</span>"
+        "<span style='color:%2; font-size:18px; font-weight:800; letter-spacing:-0.5px;'>Cam</span>"
+    ).arg(Pal::Accent, Pal::TextPrimary));
+    wordmark->setStyleSheet("background: transparent; border: none;");
 
-    // Theme toggle
-    auto *themeToggle = new QFrame(titleBar);
-    themeToggle->setObjectName("themeToggle");
-    auto *toggleLayout = new QHBoxLayout(themeToggle);
-    toggleLayout->setContentsMargins(3, 3, 3, 3);
-    toggleLayout->setSpacing(2);
+    // Settings gear button
+    auto *settingsBtn = new QPushButton(screen);
+    settingsBtn->setObjectName("settingsGear");
+    settingsBtn->setFixedSize(36, 36);
+    settingsBtn->setCursor(Qt::PointingHandCursor);
+    // Unicode gear: U+2699
+    settingsBtn->setText(QString::fromUtf8("\xe2\x9a\x99"));
+    settingsBtn->setStyleSheet(QString(
+        "QPushButton#settingsGear {"
+        "  background: transparent;"
+        "  color: %1;"
+        "  border: none;"
+        "  border-radius: 8px;"
+        "  font-size: 18px;"
+        "}"
+        "QPushButton#settingsGear:hover {"
+        "  background: rgba(255,255,255,0.06);"
+        "  color: %2;"
+        "}"
+    ).arg(Pal::TextMuted, Pal::TextPrimary));
 
-    m_darkBtn = new QPushButton(QString::fromUtf8("\xF0\x9F\x8C\x99 Dark"), themeToggle);
-    m_darkBtn->setObjectName("themeOptActive");
-    m_darkBtn->setCursor(Qt::PointingHandCursor);
-    m_darkBtn->setFixedHeight(26);
+    connect(settingsBtn, &QPushButton::clicked, this, &MainWindow::onSettingsRequested);
 
-    m_lightBtn = new QPushButton(QString::fromUtf8("\xe2\x98\x80\xef\xb8\x8f Light"), themeToggle);
-    m_lightBtn->setObjectName("themeOpt");
-    m_lightBtn->setCursor(Qt::PointingHandCursor);
-    m_lightBtn->setFixedHeight(26);
+    headerLayout->addWidget(wordmark);
+    headerLayout->addStretch();
+    headerLayout->addWidget(settingsBtn);
+    rootLayout->addWidget(header);
 
-    toggleLayout->addWidget(m_darkBtn);
-    toggleLayout->addWidget(m_lightBtn);
-    titleBarLayout->addWidget(themeToggle);
+    // ── Content area (centered, 480px column) ────────────────────────────────
+    auto *contentArea = new QWidget(screen);
+    contentArea->setObjectName("devicesContent");
+    contentArea->setStyleSheet(QString("background: %1;").arg(Pal::BgBase));
 
-    connect(m_darkBtn, &QPushButton::clicked, this, [this]() {
-        applyTheme(true);
-        m_settingsTab->setThemeIndex(1);
-    });
-    connect(m_lightBtn, &QPushButton::clicked, this, [this]() {
-        applyTheme(false);
-        m_settingsTab->setThemeIndex(2);
-    });
+    auto *centeredLayout = new QHBoxLayout(contentArea);
+    centeredLayout->setContentsMargins(0, 0, 0, 0);
+    centeredLayout->setSpacing(0);
 
-    rootLayout->addWidget(titleBar);
+    // Center column container (max 480px, horizontally centered)
+    auto *column = new QWidget(contentArea);
+    column->setObjectName("devicesColumn");
+    column->setMaximumWidth(480);
+    column->setStyleSheet("background: transparent;");
 
-    // ── Body: sidebar + main ──
-    auto *body = new QWidget(central);
-    auto *bodyLayout = new QHBoxLayout(body);
-    bodyLayout->setContentsMargins(0, 0, 0, 0);
-    bodyLayout->setSpacing(0);
+    auto *columnLayout = new QVBoxLayout(column);
+    columnLayout->setContentsMargins(0, 28, 0, 0);
+    columnLayout->setSpacing(0);
 
-    // ── Sidebar ──
-    m_sidebar = new QWidget(body);
-    m_sidebar->setObjectName("sidebar");
-    m_sidebar->setFixedWidth(220);
-    auto *sidebarLayout = new QVBoxLayout(m_sidebar);
-    sidebarLayout->setContentsMargins(12, 16, 12, 16);
-    sidebarLayout->setSpacing(6);
+    // ConnectionPanel fills the column
+    m_connectionPanel = new ConnectionPanel(column);
+    m_connectionPanel->setObjectName("connectionPanel");
+    m_connectionPanel->setStyleSheet("background: transparent;");
+    columnLayout->addWidget(m_connectionPanel, 1);
 
-    // Brand
-    auto *brandLabel = new QLabel(m_sidebar);
-    brandLabel->setObjectName("sidebarBrand");
-    brandLabel->setText(QString("<span style='color: %1;'>View</span>Cam").arg("#4fc3f7"));
-    brandLabel->setTextFormat(Qt::RichText);
-    sidebarLayout->addWidget(brandLabel);
-    sidebarLayout->addSpacing(8);
+    centeredLayout->addStretch();
+    centeredLayout->addWidget(column, 0, Qt::AlignTop);
+    centeredLayout->addStretch();
 
-    // Nav items
-    QString navNames[] = {tr("Player"), tr("Audio"), tr("Settings")};
-    for (int i = 0; i < 3; i++) {
-        m_navButtons[i] = createNavButton(navNames[i], i);
-        sidebarLayout->addWidget(m_navButtons[i]);
-    }
+    rootLayout->addWidget(contentArea, 1);
 
-    sidebarLayout->addStretch();
+    // ── Status bar (28px) ────────────────────────────────────────────────────
+    auto *statusBar = new QFrame(screen);
+    statusBar->setObjectName("devicesStatusBar");
+    statusBar->setFixedHeight(28);
+    statusBar->setStyleSheet(QString(
+        "QFrame#devicesStatusBar {"
+        "  background: %1;"
+        "  border-top: 1px solid %2;"
+        "}"
+    ).arg(Pal::BgElevated, Pal::BorderSubtle));
 
-    // Connection panel (device card) at bottom of sidebar
-    m_connectionPanel = new ConnectionPanel(m_sidebar);
-    sidebarLayout->addWidget(m_connectionPanel);
+    auto *statusLayout = new QHBoxLayout(statusBar);
+    statusLayout->setContentsMargins(16, 0, 16, 0);
+    statusLayout->setSpacing(6);
 
-    bodyLayout->addWidget(m_sidebar);
+    m_vcamStatusDot = new QLabel(statusBar);
+    m_vcamStatusDot->setFixedSize(7, 7);
+    m_vcamStatusDot->setObjectName("vcamDot");
+    m_vcamStatusDot->setStyleSheet(QString(
+        "background: %1; border-radius: 3px; border: none;"
+    ).arg(Pal::TextMuted));
 
-    // ── Main content ──
-    auto *mainArea = new QWidget(body);
-    mainArea->setObjectName("mainArea");
-    auto *mainLayout = new QVBoxLayout(mainArea);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(0);
+    m_vcamStatusLabel = new QLabel("Virtual camera inactive", statusBar);
+    m_vcamStatusLabel->setObjectName("vcamStatusLabel");
+    m_vcamStatusLabel->setStyleSheet(QString(
+        "font-size: 11px; color: %1; background: transparent; border: none;"
+    ).arg(Pal::TextMuted));
 
-    // Stacked content
-    m_stack = new QStackedWidget(mainArea);
-    m_stack->setObjectName("contentStack");
+    statusLayout->addWidget(m_vcamStatusDot);
+    statusLayout->addWidget(m_vcamStatusLabel);
+    statusLayout->addStretch();
 
-    // Player page (camera + info bar)
-    auto *playerPage = new QWidget();
-    playerPage->setObjectName("playerPage");
-    auto *playerLayout = new QVBoxLayout(playerPage);
-    playerLayout->setContentsMargins(12, 12, 12, 12);
-    playerLayout->setSpacing(8);
-
-    // Camera viewport
-    auto *camFrame = new QFrame(playerPage);
-    camFrame->setObjectName("camFrame");
-    auto *camLayout = new QVBoxLayout(camFrame);
-    camLayout->setContentsMargins(0, 0, 0, 0);
-
-    m_preview = new CameraPreviewWidget(camFrame);
-    camLayout->addWidget(m_preview, 0, Qt::AlignCenter);
-    playerLayout->addWidget(camFrame, 1);
-
-    // Info bar
-    auto *infoBar = new QFrame(playerPage);
-    infoBar->setObjectName("infoBar");
-    auto *infoLayout = new QHBoxLayout(infoBar);
-    infoLayout->setContentsMargins(12, 10, 12, 10);
-    infoLayout->setSpacing(8);
-
-    m_vcamChip = new QLabel(QString::fromUtf8("\xe2\x97\x8f Virtual Camera"), infoBar);
-    m_vcamChip->setObjectName("chipVcam");
-    m_resChip = new QLabel("1280 \xc3\x97 720", infoBar);
-    m_resChip->setObjectName("chipRes");
-    m_codecChip = new QLabel("MJPEG", infoBar);
-    m_codecChip->setObjectName("chipCodec");
-    m_statusBarLabel = new QLabel(tr("Disconnected"), infoBar);
-    m_statusBarLabel->setObjectName("statusLabel");
-    m_fpsBarLabel = new QLabel("", infoBar);
-    m_fpsBarLabel->setObjectName("fpsLabel");
-
-    infoLayout->addWidget(m_vcamChip);
-    infoLayout->addWidget(m_resChip);
-    infoLayout->addWidget(m_codecChip);
-    infoLayout->addStretch();
-    infoLayout->addWidget(m_statusBarLabel);
-    infoLayout->addWidget(m_fpsBarLabel);
-
-    playerLayout->addWidget(infoBar);
-
-    m_stack->addWidget(playerPage);
-
-    // Audio tab
-    m_audioTab = new AudioTab();
-    m_stack->addWidget(m_audioTab);
-
-    // Settings tab
-    m_settingsTab = new SettingsTab(settings);
-    m_stack->addWidget(m_settingsTab);
-
-    // Wire settings theme combo to applyTheme
-    connect(m_settingsTab, &SettingsTab::themeChanged, this, [this](int index) {
-        if (index == 0) {
-            // Auto — detect system
-            bool systemDark = true;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
-            systemDark = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
-#else
-            auto bg = QGuiApplication::palette().color(QPalette::Window);
-            systemDark = bg.lightness() < 128;
-#endif
-            applyTheme(systemDark);
-        } else {
-            applyTheme(index == 1); // 1=Dark, 2=Light
-        }
-        // Sync title bar toggle buttons
-        m_darkBtn->setObjectName(m_isDark ? "themeOptActive" : "themeOpt");
-        m_lightBtn->setObjectName(m_isDark ? "themeOpt" : "themeOptActive");
-        m_darkBtn->style()->unpolish(m_darkBtn);
-        m_darkBtn->style()->polish(m_darkBtn);
-        m_lightBtn->style()->unpolish(m_lightBtn);
-        m_lightBtn->style()->polish(m_lightBtn);
-    });
-
-    mainLayout->addWidget(m_stack);
-    bodyLayout->addWidget(mainArea, 1);
-
-    rootLayout->addWidget(body, 1);
-    setCentralWidget(central);
-
-    // Detect system dark mode
-    bool systemDark = true;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
-    systemDark = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
-#else
-    auto bg = QGuiApplication::palette().color(QPalette::Window);
-    systemDark = bg.lightness() < 128;
-#endif
-
-    applyTheme(systemDark);
-    m_navButtons[0]->setProperty("active", true);
-
-    VC_DEBUG("MainWindow created with sidebar layout (960x640)");
+    rootLayout->addWidget(statusBar);
 }
 
-QPushButton *MainWindow::createNavButton(const QString &text, int index) {
-    auto *btn = new QPushButton(text, m_sidebar);
-    btn->setObjectName("navItem");
-    btn->setCursor(Qt::PointingHandCursor);
-    btn->setProperty("active", index == 0);
-    btn->setCheckable(false);
+void MainWindow::buildCameraScreen(QWidget *screen) {
+    // Use absolute positioning (overlay) — outer widget is a black full-window view
+    screen->setStyleSheet("background: #000000;");
 
-    connect(btn, &QPushButton::clicked, this, [this, index]() {
-        for (int i = 0; i < 3; i++) {
-            m_navButtons[i]->setProperty("active", i == index);
-            m_navButtons[i]->style()->unpolish(m_navButtons[i]);
-            m_navButtons[i]->style()->polish(m_navButtons[i]);
-        }
-        m_activeNav = index;
-        m_stack->setCurrentIndex(index);
+    // The preview widget fills the screen
+    m_preview = new CameraPreviewWidget(screen);
+    m_preview->setObjectName("cameraPreview");
+
+    // ── Top overlay bar (52px) ───────────────────────────────────────────────
+    auto *topBar = new QFrame(screen);
+    topBar->setObjectName("camTopBar");
+    topBar->setStyleSheet(
+        "QFrame#camTopBar {"
+        "  background: rgba(13,13,15,0.72);"
+        "  border: none;"
+        "}"
+    );
+    topBar->setFixedHeight(52);
+
+    auto *topLayout = new QHBoxLayout(topBar);
+    topLayout->setContentsMargins(16, 0, 16, 0);
+    topLayout->setSpacing(8);
+
+    // "← Devices" back button
+    auto *backBtn = new QPushButton(QString::fromUtf8("\xe2\x86\x90") + "  Devices", topBar);
+    backBtn->setObjectName("camBackBtn");
+    backBtn->setCursor(Qt::PointingHandCursor);
+    backBtn->setFixedHeight(32);
+    backBtn->setStyleSheet(QString(
+        "QPushButton#camBackBtn {"
+        "  background: transparent;"
+        "  color: %1;"
+        "  border: none;"
+        "  font-size: 13px;"
+        "  font-weight: 600;"
+        "  padding: 0 8px;"
+        "}"
+        "QPushButton#camBackBtn:hover {"
+        "  color: %2;"
+        "}"
+    ).arg(Pal::Accent, Pal::AccentHover));
+
+    connect(backBtn, &QPushButton::clicked, this, [this]() {
+        showDevicesScreen();
+        // Notify Application that the user manually disconnected
+        if (m_connectionPanel)
+            m_connectionPanel->triggerDisconnect();
     });
 
-    return btn;
+    // Device name (centered)
+    m_deviceNameLabel = new QLabel("", topBar);
+    m_deviceNameLabel->setObjectName("camDeviceName");
+    m_deviceNameLabel->setAlignment(Qt::AlignCenter);
+    m_deviceNameLabel->setStyleSheet(QString(
+        "font-size: 14px;"
+        "font-weight: 600;"
+        "color: %1;"
+        "background: transparent;"
+        "border: none;"
+    ).arg(Pal::TextPrimary));
+
+    // Top-right settings gear
+    auto *camSettingsBtn = new QPushButton(topBar);
+    camSettingsBtn->setObjectName("camSettingsBtn");
+    camSettingsBtn->setFixedSize(32, 32);
+    camSettingsBtn->setCursor(Qt::PointingHandCursor);
+    camSettingsBtn->setText(QString::fromUtf8("\xe2\x9a\x99"));
+    camSettingsBtn->setStyleSheet(QString(
+        "QPushButton#camSettingsBtn {"
+        "  background: transparent;"
+        "  color: %1;"
+        "  border: none;"
+        "  font-size: 16px;"
+        "  border-radius: 6px;"
+        "}"
+        "QPushButton#camSettingsBtn:hover {"
+        "  background: rgba(255,255,255,0.08);"
+        "  color: %2;"
+        "}"
+    ).arg(Pal::TextSecondary, Pal::TextPrimary));
+
+    connect(camSettingsBtn, &QPushButton::clicked, this, &MainWindow::onSettingsRequested);
+
+    topLayout->addWidget(backBtn);
+    topLayout->addStretch();
+    topLayout->addWidget(m_deviceNameLabel);
+    topLayout->addStretch();
+    topLayout->addWidget(camSettingsBtn);
+
+    // ── Bottom overlay bar ───────────────────────────────────────────────────
+    auto *bottomBar = new QFrame(screen);
+    bottomBar->setObjectName("camBottomBar");
+    bottomBar->setStyleSheet(
+        "QFrame#camBottomBar {"
+        "  background: qlineargradient(x1:0, y1:0, x2:0, y2:1,"
+        "    stop:0 transparent, stop:1 rgba(13,13,15,0.85));"
+        "  border: none;"
+        "}"
+    );
+    bottomBar->setFixedHeight(56);
+
+    auto *bottomLayout = new QHBoxLayout(bottomBar);
+    bottomLayout->setContentsMargins(16, 0, 16, 0);
+    bottomLayout->setSpacing(8);
+
+    // Left chips: FPS | Resolution | MJPEG
+    m_fpsChip = makeChip("-- FPS",
+                          "rgba(59,130,246,0.10)",
+                          Pal::Accent,
+                          "rgba(59,130,246,0.25)",
+                          bottomBar);
+    m_fpsChip->setObjectName("fpsChip");
+
+    m_resChip = makeChip("1280×720",
+                          "rgba(255,255,255,0.05)",
+                          Pal::TextSecondary,
+                          Pal::BorderSubtle,
+                          bottomBar);
+    m_resChip->setObjectName("resChip");
+
+    m_codecChip = makeChip("MJPEG",
+                            "rgba(59,130,246,0.08)",
+                            Pal::TextSecondary,
+                            Pal::BorderDefault,
+                            bottomBar);
+    m_codecChip->setObjectName("codecChip");
+
+    bottomLayout->addWidget(m_fpsChip);
+    bottomLayout->addWidget(m_resChip);
+    bottomLayout->addWidget(m_codecChip);
+    bottomLayout->addStretch();
+
+    // Right: virtual cam status pill + signal bars
+    m_camVcamPill = new QLabel(QString::fromUtf8("\xe2\x97\x8f") + "  Virtual Cam", bottomBar);
+    m_camVcamPill->setObjectName("camVcamPill");
+    m_camVcamPill->setStyleSheet(QString(
+        "background: rgba(34,197,94,0.10);"
+        "color: %1;"
+        "border: 1px solid rgba(34,197,94,0.30);"
+        "border-radius: 10px;"
+        "padding: 3px 10px;"
+        "font-size: 11px;"
+        "font-weight: 600;"
+    ).arg(Pal::Success));
+    m_camVcamPill->setFixedHeight(22);
+
+    auto *signalBars = new QLabel("||||", bottomBar);
+    signalBars->setStyleSheet(QString(
+        "font-size: 11px;"
+        "font-weight: 700;"
+        "color: %1;"
+        "background: transparent;"
+        "border: none;"
+        "letter-spacing: -1px;"
+    ).arg(Pal::Success));
+
+    bottomLayout->addWidget(m_camVcamPill);
+    bottomLayout->addWidget(signalBars);
+
+    // ── Use resizeEvent-driven absolute positioning ───────────────────────────
+    // We position overlays after the screen's first show via an event filter approach.
+    // For simplicity we use a layout hack: a QVBoxLayout with invisible spacer in the
+    // middle occupies the full screen, and topBar/bottomBar get fixed heights.
+    // This is compatible with QMainWindow resize events.
+
+    auto *overlayLayout = new QVBoxLayout(screen);
+    overlayLayout->setContentsMargins(0, 0, 0, 0);
+    overlayLayout->setSpacing(0);
+    overlayLayout->addWidget(topBar);
+    overlayLayout->addStretch(1);   // <-- preview sits behind via separate stacking
+    overlayLayout->addWidget(bottomBar);
+
+    // The preview must be a sibling that we push behind the layout's widgets.
+    // Raise the overlay widgets above the preview.
+    m_preview->lower();
+    topBar->raise();
+    bottomBar->raise();
+
+    // The preview needs to match the screen geometry. We install an event filter.
+    screen->installEventFilter(this);
+    // NOTE: centralWidget() event filter is installed after setCentralWidget in the constructor.
 }
 
-void MainWindow::applyTheme(bool dark) {
-    m_isDark = dark;
-    auto c = dark ? darkTheme() : lightTheme();
+bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
+    if (obj == m_cameraScreen && event->type() == QEvent::Resize) {
+        // Keep the preview filling the camera screen
+        if (m_preview)
+            m_preview->setGeometry(0, 0, m_cameraScreen->width(), m_cameraScreen->height());
+    }
+    if (obj == centralWidget() && event->type() == QEvent::Resize) {
+        // Keep the fade overlay covering the whole central widget
+        if (m_fadeOverlay)
+            m_fadeOverlay->setGeometry(centralWidget()->rect());
+    }
+    return QMainWindow::eventFilter(obj, event);
+}
 
-    // Update toggle button states
-    m_darkBtn->setObjectName(dark ? "themeOptActive" : "themeOpt");
-    m_lightBtn->setObjectName(dark ? "themeOpt" : "themeOptActive");
+void MainWindow::buildSettingsPage(QWidget *page) {
+    page->setStyleSheet(QString("background: %1;").arg(Pal::BgBase));
 
-    QString style = buildGlobalStyle(c) + QString(R"(
-        /* ── Title bar ── */
-        #titleBar {
+    auto *rootLayout = new QVBoxLayout(page);
+    rootLayout->setContentsMargins(0, 0, 0, 0);
+    rootLayout->setSpacing(0);
+
+    // ── Back header ─────────────────────────────────────────────────────────
+    auto *header = new QFrame(page);
+    header->setObjectName("settingsHeader");
+    header->setFixedHeight(56);
+    header->setStyleSheet(QString(
+        "QFrame#settingsHeader {"
+        "  background: %1;"
+        "  border-bottom: 1px solid %2;"
+        "}"
+    ).arg(Pal::BgElevated, Pal::BorderSubtle));
+
+    auto *headerLayout = new QHBoxLayout(header);
+    headerLayout->setContentsMargins(16, 0, 24, 0);
+    headerLayout->setSpacing(8);
+
+    auto *backBtn = new QPushButton(QString::fromUtf8("\xe2\x86\x90") + "  Back", header);
+    backBtn->setObjectName("settingsBackBtn");
+    backBtn->setCursor(Qt::PointingHandCursor);
+    backBtn->setFixedHeight(32);
+    backBtn->setStyleSheet(QString(
+        "QPushButton#settingsBackBtn {"
+        "  background: transparent;"
+        "  color: %1;"
+        "  border: none;"
+        "  font-size: 13px;"
+        "  font-weight: 600;"
+        "  padding: 0 8px;"
+        "}"
+        "QPushButton#settingsBackBtn:hover {"
+        "  color: %2;"
+        "}"
+    ).arg(Pal::Accent, Pal::AccentHover));
+    connect(backBtn, &QPushButton::clicked, this, &MainWindow::onBackFromSettings);
+
+    auto *titleLabel = new QLabel("Settings", header);
+    titleLabel->setStyleSheet(QString(
+        "font-size: 15px;"
+        "font-weight: 700;"
+        "color: %1;"
+        "background: transparent;"
+        "border: none;"
+    ).arg(Pal::TextPrimary));
+
+    headerLayout->addWidget(backBtn);
+    headerLayout->addStretch();
+    headerLayout->addWidget(titleLabel);
+    headerLayout->addStretch();
+    // Spacer to keep title visually centered (matches back btn width ~ 72px)
+    auto *spacer = new QWidget(header);
+    spacer->setFixedWidth(72);
+    spacer->setStyleSheet("background: transparent;");
+    headerLayout->addWidget(spacer);
+
+    rootLayout->addWidget(header);
+
+    // ── Settings content ─────────────────────────────────────────────────────
+    // Wrap SettingsTab in a scroll area with the correct background
+    auto *scrollArea = new QScrollArea(page);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setStyleSheet(QString(
+        "QScrollArea { background: %1; border: none; }"
+        "QScrollBar:vertical { background: transparent; width: 6px; }"
+        "QScrollBar::handle:vertical { background: rgba(255,255,255,0.12); border-radius: 3px; min-height: 24px; }"
+        "QScrollBar::handle:vertical:hover { background: rgba(255,255,255,0.22); }"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
+    ).arg(Pal::BgBase));
+
+    m_settingsTab = new SettingsTab(m_settingsPtr, scrollArea);
+    m_settingsTab->setObjectName("settingsTabWidget");
+
+    scrollArea->setWidget(m_settingsTab);
+    rootLayout->addWidget(scrollArea, 1);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Global stylesheet
+// ─────────────────────────────────────────────────────────────────────────────
+void MainWindow::applyGlobalStyle() {
+    setStyleSheet(QString(R"(
+        * {
+            font-family: "Inter", "Segoe UI", "SF Pro Display", sans-serif;
+        }
+        QMainWindow, #rootStack, #devicesScreen, #cameraScreen {
             background: %1;
-            border-bottom: 1px solid %2;
         }
-        #titleBarText {
-            font-size: 12px;
-            font-weight: 600;
-            color: %3;
-            background: transparent;
-            border: none;
-        }
-
-        /* ── Theme toggle ── */
-        #themeToggle {
-            background: %4;
-            border: 1px solid %2;
-            border-radius: 15px;
-        }
-        #themeOpt {
-            padding: 4px 12px;
-            border-radius: 13px;
-            font-size: 11px;
-            font-weight: 600;
-            color: %3;
-            border: none;
-            background: transparent;
-        }
-        #themeOptActive {
-            padding: 4px 12px;
-            border-radius: 13px;
-            font-size: 11px;
-            font-weight: 600;
-            color: %5;
-            border: none;
+        /* ── SettingsTab inner widgets ─────────────────────────────────── */
+        #settingsPage, #settingsTabWidget {
             background: %1;
-        }
-
-        /* ── Sidebar ── */
-        #sidebar {
-            background: %1;
-            border-right: 1px solid %2;
-        }
-        #sidebarBrand {
-            font-size: 17px;
-            font-weight: 800;
-            color: %5;
-            padding: 4px 8px 10px;
-            letter-spacing: -0.3px;
-            background: transparent;
-            border: none;
-        }
-
-        /* ── Nav items ── */
-        #navItem {
-            text-align: left;
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            color: %3;
-            border: 1px solid transparent;
-            background: transparent;
-        }
-        #navItem:hover {
-            background: %4;
-            color: %6;
-        }
-        #navItem[active="true"] {
-            background: %4;
-            color: %7;
-            border: 1px solid %8;
-        }
-
-        /* ── Main content ── */
-        #mainArea, #contentStack, #playerPage {
-            background: %9;
-        }
-
-        /* ── Camera frame ── */
-        #camFrame {
-            background: %10;
-            border: 1px solid %2;
-            border-radius: 14px;
-        }
-
-        /* ── Info bar ── */
-        #infoBar {
-            background: %1;
-            border: 1px solid %2;
-            border-radius: 10px;
-        }
-
-        /* ── Info chips ── */
-        #chipVcam {
-            color: %11;
-            background: rgba(34,197,94,0.06);
-            border: 1px solid rgba(34,197,94,0.2);
-            border-radius: 10px;
-            padding: 4px 10px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        #chipRes {
-            color: %3;
-            background: %4;
-            border: 1px solid %2;
-            border-radius: 10px;
-            padding: 4px 10px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        #chipCodec {
-            color: %7;
-            background: rgba(79,195,247,0.06);
-            border: 1px solid rgba(79,195,247,0.2);
-            border-radius: 10px;
-            padding: 4px 10px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        #statusLabel {
-            color: %3;
-            font-size: 11px;
-            background: transparent;
-            border: none;
-        }
-        #fpsLabel {
-            color: %12;
-            font-size: 11px;
-            font-weight: 600;
-            font-family: "JetBrains Mono", "Fira Code", monospace;
-            background: transparent;
-            border: none;
-        }
-
-        /* ── Connection panel ── */
-        #connectionCard {
-            background: %4;
-            border: 1px solid %2;
-            border-radius: 14px;
-        }
-        #connectionCard * {
-            background: transparent;
-        }
-        #connectionCard QLabel {
-            border: none;
-            color: %6;
-            font-size: 12px;
-        }
-        #connectionCard QLabel#cardHeader {
-            font-size: 12px;
-            font-weight: 700;
-            color: %5;
-        }
-        #connectionCard QLabel#deviceDot {
-            background: %11;
-            border-radius: 4px;
-        }
-        #connectionCard QLabel#deviceName {
-            font-size: 12px;
-            font-weight: 700;
-            color: %5;
-        }
-        #connectionCard QLabel#deviceAddr {
-            font-family: "JetBrains Mono", "Fira Code", monospace;
-            font-size: 10px;
-            color: %13;
-        }
-        #connectionCard QLabel#statusLabel {
-            font-size: 11px;
-            color: %3;
-        }
-        #connectionCard QLabel#fpsLabel {
-            font-size: 11px;
-            color: %12;
-            font-weight: 600;
-        }
-
-        QComboBox, QLineEdit, QSpinBox {
-            color: %5;
-            background: %14;
-            border: 1px solid %2;
-            border-radius: 6px;
-            padding: 7px 10px;
-            font-size: 12px;
-            selection-background-color: %7;
-            selection-color: #ffffff;
-        }
-        QComboBox:hover, QLineEdit:hover, QSpinBox:hover {
-            border: 1px solid %15;
-        }
-        QComboBox:focus, QLineEdit:focus, QSpinBox:focus {
-            border: 2px solid %7;
-            padding: 6px 9px;
-        }
-        QComboBox::drop-down {
-            border: none;
-            padding-right: 8px;
-        }
-        QComboBox QAbstractItemView {
-            background: %1;
-            color: %5;
-            border: 1px solid %2;
-            border-radius: 6px;
-            padding: 4px;
-            selection-background-color: %4;
-            selection-color: %7;
-        }
-        QSpinBox::up-button, QSpinBox::down-button {
-            border: none;
-            background: transparent;
-        }
-
-        #connectBtn {
-            background: %7;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-        #connectBtn:hover {
-            background: %16;
-        }
-        #disconnectBtn {
-            background: rgba(239,68,68,0.08);
-            color: %17;
-            border: 1px solid rgba(239,68,68,0.2);
-            border-radius: 6px;
-            padding: 8px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-        #disconnectBtn:hover {
-            background: rgba(239,68,68,0.15);
-            border: 1px solid rgba(239,68,68,0.35);
-        }
-
-        /* ── Settings & Audio tabs ── */
-        #settingsPage, #audioPage {
-            background: %9;
         }
         #settingsCard {
-            background: %1;
-            border: 1px solid %2;
+            background: %2;
+            border: 1px solid %3;
             border-radius: 12px;
         }
-        #settingsCard * {
-            background: transparent;
-        }
-        #audioCard {
-            background: %1;
-            border: 1px solid %2;
-            border-radius: 12px;
-        }
-        #audioCard * {
-            background: transparent;
-        }
+        #settingsCard * { background: transparent; }
         #sectionHeader {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
-            color: %13;
             letter-spacing: 1px;
-            background: transparent;
+            color: %4;
             border: none;
+            background: transparent;
         }
         #settingsLabel {
             font-size: 13px;
@@ -599,13 +583,13 @@ void MainWindow::applyTheme(bool dark) {
         }
         #settingsValue {
             font-size: 13px;
-            color: %3;
+            color: %6;
             border: none;
             background: transparent;
         }
         #settingsDivider {
             border: none;
-            border-top: 1px solid %2;
+            border-top: 1px solid %3;
             background: transparent;
         }
         #pageHeader {
@@ -617,80 +601,187 @@ void MainWindow::applyTheme(bool dark) {
         }
         #pageSubtitle {
             font-size: 13px;
-            color: %3;
+            color: %6;
             background: transparent;
             border: none;
-        }
-        #audioIcon {
-            background: %4;
-            border-radius: 24px;
-            border: none;
-        }
-        #audioTitle {
-            font-size: 15px;
-            font-weight: 700;
-            color: %5;
-            border: none;
-            background: transparent;
-        }
-        #audioDesc {
-            font-size: 12px;
-            color: %3;
-            border: none;
-            background: transparent;
         }
         #comingSoonBadge {
-            background: #FF8F00;
+            background: #F59E0B;
             color: white;
             border-radius: 10px;
             padding: 4px 12px;
             font-size: 11px;
             font-weight: 700;
         }
+        /* ── QComboBox / QLineEdit / QSpinBox ──────────────────────────── */
+        QComboBox, QLineEdit, QSpinBox {
+            color: %5;
+            background: %7;
+            border: 1px solid %3;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 12px;
+            selection-background-color: %8;
+            selection-color: #ffffff;
+        }
+        QComboBox:hover, QLineEdit:hover, QSpinBox:hover {
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        QComboBox:focus, QLineEdit:focus, QSpinBox:focus {
+            border: 1px solid rgba(59,130,246,0.55);
+        }
+        QComboBox::drop-down { border: none; padding-right: 8px; }
+        QComboBox QAbstractItemView {
+            background: %2;
+            color: %5;
+            border: 1px solid %3;
+            border-radius: 6px;
+            padding: 4px;
+            selection-background-color: %7;
+            selection-color: %8;
+        }
+        QSpinBox::up-button, QSpinBox::down-button {
+            border: none; background: transparent;
+        }
     )").arg(
-        c.bg2,          // %1  - sidebar/card bg
-        c.border2,      // %2  - borders
-        c.text2,        // %3  - secondary text
-        c.bg3,          // %4  - nav hover/device card bg
-        c.text0,        // %5  - primary text
-        c.text1,        // %6  - text1
-        c.cyan,         // %7  - accent cyan
-        c.borderAccent, // %8  - accent border
-        c.bg0           // %9  - main bg
-    ).arg(
-        c.camBg,        // %10 - camera bg
-        c.green,        // %11 - green
-        c.gold,         // %12 - gold
-        c.text3,        // %13 - text3
-        c.bgInput,      // %14 - input bg
-        c.border3,      // %15 - hover border
-        dark ? "#2a8ab8" : "#01579b", // %16 - btn hover
-        c.red           // %17 - red
-    );
-
-    setStyleSheet(style);
-
-    // Re-polish nav buttons
-    for (int i = 0; i < 3; i++) {
-        m_navButtons[i]->style()->unpolish(m_navButtons[i]);
-        m_navButtons[i]->style()->polish(m_navButtons[i]);
-    }
-    m_darkBtn->style()->unpolish(m_darkBtn);
-    m_darkBtn->style()->polish(m_darkBtn);
-    m_lightBtn->style()->unpolish(m_lightBtn);
-    m_lightBtn->style()->polish(m_lightBtn);
-
-    // Update brand for light theme cyan
-    auto *brand = m_sidebar->findChild<QLabel*>("sidebarBrand");
-    if (brand) {
-        brand->setText(QString("<span style='color: %1;'>View</span>Cam").arg(c.cyan));
-    }
+        Pal::BgBase,          // %1
+        Pal::Surface,         // %2
+        Pal::BorderDefault,   // %3
+        Pal::TextMuted,       // %4
+        Pal::TextPrimary,     // %5
+        Pal::TextSecondary,   // %6
+        Pal::SurfaceRaised,   // %7
+        Pal::Accent           // %8
+    ));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Navigation
+// ─────────────────────────────────────────────────────────────────────────────
+void MainWindow::fadeToIndex(int index) {
+    if (m_stack->currentIndex() == index)
+        return;
+
+    m_fadeAnim->stop();
+    disconnect(m_fadeAnim, nullptr, nullptr, nullptr);
+
+    // Size the overlay to cover the whole central widget
+    m_fadeOverlay->setGeometry(centralWidget()->rect());
+    m_fadeOverlay->show();
+    m_fadeOverlay->raise();
+
+    // Phase 1: fade overlay IN (content disappears behind it)
+    m_fadeAnim->setStartValue(0.0);
+    m_fadeAnim->setEndValue(1.0);
+    m_fadeAnim->start();
+
+    int targetIndex = index;
+    connect(m_fadeAnim, &QPropertyAnimation::finished, this,
+            [this, targetIndex]() {
+        disconnect(m_fadeAnim, nullptr, nullptr, nullptr);
+
+        // Switch the visible screen while the overlay is fully opaque
+        m_stack->setCurrentIndex(targetIndex);
+
+        // Phase 2: fade overlay OUT (new content revealed)
+        m_fadeAnim->setStartValue(1.0);
+        m_fadeAnim->setEndValue(0.0);
+        m_fadeAnim->start();
+
+        connect(m_fadeAnim, &QPropertyAnimation::finished, this, [this]() {
+            disconnect(m_fadeAnim, nullptr, nullptr, nullptr);
+            m_fadeOverlay->hide();
+        });
+    });
+}
+
+void MainWindow::showCameraScreen(const QString &deviceName) {
+    if (m_deviceNameLabel)
+        m_deviceNameLabel->setText(deviceName);
+    fadeToIndex(1);
+}
+
+void MainWindow::showDevicesScreen() {
+    fadeToIndex(0);
+}
+
+void MainWindow::onSettingsRequested() {
+    m_previousScreenIndex = m_stack->currentIndex();
+    fadeToIndex(2);
+}
+
+void MainWindow::onBackFromSettings() {
+    fadeToIndex(m_previousScreenIndex);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Status / FPS updates
+// ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::setStatusText(const QString &text) {
-    m_statusBarLabel->setText(text);
+    if (m_vcamStatusLabel)
+        m_vcamStatusLabel->setText(text);
 }
 
 void MainWindow::setFpsText(const QString &text) {
-    m_fpsBarLabel->setText(text);
+    if (m_fpsChip) {
+        m_fpsChip->setText(text.isEmpty() ? "-- FPS" : text);
+    }
+}
+
+void MainWindow::setVirtualCamStatus(bool active, bool error) {
+    if (!m_vcamStatusDot || !m_vcamStatusLabel || !m_camVcamPill)
+        return;
+
+    if (error) {
+        m_vcamStatusDot->setStyleSheet(QString(
+            "background: %1; border-radius: 3px; border: none;").arg(Pal::Error_));
+        m_vcamStatusLabel->setText("Virtual camera error");
+        m_vcamStatusLabel->setStyleSheet(QString(
+            "font-size: 11px; color: %1; background: transparent; border: none;"
+        ).arg(Pal::Error_));
+        m_camVcamPill->setStyleSheet(
+            "background: rgba(239,68,68,0.10);"
+            "color: #EF4444;"
+            "border: 1px solid rgba(239,68,68,0.30);"
+            "border-radius: 10px;"
+            "padding: 3px 10px;"
+            "font-size: 11px;"
+            "font-weight: 600;"
+        );
+        m_camVcamPill->setText(QString::fromUtf8("\xe2\x97\x8f") + "  Virtual Cam Error");
+    } else if (active) {
+        m_vcamStatusDot->setStyleSheet(QString(
+            "background: %1; border-radius: 3px; border: none;").arg(Pal::Success));
+        m_vcamStatusLabel->setText("Virtual camera active");
+        m_vcamStatusLabel->setStyleSheet(QString(
+            "font-size: 11px; color: %1; background: transparent; border: none;"
+        ).arg(Pal::Success));
+        m_camVcamPill->setStyleSheet(QString(
+            "background: rgba(34,197,94,0.10);"
+            "color: %1;"
+            "border: 1px solid rgba(34,197,94,0.30);"
+            "border-radius: 10px;"
+            "padding: 3px 10px;"
+            "font-size: 11px;"
+            "font-weight: 600;"
+        ).arg(Pal::Success));
+        m_camVcamPill->setText(QString::fromUtf8("\xe2\x97\x8f") + "  Virtual Cam");
+    } else {
+        m_vcamStatusDot->setStyleSheet(
+            "background: rgba(255,255,255,0.20); border-radius: 3px; border: none;");
+        m_vcamStatusLabel->setText("Virtual camera inactive");
+        m_vcamStatusLabel->setStyleSheet(QString(
+            "font-size: 11px; color: %1; background: transparent; border: none;"
+        ).arg(Pal::TextMuted));
+        m_camVcamPill->setStyleSheet(
+            "background: rgba(255,255,255,0.05);"
+            "color: rgba(255,255,255,0.34);"
+            "border: 1px solid rgba(255,255,255,0.08);"
+            "border-radius: 10px;"
+            "padding: 3px 10px;"
+            "font-size: 11px;"
+            "font-weight: 600;"
+        );
+        m_camVcamPill->setText(QString::fromUtf8("\xe2\x97\x8f") + "  Virtual Cam");
+    }
 }

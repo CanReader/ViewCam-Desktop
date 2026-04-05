@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QWidget>
-#include <QComboBox>
 
 class QLabel;
 class QPushButton;
@@ -16,7 +15,6 @@ public:
     void setThemeIndex(int index);
 
 #ifdef _WIN32
-    // Refresh the filter status display from the registry
     void updateFilterStatus();
 #endif
 
@@ -24,7 +22,10 @@ signals:
     void themeChanged(int index); // 0=Auto, 1=Dark, 2=Light
 
 private:
-    QComboBox *m_themeCombo;
+    void updateThemeButton(int index, bool active);
+
+    // Segmented theme picker buttons: Auto | Dark | Light
+    QPushButton *m_themeButtons[3] = { nullptr, nullptr, nullptr };
 
 #ifdef _WIN32
     QLabel      *m_filterStatusLabel = nullptr;
