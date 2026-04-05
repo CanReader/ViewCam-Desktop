@@ -40,4 +40,7 @@ private:
 #elif defined(_WIN32)
     std::unique_ptr<DirectShowVirtualCam> m_vcamWriter;
 #endif
+
+    // Track name of currently connected device for the camera screen title
+    QString m_connectedDeviceName;
 };

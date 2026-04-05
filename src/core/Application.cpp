@@ -48,17 +48,27 @@ void Application::init() {
     connect(m_window->connectionPanel(), &ConnectionPanel::disconnectRequested,
             this, &Application::onDisconnectRequested);
 
+    // Track device name when a card is clicked so we can show it on the camera screen
+    connect(m_window->connectionPanel(), &ConnectionPanel::deviceCardClicked,
+            this, [this](const QString &name, const QString &, int) {
+        m_connectedDeviceName = name;
+    });
+
     // Wire up receiver -> decoder -> preview
     connect(m_receiver.get(), &StreamReceiver::frameReceived,
             m_decoder.get(), &FrameDecoder::decode);
     connect(m_decoder.get(), &FrameDecoder::imageReady,
             m_window->previewWidget(), &CameraPreviewWidget::updateFrame);
 
+    // ── Virtual camera setup ─────────────────────────────────────────────────
 #ifdef __linux__
     if (m_vcamWriter->open()) {
         connect(m_decoder.get(), &FrameDecoder::imageReady,
                 m_vcamWriter.get(), &V4L2LoopbackWriter::writeFrame);
+        m_window->setVirtualCamStatus(true);
+        VC_INFO("V4L2 virtual camera active");
     } else {
+        m_window->setVirtualCamStatus(false, true);
         VC_WARN("Virtual camera not available, preview only");
     }
 #elif defined(_WIN32)
@@ -84,8 +94,10 @@ void Application::init() {
     if (m_vcamWriter->open()) {
         connect(m_decoder.get(), &FrameDecoder::imageReady,
                 m_vcamWriter.get(), &DirectShowVirtualCam::writeFrame);
+        m_window->setVirtualCamStatus(true);
         VC_INFO("DirectShow virtual camera active (shared memory)");
     } else {
+        m_window->setVirtualCamStatus(false, true);
         VC_WARN("Virtual camera not available, preview only");
     }
 #endif
@@ -97,29 +109,36 @@ void Application::init() {
         m_window->setStatusText(tr("Session ended (Free tier limit)"));
     });
 
-    // Connection state -> status bar
+    // Connection state -> screen navigation + status
     connect(m_receiver.get(), &StreamReceiver::connected, this, [this]() {
         VC_INFO("Stream connected");
         m_window->connectionPanel()->setConnected(true);
         m_window->setStatusText(tr("Connected"));
+        // Navigate to the camera screen
+        m_window->showCameraScreen(m_connectedDeviceName);
     });
     connect(m_receiver.get(), &StreamReceiver::disconnected, this, [this]() {
         VC_INFO("Stream disconnected");
         m_window->connectionPanel()->setConnected(false);
         m_window->setStatusText(tr("Disconnected"));
         m_window->setFpsText("");
+        // Navigate back to the devices screen
+        m_window->showDevicesScreen();
     });
     connect(m_receiver.get(), &StreamReceiver::errorOccurred, this, [this](const QString &err) {
         VC_ERROR("Stream error: {}", err.toStdString());
         m_window->setStatusText(tr("Error: ") + err);
+        // Return to device list on error
+        m_window->showDevicesScreen();
     });
 
-    // Restore last connection
-    auto host = m_settings->lastHost();
-    if (!host.isEmpty()) {
-        VC_INFO("Restoring last device: {}:{}", host.toStdString(), m_settings->port());
-        m_window->connectionPanel()->addDevice(tr("Last"), host, m_settings->port());
-    }
+    // FPS updates -> camera screen chip
+    connect(m_receiver.get(), &StreamReceiver::frameReceived,
+            this, [this](const auto &) {
+        // FPS is computed in StreamReceiver — we rely on setFpsText calls from
+        // the receiver's FPS signal. If the receiver exposes an fpsUpdated signal,
+        // connect it here. For now we leave a hook via setFpsText.
+    });
 
     m_discovery->start();
     m_window->show();
@@ -135,10 +154,14 @@ void Application::onConnectRequested(const QString &host, int port) {
     VC_INFO("Connecting to {}:{}", host.toStdString(), port);
     m_settings->setLastHost(host);
     m_settings->setPort(port);
+    // If no device name was set (manual connect), use the host as the name
+    if (m_connectedDeviceName.isEmpty())
+        m_connectedDeviceName = host;
     m_receiver->connectToHost(host, port);
 }
 
 void Application::onDisconnectRequested() {
     VC_INFO("Disconnect requested");
+    m_connectedDeviceName.clear();
     m_receiver->disconnect();
 }
