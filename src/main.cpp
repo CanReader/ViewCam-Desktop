@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
     app.setApplicationName("ViewCam");
-    app.setOrganizationName("ViewCam");
+    app.setOrganizationName("Sleak Software");
 
     QString iconPath = QApplication::applicationDirPath() + "/resources/icons/viewcam.svg";
     if (QFile::exists(iconPath)) {
