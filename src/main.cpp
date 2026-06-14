@@ -1,5 +1,6 @@
 #include "ViewCamConfig.h"
 #include "core/Logger.h"
+#include "core/QmlDevMode.h"
 #include "viewmodels/AppController.h"
 
 #include <QFont>
@@ -97,6 +98,13 @@ int main(int argc, char *argv[]) {
         QCoreApplication::exit(1);
       },
       Qt::QueuedConnection);
+
+  // Dev mode (VIEWCAM_QML_DEV=1): load QML from on-disk source files and
+  // hot-reload on save. No effect in normal / release use.
+  QmlDevMode devMode;
+  if (QmlDevMode::active())
+    devMode.install(&engine);
+
   engine.loadFromModule("ViewCam.Studio", "Main");
 
   VC_INFO("Event loop starting");

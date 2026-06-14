@@ -12,7 +12,7 @@ Rectangle {
     color: Theme.bg1
     opacity: open ? 1 : 0
     visible: opacity > 0
-    enabled: open
+    enabled: true
 
     Behavior on opacity {
         NumberAnimation {
@@ -37,7 +37,8 @@ Rectangle {
 
             Monogram {
                 anchors.verticalCenter: parent.verticalCenter
-                width: 30; height: 30
+                width: 30
+                height: 30
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -90,7 +91,10 @@ Rectangle {
                     font.letterSpacing: 0.12 * 11
                     color: Theme.fg3
                 }
-                Item { width: 1; height: 12 }
+                Item {
+                    width: 1
+                    height: 12
+                }
                 Text {
                     text: qsTr("Connect your phone")
                     font.family: Theme.fontSans
@@ -99,7 +103,10 @@ Rectangle {
                     font.letterSpacing: -0.02 * 30
                     color: Theme.fg1
                 }
-                Item { width: 1; height: 12 }
+                Item {
+                    width: 1
+                    height: 12
+                }
                 Text {
                     width: Math.min(360, parent.width)
                     text: qsTr("%1 turns any phone into a wireless camera and microphone for this computer.").arg(AppInfo.name)
@@ -109,7 +116,10 @@ Rectangle {
                     color: Theme.fg2
                     wrapMode: Text.WordWrap
                 }
-                Item { width: 1; height: 40 }
+                Item {
+                    width: 1
+                    height: 40
+                }
 
                 // numbered steps
                 Column {
@@ -118,9 +128,18 @@ Rectangle {
 
                     Repeater {
                         model: [
-                            { t: qsTr("Open ViewCam on your phone"), d: qsTr("Launch the mobile app and keep it in the foreground.") },
-                            { t: qsTr("Join the same Wi-Fi"), d: qsTr("Both devices need to be on one network.") },
-                            { t: qsTr("Pick it from the list →"), d: qsTr("Your phone shows up on the right within a few seconds.") }
+                            {
+                                t: qsTr("Open ViewCam on your phone"),
+                                d: qsTr("Launch the mobile app and keep it in the foreground.")
+                            },
+                            {
+                                t: qsTr("Join the same Wi-Fi"),
+                                d: qsTr("Both devices need to be on one network.")
+                            },
+                            {
+                                t: qsTr("Pick it from the list →"),
+                                d: qsTr("Your phone shows up on the right within a few seconds.")
+                            }
                         ]
 
                         Rectangle {
@@ -133,8 +152,14 @@ Rectangle {
                             radius: Theme.radiusLg
                             color: stepHover.hovered ? Theme.bg2 : "transparent"
 
-                            Behavior on color { ColorAnimation { duration: Theme.durSnap } }
-                            HoverHandler { id: stepHover }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.durSnap
+                                }
+                            }
+                            HoverHandler {
+                                id: stepHover
+                            }
 
                             RowLayout {
                                 id: stepRow
@@ -192,25 +217,32 @@ Rectangle {
                     }
                 }
 
-                Item { width: 1; height: 36 }
+                Item {
+                    width: 1
+                    height: 36
+                }
 
                 Row {
                     spacing: 9
 
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 7; height: 7; radius: 4
+                        width: 7
+                        height: 7
+                        radius: 4
                         color: Theme.blue
 
                         SequentialAnimation on opacity {
                             loops: Animation.Infinite
                             NumberAnimation {
-                                to: 1; duration: 700
+                                to: 1
+                                duration: 700
                                 easing.type: Easing.BezierSpline
                                 easing.bezierCurve: Theme.easeIris
                             }
                             NumberAnimation {
-                                to: 0.35; duration: 700
+                                to: 0.35
+                                duration: 700
                                 easing.type: Easing.BezierSpline
                                 easing.bezierCurve: Theme.easeIris
                             }
@@ -256,19 +288,29 @@ Rectangle {
                         font.letterSpacing: 0.1 * 11
                         color: Theme.fg3
                     }
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
                     Row {
                         spacing: 6
 
                         Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 5; height: 5; radius: 3
+                            width: 5
+                            height: 5
+                            radius: 3
                             color: Theme.blue
 
                             SequentialAnimation on opacity {
                                 loops: Animation.Infinite
-                                NumberAnimation { to: 1; duration: 700 }
-                                NumberAnimation { to: 0.35; duration: 700 }
+                                NumberAnimation {
+                                    to: 1
+                                    duration: 700
+                                }
+                                NumberAnimation {
+                                    to: 0.35
+                                    duration: 700
+                                }
                             }
                         }
                         Text {
@@ -282,7 +324,9 @@ Rectangle {
                     }
                 }
 
-                Item { Layout.preferredHeight: 14 }
+                Item {
+                    Layout.preferredHeight: 14
+                }
 
                 ListView {
                     id: deviceList
@@ -306,7 +350,9 @@ Rectangle {
                     }
                 }
 
-                Item { Layout.preferredHeight: 24 }
+                Item {
+                    Layout.preferredHeight: 24
+                }
 
                 Text {
                     text: qsTr("Or connect manually")
@@ -314,11 +360,13 @@ Rectangle {
                     font.pixelSize: 11
                     color: Theme.fg3
                 }
-                Item { Layout.preferredHeight: 8 }
+                Item {
+                    Layout.preferredHeight: 8
+                }
                 VcIpBox {
                     Layout.fillWidth: true
                     large: true
-                    onSubmitted: (ip) => AppController.connectManual(ip)
+                    onSubmitted: ip => AppController.connectManual(ip)
                 }
             }
         }
@@ -347,14 +395,14 @@ Rectangle {
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
-                width: 8; height: 8; radius: 4
+                width: 8
+                height: 8
+                radius: 4
                 color: AppController.virtualCam.available ? Theme.statusLive : Theme.statusError
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: AppController.virtualCam.available
-                      ? qsTr("Virtual camera ready · %1").arg(AppController.virtualCam.devicePath)
-                      : qsTr("Virtual camera inactive · 0 clients")
+                text: AppController.virtualCam.available ? qsTr("Virtual camera ready · %1").arg(AppController.virtualCam.devicePath) : qsTr("Virtual camera inactive · 0 clients")
                 font.family: Theme.fontMono
                 font.pixelSize: 11
                 color: Theme.fg3
@@ -362,3 +410,4 @@ Rectangle {
         }
     }
 }
+// reload trigger Mon Jun 15 01:40:42 AM +03 2026

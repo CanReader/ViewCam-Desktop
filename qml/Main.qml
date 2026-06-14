@@ -1,6 +1,9 @@
 import QtQuick
 import ViewCam.Studio
 
+// Persistent shell window — created ONCE and never reloaded.
+// Only the inner Loader (AppContent.qml) is swapped on hot-reload.
+// Geometry, visibility, and focus are never touched during a reload.
 Window {
     id: win
 
@@ -12,26 +15,16 @@ Window {
     title: AppInfo.displayName
     color: Theme.bg1
 
-    AppShell {
-        id: shell
+    Loader {
+        id: contentLoader
         anchors.fill: parent
-        onOpenLauncher: launcher.open = true
+        source: Qt.resolvedUrl("AppContent.qml")
     }
 
-    Launcher {
-        id: launcher
-        anchors.fill: parent
-        open: true
-    }
-
-    // connecting hides the launcher and lands on Live View
-    Connections {
-        target: AppController.connection
-        function onStateChanged() {
-            if (AppController.connection.connected) {
-                launcher.open = false;
-                shell.page = "liveview";
-            }
-        }
+    // Called by QmlDevMode.doReload() — only the inner content is reset.
+    // The Window (geometry, visibility, raise state, focus) is untouched.
+    function reloadContent() {
+        contentLoader.source = "";
+        contentLoader.source = Qt.resolvedUrl("AppContent.qml");
     }
 }

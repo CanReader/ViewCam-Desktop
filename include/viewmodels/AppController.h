@@ -43,6 +43,9 @@ class AppController : public QObject {
     Q_PROPERTY(FrameSource *frameSource READ frameSource CONSTANT)
     // Active GPU compute backend label (e.g. "CUDA · NVIDIA RTX 4050").
     Q_PROPERTY(QString gpuBackend READ gpuBackend NOTIFY gpuBackendChanged)
+    // Currently active navigation page ("liveview" / "sources" / "settings").
+    // Persists across QML hot-reloads so the user stays on the same screen.
+    Q_PROPERTY(QString activePage READ activePage WRITE setActivePage NOTIFY activePageChanged)
 
 public:
     ~AppController() override;
@@ -62,12 +65,20 @@ public:
     FrameSource *frameSource() const { return m_frameSource.get(); }
     QString gpuBackend() const { return m_gpuBackendLabel; }
 
+    QString activePage() const { return m_activePage; }
+    void setActivePage(const QString &page) {
+        if (m_activePage == page) return;
+        m_activePage = page;
+        emit activePageChanged();
+    }
+
     Q_INVOKABLE void connectToDevice(const QString &name, const QString &host, int port);
     Q_INVOKABLE void connectManual(const QString &ip);
     Q_INVOKABLE void disconnectDevice();
 
 signals:
     void gpuBackendChanged();
+    void activePageChanged();
 
 private:
     explicit AppController(QObject *parent = nullptr);
@@ -102,6 +113,7 @@ private:
     // GPU_ABSTRACTION_BRIEF — the app only ever talks to this interface.
     std::unique_ptr<GpuBackend> m_gpuBackend;
     QString m_gpuBackendLabel;
+    QString m_activePage = QStringLiteral("liveview");
 
     QTimer m_reconnectTimer;
     bool m_userDisconnect = false;

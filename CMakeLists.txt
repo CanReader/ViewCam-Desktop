@@ -137,6 +137,7 @@ set(SOURCES
     src/main.cpp
     src/core/Settings.cpp
     src/core/Logger.cpp
+    src/core/QmlDevMode.cpp
     src/network/StreamReceiver.cpp
     src/network/DeviceDiscovery.cpp
     src/network/FrameDecoder.cpp
@@ -149,6 +150,7 @@ set(HEADERS
     include/core/Settings.h
     include/core/FrameData.h
     include/core/Logger.h
+    include/core/QmlDevMode.h
     include/network/StreamReceiver.h
     include/network/DeviceDiscovery.h
     include/network/FrameDecoder.h
@@ -182,6 +184,7 @@ qt_add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 # ── QML module: ViewModels (QML_ELEMENT) + QML UI + assets ───
 set(VIEWCAM_QML_FILES
     qml/Main.qml
+    qml/AppContent.qml
     qml/Theme.qml
     qml/components/Monogram.qml
     qml/components/VcBadge.qml
@@ -285,6 +288,20 @@ if(UNIX AND SPDLOG_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${SPDLOG_LIBRARIES})
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog)
+endif()
+
+# ── QML hot-reload (Debug only) ───────────────────────────────
+# VIEWCAM_HOT_RELOAD activates QmlDevMode in QmlDevMode.cpp. The source
+# qml/ directory is baked in as an absolute path at configure time so no
+# env var is needed — just build Debug and live edits reload instantly.
+# To use a different source dir at runtime, set VIEWCAM_QML_DIR env.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        VIEWCAM_HOT_RELOAD
+        VIEWCAM_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
+    message(STATUS "QML hot-reload: ENABLED (Debug build, source: ${CMAKE_CURRENT_SOURCE_DIR}/qml)")
+else()
+    message(STATUS "QML hot-reload: disabled (${CMAKE_BUILD_TYPE} build)")
 endif()
 
 # GPU backends: compile-define gate + runtime lib per backend. All CUDA/Vulkan

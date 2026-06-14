@@ -9,6 +9,13 @@ Item {
     property string page: "liveview"
     signal openLauncher()
 
+    // Restore the active page from the C++ singleton on creation.
+    // AppController survives hot-reload, so the user lands on the same screen.
+    Component.onCompleted: page = AppController.activePage
+
+    // Keep the C++ singleton in sync so the page survives the next reload.
+    onPageChanged: AppController.activePage = page
+
     Sidebar {
         id: sidebar
         anchors.left: parent.left
