@@ -1,8 +1,11 @@
 #include "core/Settings.h"
+#include "core/Constants.h"
 
 Settings::Settings(QObject *parent)
     : QObject(parent)
-    , m_settings("ViewCam", "ViewCam")
+    // Default ctor picks up QCoreApplication's org/app name (set in main from
+    // the generated config) — single source of truth for the settings path.
+    , m_settings()
 {
 }
 
@@ -15,9 +18,17 @@ void Settings::setLastHost(const QString &host) {
 }
 
 int Settings::port() const {
-    return m_settings.value("connection/port", 8080).toInt();
+    return m_settings.value("connection/port", vc::kStreamPort).toInt();
 }
 
 void Settings::setPort(int port) {
     m_settings.setValue("connection/port", port);
+}
+
+QVariant Settings::value(const QString &key, const QVariant &defaultValue) const {
+    return m_settings.value(key, defaultValue);
+}
+
+void Settings::setValue(const QString &key, const QVariant &value) {
+    m_settings.setValue(key, value);
 }

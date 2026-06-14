@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QSettings>
 #include <QString>
+#include <QVariant>
 
 class Settings : public QObject {
     Q_OBJECT
@@ -15,6 +16,10 @@ public:
 
     int port() const;
     void setPort(int port);
+
+    // Generic access for the QML settings layer
+    QVariant value(const QString &key, const QVariant &defaultValue = {}) const;
+    void setValue(const QString &key, const QVariant &value);
 
 private:
     QSettings m_settings;
