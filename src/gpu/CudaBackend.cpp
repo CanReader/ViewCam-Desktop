@@ -18,6 +18,15 @@ bool CudaBackend::nvidiaDevicePresent() {
 #endif
 }
 
+std::string CudaBackend::runtimeVersionString() {
+#ifdef VIEWCAM_HAVE_CUDA
+    int version = 0;
+    if (cudaRuntimeGetVersion(&version) == cudaSuccess && version > 0)
+        return std::to_string(version / 1000) + "." + std::to_string((version % 1000) / 10);
+#endif
+    return {};
+}
+
 bool CudaBackend::initialize() {
 #ifdef VIEWCAM_HAVE_CUDA
     int count = 0;

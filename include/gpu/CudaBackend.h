@@ -19,6 +19,9 @@ public:
     // Always false when built without CUDA.
     static bool nvidiaDevicePresent();
 
+    // Returns "12.4" style string from the CUDA runtime, or empty if unavailable.
+    static std::string runtimeVersionString();
+
 private:
     bool m_available = false;
     std::string m_device;

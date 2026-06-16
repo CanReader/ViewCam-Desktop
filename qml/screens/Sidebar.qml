@@ -351,6 +351,7 @@ Rectangle {
 
         // ── profile footer ───────────────────────────────────────
         Rectangle {
+            visible: false
             Layout.fillWidth: true
             implicitHeight: 60
             color: "transparent"

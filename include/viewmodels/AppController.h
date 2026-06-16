@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QImage>
+#include <QList>
 #include <QObject>
 #include <QTimer>
 #include <QtQml/qqmlregistration.h>
@@ -43,6 +45,8 @@ class AppController : public QObject {
     Q_PROPERTY(FrameSource *frameSource READ frameSource CONSTANT)
     // Active GPU compute backend label (e.g. "CUDA · NVIDIA RTX 4050").
     Q_PROPERTY(QString gpuBackend READ gpuBackend NOTIFY gpuBackendChanged)
+    // CUDA runtime version string, e.g. "CUDA 12.4". Empty when CUDA unavailable.
+    Q_PROPERTY(QString cudaVersion READ cudaVersion CONSTANT)
     // Currently active navigation page ("liveview" / "sources" / "settings").
     // Persists across QML hot-reloads so the user stays on the same screen.
     Q_PROPERTY(QString activePage READ activePage WRITE setActivePage NOTIFY activePageChanged)
@@ -64,6 +68,7 @@ public:
     CameraControlViewModel *cameraControl() const { return m_cameraControl.get(); }
     FrameSource *frameSource() const { return m_frameSource.get(); }
     QString gpuBackend() const { return m_gpuBackendLabel; }
+    QString cudaVersion() const { return m_cudaVersion; }
 
     QString activePage() const { return m_activePage; }
     void setActivePage(const QString &page) {
@@ -84,6 +89,7 @@ private:
     explicit AppController(QObject *parent = nullptr);
     void init();
     void onImageReady(const QImage &image);
+    void publishFrame(const QImage &frame);
     void scheduleReconnect();
 
     static AppController *s_instance;
@@ -113,7 +119,11 @@ private:
     // GPU_ABSTRACTION_BRIEF — the app only ever talks to this interface.
     std::unique_ptr<GpuBackend> m_gpuBackend;
     QString m_gpuBackendLabel;
+    QString m_cudaVersion;
     QString m_activePage = QStringLiteral("liveview");
+
+    // Jitter buffer: holds up to bufferedFrames decoded frames for smooth display.
+    QList<QImage> m_frameBuffer;
 
     QTimer m_reconnectTimer;
     bool m_userDisconnect = false;

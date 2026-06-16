@@ -31,6 +31,8 @@ private:
     std::string m_devicePath;
     int m_width = 0;
     int m_height = 0;
+    int m_requestedWidth = 0;
+    int m_requestedHeight = 0;
     bool m_formatSet = false;
     bool m_disabled = false;
     std::vector<uint8_t> m_yuyvBuffer;

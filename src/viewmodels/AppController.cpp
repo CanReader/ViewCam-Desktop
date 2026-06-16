@@ -2,6 +2,7 @@
 #include "ViewCamConfig.h"
 #include "core/Logger.h"
 #include "core/Settings.h"
+#include "gpu/CudaBackend.h"
 #include "network/DeviceDiscovery.h"
 #include "network/FrameDecoder.h"
 #include "network/StreamReceiver.h"
@@ -75,6 +76,13 @@ void AppController::init() {
             selectGpuBackend();
           });
 
+  // Detect CUDA runtime version once at startup (shown in About).
+  {
+    const std::string ver = CudaBackend::runtimeVersionString();
+    if (!ver.empty())
+        m_cudaVersion = QStringLiteral("CUDA ") + QString::fromStdString(ver);
+  }
+
   // discovery -> device model
   connect(m_discovery.get(), &DeviceDiscovery::deviceFound, m_deviceModel.get(),
           &DeviceListModel::addOrUpdate);
@@ -103,7 +111,12 @@ void AppController::init() {
             m_connection->setLens(lens);
             m_connection->markConnected();
             // Push the full control snapshot so the phone matches the panel.
-            m_receiver->sendControl(m_cameraControl->snapshot());
+            // Include jpegQuality so the encoder preset takes effect immediately.
+            static const int kQuality[] = {95, 85, 65}; // Quality/Balanced/Speed
+            QJsonObject snap = m_cameraControl->snapshot();
+            snap[QStringLiteral("jpegQuality")] =
+                kQuality[qBound(0, m_settingsVm->encoderPreset(), 2)];
+            m_receiver->sendControl(snap);
           });
   // Periodic STATUS frames keep battery/charging current without reconnecting.
   connect(m_receiver.get(), &StreamReceiver::statusReceived, this,
@@ -141,6 +154,15 @@ void AppController::init() {
               m_discovery->start();
             else
               m_discovery->stop();
+          });
+
+  // Encoder preset -> phone JPEG quality (live update when connected)
+  connect(m_settingsVm.get(), &SettingsViewModel::encoderPresetChanged, this,
+          [this]() {
+            if (!m_connection->isConnected()) return;
+            static const int kQuality[] = {95, 85, 65};
+            const int q = kQuality[qBound(0, m_settingsVm->encoderPreset(), 2)];
+            m_receiver->sendControl(QJsonObject{{QStringLiteral("jpegQuality"), q}});
           });
 
   m_reconnectTimer.setSingleShot(true);
@@ -208,9 +230,35 @@ void AppController::onImageReady(const QImage &image) {
     VC_INFO("First video frame decoded: {}x{} -> preview + virtual camera",
             image.width(), image.height());
   }
-  m_frameSource->publish(image);
+
+  // Cap at the max output resolution setting (0=720p, 1=1080p, 2=4K).
+  static const int kResW[] = {1280, 1920, 3840};
+  static const int kResH[] = {720,  1080, 2160};
+  const int ri = qBound(0, m_settingsVm->maxResolution(), 2);
+  QImage frame = (image.width() > kResW[ri] || image.height() > kResH[ri])
+      ? image.scaled(kResW[ri], kResH[ri], Qt::KeepAspectRatio, Qt::SmoothTransformation)
+      : image;
+
+  const int bufSize = m_settingsVm->bufferedFrames();
+  if (bufSize == 0) {
+    // No buffering: display immediately.
+    publishFrame(frame);
+  } else {
+    // Jitter buffer: queue the incoming frame and display the oldest once
+    // we have enough to absorb a burst. Caps at 2×bufSize to avoid unbounded
+    // growth if the consumer stalls.
+    m_frameBuffer.append(frame);
+    while (m_frameBuffer.size() > bufSize * 2)
+      m_frameBuffer.removeFirst();
+    if (m_frameBuffer.size() > bufSize)
+      publishFrame(m_frameBuffer.takeFirst());
+  }
+}
+
+void AppController::publishFrame(const QImage &frame) {
+  m_frameSource->publish(frame);
   if (m_virtualCam->available() && m_virtualCam->enabled())
-    m_vcamWriter->writeFrame(image);
+    m_vcamWriter->writeFrame(frame);
 }
 
 void AppController::connectToDevice(const QString &name, const QString &host,

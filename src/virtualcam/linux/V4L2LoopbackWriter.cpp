@@ -62,6 +62,8 @@ void V4L2LoopbackWriter::close() {
         m_formatSet = false;
         m_width = 0;
         m_height = 0;
+        m_requestedWidth = 0;
+        m_requestedHeight = 0;
         VC_INFO("Virtual camera closed");
     }
 }
@@ -235,7 +237,9 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
         w = rgb.width();
     }
 
-    if (!m_formatSet || w != m_width || h != m_height) {
+    if (!m_formatSet || w != m_requestedWidth || h != m_requestedHeight) {
+        m_requestedWidth = w;
+        m_requestedHeight = h;
         if (!setFormat(w, h)) {
             m_disabled = true;
             VC_ERROR("Virtual camera disabled, format setup failed");
@@ -244,19 +248,30 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
     }
 
     if (w != m_width || h != m_height) {
-        // Crop-to-fill: scale up to cover the target, then center-crop
-        // This mimics how a real webcam always fills the frame
+        // Letterbox: scale down to fit entirely within the target, centre
+        // on a black canvas.  Preserves full content when orientation
+        // differs (e.g. landscape frame inside portrait v4l2 format).
         double scaleX = static_cast<double>(m_width) / w;
         double scaleY = static_cast<double>(m_height) / h;
-        double scale = std::max(scaleX, scaleY);
-        int scaledW = static_cast<int>(w * scale);
-        int scaledH = static_cast<int>(h * scale);
-        QImage scaled = rgb.scaled(scaledW, scaledH, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        int cropX = (scaledW - m_width) / 2;
-        int cropY = (scaledH - m_height) / 2;
-        rgb = scaled.copy(cropX, cropY, m_width, m_height);
-        if (rgb.format() != QImage::Format_RGB888)
-            rgb = rgb.convertToFormat(QImage::Format_RGB888);
+        double scale  = std::min(scaleX, scaleY);
+        int fitW = static_cast<int>(w * scale);
+        int fitH = static_cast<int>(h * scale);
+        if (fitW % 2 != 0) fitW--;
+
+        QImage canvas(m_width, m_height, QImage::Format_RGB888);
+        canvas.fill(Qt::black);
+
+        QImage scaled = rgb.scaled(fitW, fitH, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        if (scaled.format() != QImage::Format_RGB888)
+            scaled = scaled.convertToFormat(QImage::Format_RGB888);
+
+        int offX = (m_width  - fitW) / 2;
+        int offY = (m_height - fitH) / 2;
+        QPainter p(&canvas);
+        p.drawImage(offX, offY, scaled);
+        p.end();
+
+        rgb = canvas;
         w = m_width;
         h = m_height;
     }

@@ -70,6 +70,27 @@ void CameraControlViewModel::applyControls(const QJsonObject &controls) {
         const bool v = controls.value("torchAvailable").toBool();
         if (v != m_torchAvailable) { m_torchAvailable = v; emit torchAvailableChanged(); }
     }
+    if (controls.contains("lens")) {
+        const bool front = controls.value("lens").toString() == QStringLiteral("front");
+        if (front != m_lensFront) { m_lensFront = front; emit lensFrontChanged(); }
+    }
+}
+
+void CameraControlViewModel::setResolution(int index) {
+    if (index < 0 || index >= RES_COUNT || m_resolutionIndex == index) return;
+    m_resolutionIndex = index;
+    emit resolutionIndexChanged();
+    emit controlPatch(QJsonObject{{"resWidth", RES_WIDTHS[index]}, {"resHeight", RES_HEIGHTS[index]}});
+}
+
+void CameraControlViewModel::flipLens() {
+    m_lensFront = !m_lensFront;
+    emit lensFrontChanged();
+    emit controlPatch(QJsonObject{{"lens", m_lensFront ? QStringLiteral("front") : QStringLiteral("back")}});
+}
+
+void CameraControlViewModel::triggerFocus() {
+    emit controlPatch(QJsonObject{{"focusTap", true}});
 }
 
 void CameraControlViewModel::reset() {
@@ -80,4 +101,6 @@ void CameraControlViewModel::reset() {
     if (!m_hdr) { m_hdr = true; emit hdrChanged(); }
     if (!m_hdrSupported) { m_hdrSupported = true; emit hdrSupportedChanged(); }
     if (!m_torchAvailable) { m_torchAvailable = true; emit torchAvailableChanged(); }
+    if (m_resolutionIndex != 0) { m_resolutionIndex = 0; emit resolutionIndexChanged(); }
+    if (m_lensFront) { m_lensFront = false; emit lensFrontChanged(); }
 }
