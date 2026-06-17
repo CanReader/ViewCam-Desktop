@@ -54,7 +54,6 @@ Flickable {
             VcSettingRow {
                 icon: "renderer"
                 title: qsTr("GPU processing")
-                // active backend shown live (CUDA / Vulkan compute / CPU)
                 description: AppController.gpuBackend !== ""
                              ? qsTr("Active: %1").arg(AppController.gpuBackend)
                              : qsTr("Frame processing & filters")
@@ -67,7 +66,7 @@ Flickable {
             VcSettingRow {
                 icon: "protocol"
                 title: qsTr("Stream protocol")
-                description: qsTr("Frame transport for the virtual camera")
+                description: qsTr("MJPEG active · H.264/H.265 require mobile update")
                 VcSeg {
                     model: ["MJPEG", "H.264", "H.265"]
                     currentIndex: root.s.streamProtocol
@@ -77,7 +76,7 @@ Flickable {
             VcSettingRow {
                 icon: "plus"
                 title: qsTr("Encoder preset")
-                description: qsTr("Quality vs. CPU cost")
+                description: qsTr("MJPEG quality / H.264 speed trade-off")
                 VcSeg {
                     model: [qsTr("Quality"), qsTr("Balanced"), qsTr("Speed")]
                     currentIndex: root.s.encoderPreset
@@ -97,23 +96,49 @@ Flickable {
             VcSettingRow {
                 icon: "clock"
                 title: qsTr("Keyframe interval")
-                description: qsTr("Seconds between full frames")
-                Text {
-                    text: "2 s"
-                    font.family: Theme.fontMono
-                    font.pixelSize: 12
-                    color: Theme.fg2
+                description: qsTr("I-frame rate for H.264/H.265 — no effect on MJPEG")
+                Row {
+                    spacing: 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    VcButton {
+                        kind: "soft"; text: "−"
+                        onClicked: if (root.s.keyframeInterval > 1) root.s.keyframeInterval--
+                    }
+                    Text {
+                        width: 36; height: 38
+                        text: root.s.keyframeInterval + " s"
+                        font.family: Theme.fontMono; font.pixelSize: 12; color: Theme.fg2
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    VcButton {
+                        kind: "soft"; text: "+"
+                        onClicked: if (root.s.keyframeInterval < 10) root.s.keyframeInterval++
+                    }
                 }
             }
             VcSettingRow {
                 icon: "arch"
                 title: qsTr("Buffered frames")
-                description: qsTr("Smooths jitter, adds latency")
-                Text {
-                    text: qsTr("2 frames")
-                    font.family: Theme.fontMono
-                    font.pixelSize: 12
-                    color: Theme.fg2
+                description: qsTr("Delays display by N frames to smooth network jitter")
+                Row {
+                    spacing: 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    VcButton {
+                        kind: "soft"; text: "−"
+                        onClicked: if (root.s.bufferedFrames > 0) root.s.bufferedFrames--
+                    }
+                    Text {
+                        width: 64; height: 38
+                        text: root.s.bufferedFrames === 0 ? qsTr("Off") : (root.s.bufferedFrames + qsTr(" frames"))
+                        font.family: Theme.fontMono; font.pixelSize: 12; color: Theme.fg2
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    VcButton {
+                        kind: "soft"; text: "+"
+                        onClicked: if (root.s.bufferedFrames < 8) root.s.bufferedFrames++
+                    }
                 }
             }
         }
@@ -136,12 +161,29 @@ Flickable {
             VcSettingRow {
                 icon: "port"
                 title: qsTr("Listen port")
-                description: qsTr("TCP stream socket")
-                Text {
+                description: qsTr("TCP stream socket — applies on next connect")
+                TextInput {
+                    id: portInput
                     text: String(root.s.listenPort)
                     font.family: Theme.fontMono
                     font.pixelSize: 12
                     color: Theme.fg2
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    width: 54
+                    validator: IntValidator { bottom: 1024; top: 65535 }
+                    selectByMouse: true
+                    onEditingFinished: {
+                        const p = parseInt(text)
+                        if (p >= 1024 && p <= 65535) root.s.listenPort = p
+                        else text = String(root.s.listenPort)
+                    }
+                    Connections {
+                        target: root.s
+                        function onListenPortChanged() {
+                            if (!portInput.activeFocus)
+                                portInput.text = String(root.s.listenPort)
+                        }
+                    }
                 }
             }
             VcSettingRow {
@@ -178,6 +220,21 @@ Flickable {
                     model: [qsTr("Dark"), qsTr("Light")]
                     currentIndex: root.s.darkTheme ? 0 : 1
                     onActivated: (i) => root.s.darkTheme = (i === 0)
+                }
+            }
+            VcSettingRow {
+                icon: "globe"
+                title: qsTr("Language")
+                description: qsTr("App display language")
+                VcSeg {
+                    readonly property var codes:   ["",   "en",     "tr",     "de",     "fr"]
+                    readonly property var labels:  [qsTr("System"), "EN", "TR", "DE", "FR"]
+                    model: labels
+                    currentIndex: {
+                        const idx = codes.indexOf(root.s.language)
+                        return idx < 0 ? 0 : idx
+                    }
+                    onActivated: (i) => root.s.language = codes[i]
                 }
             }
             VcSettingRow {
@@ -277,6 +334,18 @@ Flickable {
                 description: qsTr("Cross-platform framework")
                 Text {
                     text: qsTr("Qt %1").arg(AppInfo.qtRuntimeVersion)
+                    font.family: Theme.fontMono
+                    font.pixelSize: 12
+                    color: Theme.fg2
+                }
+            }
+            VcSettingRow {
+                visible: AppController.cudaVersion !== ""
+                icon: "gpu"
+                title: qsTr("CUDA runtime")
+                description: qsTr("NVIDIA parallel computing platform")
+                Text {
+                    text: AppController.cudaVersion
                     font.family: Theme.fontMono
                     font.pixelSize: 12
                     color: Theme.fg2

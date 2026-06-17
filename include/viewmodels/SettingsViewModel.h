@@ -15,6 +15,7 @@ class SettingsViewModel : public QObject {
     QML_UNCREATABLE("Owned by AppController")
 
     // Appearance
+    Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
     Q_PROPERTY(bool darkTheme READ darkTheme WRITE setDarkTheme NOTIFY darkThemeChanged)
     Q_PROPERTY(QString accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged)
     Q_PROPERTY(bool telemetryOverlay READ telemetryOverlay WRITE setTelemetryOverlay NOTIFY telemetryOverlayChanged)
@@ -29,6 +30,8 @@ class SettingsViewModel : public QObject {
     Q_PROPERTY(int streamProtocol READ streamProtocol WRITE setStreamProtocol NOTIFY streamProtocolChanged)
     Q_PROPERTY(int encoderPreset READ encoderPreset WRITE setEncoderPreset NOTIFY encoderPresetChanged)
     Q_PROPERTY(int maxResolution READ maxResolution WRITE setMaxResolution NOTIFY maxResolutionChanged)
+    Q_PROPERTY(int keyframeInterval READ keyframeInterval WRITE setKeyframeInterval NOTIFY keyframeIntervalChanged)
+    Q_PROPERTY(int bufferedFrames READ bufferedFrames WRITE setBufferedFrames NOTIFY bufferedFramesChanged)
 
     // Network
     Q_PROPERTY(bool autoDiscovery READ autoDiscovery WRITE setAutoDiscovery NOTIFY autoDiscoveryChanged)
@@ -57,6 +60,9 @@ class SettingsViewModel : public QObject {
 public:
     explicit SettingsViewModel(Settings *backend, QObject *parent = nullptr);
 
+    QString language() const;
+    void setLanguage(const QString &v);
+
     bool darkTheme() const;
     void setDarkTheme(bool v);
     QString accentColor() const;
@@ -78,6 +84,10 @@ public:
     void setEncoderPreset(int v);
     int maxResolution() const;
     void setMaxResolution(int v);
+    int keyframeInterval() const;
+    void setKeyframeInterval(int v);
+    int bufferedFrames() const;
+    void setBufferedFrames(int v);
 
     bool autoDiscovery() const;
     void setAutoDiscovery(bool v);
@@ -119,6 +129,7 @@ public:
     void setAudioSampleRate(int v);
 
 signals:
+    void languageChanged();
     void darkThemeChanged();
     void accentColorChanged();
     void telemetryOverlayChanged();
@@ -129,6 +140,8 @@ signals:
     void streamProtocolChanged();
     void encoderPresetChanged();
     void maxResolutionChanged();
+    void keyframeIntervalChanged();
+    void bufferedFramesChanged();
     void autoDiscoveryChanged();
     void listenPortChanged();
     void autoReconnectChanged();
@@ -149,5 +162,6 @@ signals:
     void audioSampleRateChanged();
 
 private:
+    void applyLaunchAtLogin(bool enable);
     Settings *m_s;
 };
