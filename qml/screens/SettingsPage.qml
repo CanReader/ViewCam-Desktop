@@ -398,7 +398,17 @@ Flickable {
 
             VcSettingRow {
                 showDivider: false
-                icon: "info"; accent: true
+                icon: "globe"; accent: true
+                title: qsTr("ViewCam website")
+                description: "viewcam.tech"
+                VcButton {
+                    kind: "soft"
+                    text: qsTr("Open")
+                    onClicked: Qt.openUrlExternally("https://viewcam.tech")
+                }
+            }
+            VcSettingRow {
+                icon: "info"
                 title: AppInfo.displayName
                 description: qsTr("Version %1 · build %2").arg(AppInfo.versionString).arg(AppInfo.buildNumber)
                 VcButton {
