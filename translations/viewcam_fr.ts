@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="fr_FR">
+<TS version="2.1" language="fr">
 <context>
     <name>Application</name>
     <message>
         <source>Connected</source>
-        <translation type="vanished">Connecte</translation>
+        <translation type="vanished">Connecté</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Deconnecte</translation>
+        <translation type="vanished">Déconnecté</translation>
     </message>
     <message>
         <source>Error: </source>
@@ -28,7 +28,7 @@
     </message>
     <message>
         <source>Audio streaming features are coming in a future release.</source>
-        <translation type="vanished">Les fonctionnalites de streaming audio seront disponibles dans une prochaine version.</translation>
+        <translation type="vanished">Les fonctionnalités de streaming audio seront ajoutées dans une prochaine version.</translation>
     </message>
     <message>
         <source>Microphone</source>
@@ -36,7 +36,7 @@
     </message>
     <message>
         <source>Receive microphone audio from your phone</source>
-        <translation type="vanished">Recevoir le son du microphone de votre telephone</translation>
+        <translation type="vanished">Recevoir l'audio du microphone de votre téléphone</translation>
     </message>
     <message>
         <source>Speaker</source>
@@ -44,7 +44,7 @@
     </message>
     <message>
         <source>Send desktop audio to your phone</source>
-        <translation type="vanished">Envoyer le son du bureau vers votre telephone</translation>
+        <translation type="vanished">Envoyer l'audio du bureau à votre téléphone</translation>
     </message>
 </context>
 <context>
@@ -62,7 +62,7 @@
     <name>ConnectionPanel</name>
     <message>
         <source>Discovered Devices</source>
-        <translation type="vanished">Appareils detectes</translation>
+        <translation type="vanished">Appareils découverts</translation>
     </message>
     <message>
         <source>Manual...</source>
@@ -70,7 +70,7 @@
     </message>
     <message>
         <source>Connect by Address</source>
-        <translation type="vanished">Connexion par adresse</translation>
+        <translation type="vanished">Connecter par adresse</translation>
     </message>
     <message>
         <source>IP address (e.g. 192.168.1.100)</source>
@@ -86,15 +86,15 @@
     </message>
     <message>
         <source>Disconnect</source>
-        <translation type="vanished">Deconnecter</translation>
+        <translation type="vanished">Déconnecter</translation>
     </message>
     <message>
         <source>Connected</source>
-        <translation type="vanished">Connecte</translation>
+        <translation type="vanished">Connecté</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Deconnecte</translation>
+        <translation type="vanished">Déconnecté</translation>
     </message>
     <message>
         <source>%1 FPS</source>
@@ -106,77 +106,77 @@
     <message>
         <location filename="../qml/screens/Launcher.qml" line="88"/>
         <source>Pair a device</source>
-        <translation type="unfinished"></translation>
+        <translation>Associer un appareil</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="99"/>
         <source>Connect your phone</source>
-        <translation type="unfinished"></translation>
+        <translation>Connectez votre téléphone</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="112"/>
         <source>%1 turns any phone into a wireless camera and microphone for this computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 transforme n'importe quel téléphone en caméra et microphone sans fil pour cet ordinateur.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="132"/>
         <source>Open ViewCam on your phone</source>
-        <translation type="unfinished"></translation>
+        <translation>Ouvrez ViewCam sur votre téléphone</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="133"/>
         <source>Launch the mobile app and keep it in the foreground.</source>
-        <translation type="unfinished"></translation>
+        <translation>Lancez l'application mobile et gardez-la au premier plan.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="136"/>
         <source>Join the same Wi-Fi</source>
-        <translation type="unfinished"></translation>
+        <translation>Rejoignez le même Wi-Fi</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="137"/>
         <source>Both devices need to be on one network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Les deux appareils doivent être sur le même réseau.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="140"/>
         <source>Pick it from the list →</source>
-        <translation type="unfinished"></translation>
+        <translation>Choisissez-le dans la liste →</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="141"/>
         <source>Your phone shows up on the right within a few seconds.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre téléphone apparaît à droite en quelques secondes.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="253"/>
         <source>Scanning your network…</source>
-        <translation type="unfinished"></translation>
+        <translation>Analyse du réseau…</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="284"/>
         <source>Available devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Appareils disponibles</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="318"/>
         <source>Scanning…</source>
-        <translation type="unfinished"></translation>
+        <translation>Analyse…</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="358"/>
         <source>Or connect manually</source>
-        <translation type="unfinished"></translation>
+        <translation>Ou connecter manuellement</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="405"/>
         <source>Virtual camera ready · %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Caméra virtuelle prête · %1</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="405"/>
         <source>Virtual camera inactive · 0 clients</source>
-        <translation type="unfinished"></translation>
+        <translation>Caméra virtuelle inactive · 0 clients</translation>
     </message>
 </context>
 <context>
@@ -184,32 +184,32 @@
     <message>
         <location filename="../qml/screens/LiveView.qml" line="112"/>
         <source>Session ended</source>
-        <translation type="unfinished"></translation>
+        <translation>Session terminée</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="112"/>
         <source>No camera connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucune caméra connectée</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="123"/>
         <source>Free tier session limit reached. Reconnect to continue.</source>
-        <translation type="unfinished"></translation>
+        <translation>Limite de session du plan gratuit atteinte. Reconnectez-vous pour continuer.</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="123"/>
         <source>Connect a phone running ViewCam to start the live feed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Connectez un téléphone exécutant ViewCam pour démarrer le flux en direct.</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="136"/>
         <source>Scan for devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher des appareils</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="333"/>
         <source>Virtual Camera</source>
-        <translation type="unfinished"></translation>
+        <translation>Caméra virtuelle</translation>
     </message>
 </context>
 <context>
@@ -232,38 +232,38 @@
     </message>
     <message>
         <source>  Settings  </source>
-        <translation type="vanished">  Parametres  </translation>
+        <translation type="vanished">  Paramètres  </translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Deconnecte</translation>
+        <translation type="vanished">Déconnecté</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Coming Soon</source>
-        <translation type="vanished">Bientot disponible</translation>
+        <translation type="vanished">Bientôt disponible</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="117"/>
         <source>Installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Installé</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="118"/>
         <source>Path mismatch</source>
-        <translation type="unfinished"></translation>
+        <translation>Chemin incorrect</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="119"/>
         <source>Not installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Non installé</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="121"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Inconnu</translation>
     </message>
 </context>
 <context>
@@ -271,238 +271,239 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="47"/>
         <source>Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Réseau</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="61"/>
         <source>Connection</source>
-        <translation type="unfinished"></translation>
+        <translation>Connexion</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="66"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="71"/>
         <source>Signal</source>
-        <translation type="unfinished"></translation>
+        <translation>Signal</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="97"/>
         <source>Latency</source>
-        <translation type="unfinished"></translation>
+        <translation>Latence</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="103"/>
         <source>Bitrate</source>
-        <translation type="unfinished"></translation>
+        <translation>Débit</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="109"/>
         <source>FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>IPS</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="115"/>
         <source>Uptime</source>
-        <translation type="unfinished"></translation>
+        <translation>Disponibilité</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="126"/>
         <source>Device</source>
-        <translation type="unfinished">Peripherique</translation>
+        <translation>Appareil</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="140"/>
         <source>Model</source>
-        <translation type="unfinished"></translation>
+        <translation>Modèle</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="145"/>
         <source>System</source>
-        <translation type="unfinished"></translation>
+        <translation>Système</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="150"/>
         <source>Battery</source>
-        <translation type="unfinished"></translation>
+        <translation>Batterie</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="152"/>
         <source>charging</source>
-        <translation type="unfinished"></translation>
+        <translation>en charge</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="157"/>
         <source>Lens</source>
-        <translation type="unfinished"></translation>
+        <translation>Objectif</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="162"/>
         <source>Capture</source>
-        <translation type="unfinished"></translation>
+        <translation>Capture</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="173"/>
         <source>Device control</source>
-        <translation type="unfinished"></translation>
+        <translation>Contrôle de l'appareil</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="188"/>
         <source>Torch</source>
-        <translation type="unfinished"></translation>
+        <translation>Lampe torche</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="189"/>
         <source>Rear flashlight</source>
-        <translation type="unfinished"></translation>
+        <translation>Flash arrière</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="189"/>
         <source>No flash on front camera</source>
-        <translation type="unfinished"></translation>
+        <translation>Pas de flash sur la caméra frontale</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="198"/>
         <source>Focus lock</source>
-        <translation type="unfinished"></translation>
+        <translation>Verrouillage mise au point</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="199"/>
         <source>Freeze autofocus</source>
-        <translation type="unfinished"></translation>
+        <translation>Bloquer la mise au point auto</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="207"/>
         <source>Exposure lock</source>
-        <translation type="unfinished"></translation>
+        <translation>Verrouillage exposition</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="208"/>
         <source>Lock AE / AWB</source>
-        <translation type="unfinished"></translation>
+        <translation>Verrouiller AE / AWB</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="217"/>
         <source>HDR</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="218"/>
         <source>High dynamic range</source>
-        <translation type="unfinished"></translation>
+        <translation>Grande plage dynamique</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="218"/>
         <source>Not supported on this device</source>
-        <translation type="unfinished"></translation>
+        <translation>Non pris en charge sur cet appareil</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="227"/>
         <source>Resolution</source>
-        <translation type="unfinished"></translation>
+        <translation>Résolution</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="247"/>
         <source>Flip lens</source>
-        <translation type="unfinished"></translation>
+        <translation>Changer objectif</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="254"/>
         <source>Tap to focus</source>
-        <translation type="unfinished"></translation>
+        <translation>Toucher pour faire la mise au point</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="274"/>
         <source>Optimization</source>
-        <translation type="unfinished"></translation>
+        <translation>Optimisation</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="287"/>
         <source>Adaptive bitrate</source>
-        <translation type="unfinished"></translation>
+        <translation>Débit adaptatif</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="288"/>
         <source>Clamps to network</source>
-        <translation type="unfinished"></translation>
+        <translation>S'adapte au réseau</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="295"/>
         <source>Hardware acceleration</source>
-        <translation type="unfinished"></translation>
+        <translation>Accélération matérielle</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="296"/>
         <source>GPU encode &amp; decode</source>
-        <translation type="unfinished"></translation>
+        <translation>Encodage &amp; décodage GPU</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="303"/>
         <source>Adaptive resolution</source>
-        <translation type="unfinished"></translation>
+        <translation>Résolution adaptative</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="304"/>
         <source>Drop res before frames</source>
-        <translation type="unfinished"></translation>
+        <translation>Réduire la résolution avant les images</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="311"/>
         <source>Low-light boost</source>
-        <translation type="unfinished"></translation>
+        <translation>Amplification faible luminosité</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="312"/>
         <source>Brighten dim scenes</source>
-        <translation type="unfinished"></translation>
+        <translation>Éclaircir les scènes sombres</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="319"/>
         <source>Noise reduction</source>
-        <translation type="unfinished"></translation>
+        <translation>Réduction du bruit</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="320"/>
         <source>Temporal denoise</source>
-        <translation type="unfinished"></translation>
+        <translation>Débruitage temporel</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="327"/>
         <source>Mirror image</source>
-        <translation type="unfinished"></translation>
+        <translation>Image miroir</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="328"/>
         <source>Flip horizontally</source>
-        <translation type="unfinished"></translation>
+        <translation>Miroir horizontal</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="335"/>
         <source>Color profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Profil de couleur</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="337"/>
         <source>Auto</source>
-        <translation type="unfinished"></translation>
+        <translation>Auto</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="343"/>
         <source>Audio sample rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux d'échantillonnage audio</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="379"/>
         <source>This feature is currently unavailable!
  Please wait for the next update...</source>
-        <translation type="unfinished"></translation>
+        <translation>Cette fonctionnalité est actuellement indisponible !
+ Veuillez attendre la prochaine mise à jour...</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="434"/>
         <source>Disconnect device</source>
-        <translation type="unfinished"></translation>
+        <translation>Déconnecter l'appareil</translation>
     </message>
 </context>
 <context>
@@ -510,323 +511,323 @@
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="21"/>
         <source>Settings</source>
-        <translation type="unfinished">Parametres</translation>
+        <translation>Paramètres</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="31"/>
         <source>Engine, network and appearance preferences for %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Préférences de moteur, réseau et apparence pour %1.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="41"/>
         <source>Stream engine</source>
-        <translation type="unfinished"></translation>
+        <translation>Moteur de flux</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="46"/>
         <source>Hardware acceleration</source>
-        <translation type="unfinished"></translation>
+        <translation>Accélération matérielle</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="47"/>
         <source>Use GPU encoder (VideoToolbox / NVENC)</source>
-        <translation type="unfinished"></translation>
+        <translation>Utiliser l'encodeur GPU (VideoToolbox / NVENC)</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="48"/>
         <source>GPU video encoding — encodes the virtual-camera stream on the GPU (NVENC / VideoToolbox). Off = CPU encoding.</source>
-        <translation type="unfinished"></translation>
+        <translation>Encodage vidéo GPU — encode le flux de la caméra virtuelle sur le GPU (NVENC / VideoToolbox). Désactivé = encodage CPU.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="56"/>
         <source>GPU processing</source>
-        <translation type="unfinished"></translation>
+        <translation>Traitement GPU</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="58"/>
         <source>Active: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Actif : %1</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="59"/>
         <source>Frame processing &amp; filters</source>
-        <translation type="unfinished"></translation>
+        <translation>Traitement des images &amp; filtres</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="60"/>
         <source>GPU-accelerated frame processing &amp; filters — CUDA on NVIDIA, Vulkan compute on AMD/Intel. Off = CPU.</source>
-        <translation type="unfinished"></translation>
+        <translation>Traitement d'images &amp; filtres accélérés GPU — CUDA sur NVIDIA, Vulkan sur AMD/Intel. Désactivé = CPU.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="68"/>
         <source>Stream protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>Protocole de flux</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="69"/>
         <source>MJPEG active · H.264/H.265 require mobile update</source>
-        <translation type="unfinished"></translation>
+        <translation>MJPEG actif · H.264/H.265 nécessitent une mise à jour mobile</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="78"/>
         <source>Encoder preset</source>
-        <translation type="unfinished"></translation>
+        <translation>Préréglage encodeur</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="79"/>
         <source>MJPEG quality / H.264 speed trade-off</source>
-        <translation type="unfinished"></translation>
+        <translation>Compromis qualité MJPEG / vitesse H.264</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Quality</source>
-        <translation type="unfinished"></translation>
+        <translation>Qualité</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Balanced</source>
-        <translation type="unfinished"></translation>
+        <translation>Équilibré</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Speed</source>
-        <translation type="unfinished"></translation>
+        <translation>Vitesse</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="88"/>
         <source>Max output resolution</source>
-        <translation type="unfinished"></translation>
+        <translation>Résolution de sortie max</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="89"/>
         <source>Virtual camera ceiling</source>
-        <translation type="unfinished"></translation>
+        <translation>Plafond de la caméra virtuelle</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="98"/>
         <source>Keyframe interval</source>
-        <translation type="unfinished"></translation>
+        <translation>Intervalle d'images clés</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="99"/>
         <source>I-frame rate for H.264/H.265 — no effect on MJPEG</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux d'images I pour H.264/H.265 — sans effet sur MJPEG</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="122"/>
         <source>Buffered frames</source>
-        <translation type="unfinished"></translation>
+        <translation>Images en mémoire tampon</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="123"/>
         <source>Delays display by N frames to smooth network jitter</source>
-        <translation type="unfinished"></translation>
+        <translation>Retarde l'affichage de N images pour lisser la gigue réseau</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="133"/>
         <source>Off</source>
-        <translation type="unfinished"></translation>
+        <translation>Désactivé</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="133"/>
         <source> frames</source>
-        <translation type="unfinished"></translation>
+        <translation> images</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="149"/>
         <source>Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Réseau</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="154"/>
         <source>Automatic discovery</source>
-        <translation type="unfinished"></translation>
+        <translation>Découverte automatique</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="155"/>
         <source>Announce this computer to nearby phones</source>
-        <translation type="unfinished"></translation>
+        <translation>Annoncer cet ordinateur aux téléphones à proximité</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="163"/>
         <source>Listen port</source>
-        <translation type="unfinished"></translation>
+        <translation>Port d'écoute</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="164"/>
         <source>TCP stream socket — applies on next connect</source>
-        <translation type="unfinished"></translation>
+        <translation>Socket de flux TCP — appliqué à la prochaine connexion</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="191"/>
         <source>Auto-reconnect</source>
-        <translation type="unfinished"></translation>
+        <translation>Reconnexion auto</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="192"/>
         <source>Re-pair when a device drops off</source>
-        <translation type="unfinished"></translation>
+        <translation>Ré-associer quand un appareil se déconnecte</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="200"/>
         <source>Restrict to local subnet</source>
-        <translation type="unfinished"></translation>
+        <translation>Limiter au sous-réseau local</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="201"/>
         <source>Only allow same-network devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Autoriser uniquement les appareils du même réseau</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="212"/>
         <source>Appearance</source>
-        <translation type="unfinished"></translation>
+        <translation>Apparence</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="217"/>
         <source>Theme</source>
-        <translation type="unfinished"></translation>
+        <translation>Thème</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="218"/>
         <source>Studio appearance</source>
-        <translation type="unfinished"></translation>
+        <translation>Apparence Studio</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="220"/>
         <source>Dark</source>
-        <translation type="unfinished"></translation>
+        <translation>Sombre</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="220"/>
         <source>Light</source>
-        <translation type="unfinished"></translation>
+        <translation>Clair</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="227"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="224"/>
         <source>Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Langue</translation>
+    </message>
+    <message>
+        <location filename="../qml/screens/SettingsPage.qml" line="225"/>
+        <source>App display language</source>
+        <translation>Langue d'affichage</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="228"/>
-        <source>App display language</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="231"/>
         <source>System</source>
-        <translation type="unfinished"></translation>
+        <translation>Système</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="242"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="238"/>
         <source>Accent color</source>
-        <translation type="unfinished"></translation>
+        <translation>Couleur d'accentuation</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="243"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="239"/>
         <source>Highlights and active states</source>
-        <translation type="unfinished"></translation>
+        <translation>Mises en évidence et états actifs</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="289"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="285"/>
         <source>Telemetry overlay</source>
-        <translation type="unfinished"></translation>
+        <translation>Superposition de télémétrie</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="290"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="286"/>
         <source>Bitrate, FPS and latency on the viewfinder</source>
-        <translation type="unfinished"></translation>
+        <translation>Débit, IPS et latence dans le viseur</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="298"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="294"/>
         <source>Compact sidebar</source>
-        <translation type="unfinished"></translation>
+        <translation>Barre latérale compacte</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="299"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="295"/>
         <source>Denser navigation and device list</source>
-        <translation type="unfinished"></translation>
+        <translation>Navigation et liste d'appareils plus denses</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="307"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="303"/>
         <source>Launch at login</source>
-        <translation type="unfinished"></translation>
+        <translation>Démarrer à la connexion</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="308"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="304"/>
         <source>Start ViewCam in the background</source>
-        <translation type="unfinished"></translation>
+        <translation>Démarrer ViewCam en arrière-plan</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="319"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="315"/>
         <source>About</source>
-        <translation type="unfinished"></translation>
+        <translation>À propos</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="325"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="321"/>
         <source>Version %1 · build %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Version %1 · build %2</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="328"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="324"/>
         <source>Check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Vérifier les mises à jour</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="333"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="329"/>
         <source>Qt runtime</source>
-        <translation type="unfinished"></translation>
+        <translation>Runtime Qt</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="334"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="330"/>
         <source>Cross-platform framework</source>
-        <translation type="unfinished"></translation>
+        <translation>Framework multiplateforme</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="336"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="332"/>
         <source>Qt %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Qt %1</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="345"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="341"/>
         <source>CUDA runtime</source>
-        <translation type="unfinished"></translation>
+        <translation>Runtime CUDA</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="346"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="342"/>
         <source>NVIDIA parallel computing platform</source>
-        <translation type="unfinished"></translation>
+        <translation>Plateforme de calcul parallèle NVIDIA</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="357"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="353"/>
         <source>Renderer</source>
-        <translation type="unfinished"></translation>
+        <translation>Moteur de rendu</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="358"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="354"/>
         <source>Graphics backend</source>
-        <translation type="unfinished"></translation>
+        <translation>Backend graphique</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="378"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="374"/>
         <source>Open-source licenses</source>
-        <translation type="unfinished"></translation>
+        <translation>Licences open source</translation>
     </message>
     <message>
-        <location filename="../qml/screens/SettingsPage.qml" line="379"/>
+        <location filename="../qml/screens/SettingsPage.qml" line="375"/>
         <source>Third-party components</source>
-        <translation type="unfinished"></translation>
+        <translation>Composants tiers</translation>
     </message>
 </context>
 <context>
     <name>SettingsTab</name>
     <message>
         <source>Settings</source>
-        <translation type="vanished">Parametres</translation>
+        <translation type="vanished">Paramètres</translation>
     </message>
     <message>
         <source>VIRTUAL CAMERA</source>
-        <translation type="vanished">CAMERA VIRTUELLE</translation>
+        <translation type="vanished">CAMÉRA VIRTUELLE</translation>
     </message>
     <message>
         <source>Backend</source>
@@ -834,7 +835,7 @@
     </message>
     <message>
         <source>Device</source>
-        <translation type="vanished">Peripherique</translation>
+        <translation type="vanished">Appareil</translation>
     </message>
     <message>
         <source>CONNECTION</source>
@@ -842,15 +843,15 @@
     </message>
     <message>
         <source>Default Port</source>
-        <translation type="vanished">Port par defaut</translation>
+        <translation type="vanished">Port par défaut</translation>
     </message>
     <message>
         <source>Discovery</source>
-        <translation type="vanished">Decouverte</translation>
+        <translation type="vanished">Découverte</translation>
     </message>
     <message>
         <source>ABOUT</source>
-        <translation type="vanished">A PROPOS</translation>
+        <translation type="vanished">À PROPOS</translation>
     </message>
     <message>
         <source>Version</source>
@@ -866,52 +867,52 @@
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="69"/>
         <source>Live View</source>
-        <translation type="unfinished"></translation>
+        <translation>Vue en direct</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="75"/>
         <source>Sources</source>
-        <translation type="unfinished"></translation>
+        <translation>Sources</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="81"/>
         <source>Settings</source>
-        <translation type="unfinished">Parametres</translation>
+        <translation>Paramètres</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="109"/>
         <source>Devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Appareils</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="141"/>
         <source>Scanning</source>
-        <translation type="unfinished"></translation>
+        <translation>Recherche en cours</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="306"/>
         <source>Other devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Autres appareils</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="306"/>
         <source>Available devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Appareils disponibles</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="337"/>
         <source>Connect manually</source>
-        <translation type="unfinished"></translation>
+        <translation>Connecter manuellement</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="389"/>
         <source>Operator</source>
-        <translation type="unfinished"></translation>
+        <translation>Opérateur</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="396"/>
         <source>Free plan</source>
-        <translation type="unfinished"></translation>
+        <translation>Plan gratuit</translation>
     </message>
 </context>
 <context>
@@ -919,198 +920,199 @@
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="30"/>
         <source>Sources</source>
-        <translation type="unfinished"></translation>
+        <translation>Sources</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="45"/>
         <source>How this computer captures, mixes and plays back audio. The connected phone is already linked — no re-pairing needed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Comment cet ordinateur capture, mixe et lit l'audio. Le téléphone connecté est déjà lié — pas besoin de ré-associer.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="58"/>
         <source>Inputs</source>
-        <translation type="unfinished"></translation>
+        <translation>Entrées</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="64"/>
         <source> — Microphone</source>
-        <translation type="unfinished"></translation>
+        <translation> — Microphone</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="64"/>
         <source>Phone microphone</source>
-        <translation type="unfinished"></translation>
+        <translation>Microphone du téléphone</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="65"/>
         <source>From phone · Compressed 64 Kb/s · 48 kHz</source>
-        <translation type="unfinished"></translation>
+        <translation>Du téléphone · Compressé 64 Kb/s · 48 kHz</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="73"/>
         <source>Capture system audio</source>
-        <translation type="unfinished"></translation>
+        <translation>Capturer le son système</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="74"/>
         <source>Record what you hear from this computer</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrer ce que vous entendez de cet ordinateur</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="82"/>
         <source>Application capture</source>
-        <translation type="unfinished"></translation>
+        <translation>Capture d'application</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="83"/>
         <source>Capture audio from one app only</source>
-        <translation type="unfinished"></translation>
+        <translation>Capturer l'audio d'une seule application</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="85"/>
         <source>Off</source>
-        <translation type="unfinished"></translation>
+        <translation>Désactivé</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="85"/>
         <source>Pick app</source>
-        <translation type="unfinished"></translation>
+        <translation>Choisir une app</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="92"/>
         <source>Loopback device</source>
-        <translation type="unfinished"></translation>
+        <translation>Dispositif de bouclage</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="93"/>
         <source>Virtual cable for routing to other apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Câble virtuel pour le routage vers d'autres applications</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="109"/>
         <source>Output &amp; monitoring</source>
-        <translation type="unfinished"></translation>
+        <translation>Sortie &amp; surveillance</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="115"/>
         <source>Output device</source>
-        <translation type="unfinished"></translation>
+        <translation>Périphérique de sortie</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="116"/>
         <source>Where the return feed plays</source>
-        <translation type="unfinished"></translation>
+        <translation>Où le retour audio est lu</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="118"/>
         <source>System default</source>
-        <translation type="unfinished"></translation>
+        <translation>Par défaut du système</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="126"/>
         <source>Monitor volume</source>
-        <translation type="unfinished"></translation>
+        <translation>Volume de contrôle</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="127"/>
         <source>Loopback monitoring level</source>
-        <translation type="unfinished"></translation>
+        <translation>Niveau de surveillance de bouclage</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="137"/>
         <source>Mute monitor while talking</source>
-        <translation type="unfinished"></translation>
+        <translation>Couper le monitoring pendant la parole</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="138"/>
         <source>Avoid echo on calls</source>
-        <translation type="unfinished"></translation>
+        <translation>Éviter l'écho lors des appels</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="152"/>
         <source>Processing</source>
-        <translation type="unfinished"></translation>
+        <translation>Traitement</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="158"/>
         <source>Sample rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux d'échantillonnage</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="159"/>
         <source>Mixer clock</source>
-        <translation type="unfinished"></translation>
+        <translation>Horloge du mixeur</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="168"/>
         <source>Buffer size</source>
-        <translation type="unfinished"></translation>
+        <translation>Taille du tampon</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="169"/>
         <source>Lower = less delay</source>
-        <translation type="unfinished"></translation>
+        <translation>Plus bas = moins de délai</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>Low</source>
-        <translation type="unfinished"></translation>
+        <translation>Bas</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>Medium</source>
-        <translation type="unfinished"></translation>
+        <translation>Moyen</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>High</source>
-        <translation type="unfinished"></translation>
+        <translation>Élevé</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="178"/>
         <source>A/V sync offset</source>
-        <translation type="unfinished"></translation>
+        <translation>Décalage sync A/V</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="179"/>
         <source>Nudge audio against video</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajuster l'audio par rapport à la vidéo</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="189"/>
         <source>Channels</source>
-        <translation type="unfinished"></translation>
+        <translation>Canaux</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="190"/>
         <source>Mono is lighter on the network</source>
-        <translation type="unfinished"></translation>
+        <translation>Le mono est plus léger sur le réseau</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="192"/>
         <source>Mono</source>
-        <translation type="unfinished"></translation>
+        <translation>Mono</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="192"/>
         <source>Stereo</source>
-        <translation type="unfinished"></translation>
+        <translation>Stéréo</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="199"/>
         <source>Noise gate</source>
-        <translation type="unfinished"></translation>
+        <translation>Portail de bruit</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="200"/>
         <source>Silence the feed below a threshold</source>
-        <translation type="unfinished"></translation>
+        <translation>Couper le flux en dessous d'un seuil</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="241"/>
         <source>This feature is currently unavailable!
  Please wait for the next update...</source>
-        <translation type="unfinished"></translation>
+        <translation>Cette fonctionnalité est actuellement indisponible !
+ Veuillez attendre la prochaine mise à jour...</translation>
     </message>
 </context>
 <context>
@@ -1118,7 +1120,7 @@
     <message>
         <location filename="../qml/components/VcDeviceRow.qml" line="70"/>
         <source>Connect</source>
-        <translation type="unfinished">Connecter</translation>
+        <translation>Connecter</translation>
     </message>
 </context>
 </TS>

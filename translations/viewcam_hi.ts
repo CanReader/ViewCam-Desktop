@@ -1,100 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="de">
+<TS version="2.1" language="hi">
 <context>
     <name>Application</name>
     <message>
         <source>Connected</source>
-        <translation type="vanished">Verbunden</translation>
+        <translation type="vanished">कनेक्ट हुआ</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">डिसकनेक्ट हुआ</translation>
     </message>
     <message>
         <source>Error: </source>
-        <translation type="vanished">Fehler: </translation>
+        <translation type="vanished">त्रुटि: </translation>
     </message>
     <message>
         <source>Last</source>
-        <translation type="vanished">Letzte</translation>
+        <translation type="vanished">अंतिम</translation>
     </message>
 </context>
 <context>
     <name>AudioTab</name>
     <message>
         <source>Audio Sources</source>
-        <translation type="vanished">Audioquellen</translation>
+        <translation type="vanished">ऑडियो स्रोत</translation>
     </message>
     <message>
         <source>Audio streaming features are coming in a future release.</source>
-        <translation type="vanished">Audio-Streaming-Funktionen werden in einer zukünftigen Version hinzugefügt.</translation>
+        <translation type="vanished">ऑडियो स्ट्रीमिंग सुविधाएं भविष्य के संस्करण में आएंगी।</translation>
     </message>
     <message>
         <source>Microphone</source>
-        <translation type="vanished">Mikrofon</translation>
+        <translation type="vanished">माइक्रोफ़ोन</translation>
     </message>
     <message>
         <source>Receive microphone audio from your phone</source>
-        <translation type="vanished">Mikrofonaudio von deinem Telefon empfangen</translation>
+        <translation type="vanished">अपने फ़ोन से माइक्रोफ़ोन ऑडियो प्राप्त करें</translation>
     </message>
     <message>
         <source>Speaker</source>
-        <translation type="vanished">Lautsprecher</translation>
+        <translation type="vanished">स्पीकर</translation>
     </message>
     <message>
         <source>Send desktop audio to your phone</source>
-        <translation type="vanished">Desktop-Audio an dein Telefon senden</translation>
+        <translation type="vanished">डेस्कटॉप ऑडियो को अपने फ़ोन पर भेजें</translation>
     </message>
 </context>
 <context>
     <name>CameraPreviewWidget</name>
     <message>
         <source>No Signal</source>
-        <translation type="vanished">Kein Signal</translation>
+        <translation type="vanished">कोई सिग्नल नहीं</translation>
     </message>
     <message>
         <source>Waiting for connection…</source>
-        <translation type="vanished">Warte auf Verbindung…</translation>
+        <translation type="vanished">कनेक्शन की प्रतीक्षा…</translation>
     </message>
 </context>
 <context>
     <name>ConnectionPanel</name>
     <message>
         <source>Discovered Devices</source>
-        <translation type="vanished">Gefundene Geräte</translation>
+        <translation type="vanished">खोजे गए डिवाइस</translation>
     </message>
     <message>
         <source>Manual...</source>
-        <translation type="vanished">Manuell...</translation>
+        <translation type="vanished">मैन्युअल...</translation>
     </message>
     <message>
         <source>Connect by Address</source>
-        <translation type="vanished">Per Adresse verbinden</translation>
+        <translation type="vanished">पते से कनेक्ट करें</translation>
     </message>
     <message>
         <source>IP address (e.g. 192.168.1.100)</source>
-        <translation type="vanished">IP-Adresse (z. B. 192.168.1.100)</translation>
+        <translation type="vanished">IP पता (उदा. 192.168.1.100)</translation>
     </message>
     <message>
         <source>Port: </source>
-        <translation type="vanished">Port: </translation>
+        <translation type="vanished">पोर्ट: </translation>
     </message>
     <message>
         <source>Connect</source>
-        <translation type="vanished">Verbinden</translation>
+        <translation type="vanished">कनेक्ट करें</translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation type="vanished">Trennen</translation>
+        <translation type="vanished">डिसकनेक्ट करें</translation>
     </message>
     <message>
         <source>Connected</source>
-        <translation type="vanished">Verbunden</translation>
+        <translation type="vanished">कनेक्ट हुआ</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">डिसकनेक्ट हुआ</translation>
     </message>
     <message>
         <source>%1 FPS</source>
@@ -106,77 +106,77 @@
     <message>
         <location filename="../qml/screens/Launcher.qml" line="88"/>
         <source>Pair a device</source>
-        <translation>Gerät koppeln</translation>
+        <translation>डिवाइस पेयर करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="99"/>
         <source>Connect your phone</source>
-        <translation>Telefon verbinden</translation>
+        <translation>अपना फ़ोन कनेक्ट करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="112"/>
         <source>%1 turns any phone into a wireless camera and microphone for this computer.</source>
-        <translation>%1 verwandelt jedes Telefon in eine kabellose Kamera und ein Mikrofon für diesen Computer.</translation>
+        <translation>%1 किसी भी फ़ोन को इस कंप्यूटर के लिए वायरलेस कैमरा और माइक्रोफ़ोन बना देता है।</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="132"/>
         <source>Open ViewCam on your phone</source>
-        <translation>ViewCam auf deinem Telefon öffnen</translation>
+        <translation>अपने फ़ोन पर ViewCam खोलें</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="133"/>
         <source>Launch the mobile app and keep it in the foreground.</source>
-        <translation>Mobile App starten und im Vordergrund behalten.</translation>
+        <translation>मोबाइल ऐप लॉन्च करें और इसे फोरग्राउंड में रखें।</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="136"/>
         <source>Join the same Wi-Fi</source>
-        <translation>Gleiches Wi-Fi beitreten</translation>
+        <translation>एक ही Wi-Fi से जुड़ें</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="137"/>
         <source>Both devices need to be on one network.</source>
-        <translation>Beide Geräte müssen im selben Netzwerk sein.</translation>
+        <translation>दोनों डिवाइस एक ही नेटवर्क पर होने चाहिए।</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="140"/>
         <source>Pick it from the list →</source>
-        <translation>Aus der Liste auswählen →</translation>
+        <translation>सूची से चुनें →</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="141"/>
         <source>Your phone shows up on the right within a few seconds.</source>
-        <translation>Dein Telefon erscheint innerhalb von Sekunden rechts.</translation>
+        <translation>आपका फ़ोन कुछ सेकंड में दाईं ओर दिखाई देगा।</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="253"/>
         <source>Scanning your network…</source>
-        <translation>Netzwerk wird gescannt…</translation>
+        <translation>नेटवर्क स्कैन हो रहा है…</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="284"/>
         <source>Available devices</source>
-        <translation>Verfügbare Geräte</translation>
+        <translation>उपलब्ध डिवाइस</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="318"/>
         <source>Scanning…</source>
-        <translation>Suche…</translation>
+        <translation>स्कैन हो रहा है…</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="358"/>
         <source>Or connect manually</source>
-        <translation>Oder manuell verbinden</translation>
+        <translation>या मैन्युअली कनेक्ट करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="405"/>
         <source>Virtual camera ready · %1</source>
-        <translation>Virtuelle Kamera bereit · %1</translation>
+        <translation>वर्चुअल कैमरा तैयार · %1</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="405"/>
         <source>Virtual camera inactive · 0 clients</source>
-        <translation>Virtuelle Kamera inaktiv · 0 Clients</translation>
+        <translation>वर्चुअल कैमरा निष्क्रिय · 0 क्लाइंट</translation>
     </message>
 </context>
 <context>
@@ -184,32 +184,32 @@
     <message>
         <location filename="../qml/screens/LiveView.qml" line="112"/>
         <source>Session ended</source>
-        <translation>Sitzung beendet</translation>
+        <translation>सत्र समाप्त</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="112"/>
         <source>No camera connected</source>
-        <translation>Keine Kamera verbunden</translation>
+        <translation>कोई कैमरा कनेक्ट नहीं</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="123"/>
         <source>Free tier session limit reached. Reconnect to continue.</source>
-        <translation>Sitzungslimit des kostenlosen Tarifs erreicht. Erneut verbinden zum Fortfahren.</translation>
+        <translation>मुफ्त टियर सत्र सीमा पहुंच गई। जारी रखने के लिए पुनः कनेक्ट करें।</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="123"/>
         <source>Connect a phone running ViewCam to start the live feed.</source>
-        <translation>Verbinde ein Telefon mit ViewCam, um den Live-Feed zu starten.</translation>
+        <translation>लाइव फीड शुरू करने के लिए ViewCam चला रहे फ़ोन को कनेक्ट करें।</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="136"/>
         <source>Scan for devices</source>
-        <translation>Nach Geräten suchen</translation>
+        <translation>डिवाइस खोजें</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="333"/>
         <source>Virtual Camera</source>
-        <translation>Virtuelle Kamera</translation>
+        <translation>वर्चुअल कैमरा</translation>
     </message>
 </context>
 <context>
@@ -224,46 +224,46 @@
     </message>
     <message>
         <source>  Player  </source>
-        <translation type="vanished">  Player  </translation>
+        <translation type="vanished">  प्लेयर  </translation>
     </message>
     <message>
         <source>  Audio  </source>
-        <translation type="vanished">  Audio  </translation>
+        <translation type="vanished">  ऑडियो  </translation>
     </message>
     <message>
         <source>  Settings  </source>
-        <translation type="vanished">  Einstellungen  </translation>
+        <translation type="vanished">  सेटिंग्स  </translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">डिसकनेक्ट हुआ</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Coming Soon</source>
-        <translation type="vanished">Demnächst</translation>
+        <translation type="vanished">जल्द आ रहा है</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="117"/>
         <source>Installed</source>
-        <translation>Installiert</translation>
+        <translation>इंस्टॉल</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="118"/>
         <source>Path mismatch</source>
-        <translation>Pfadabweichung</translation>
+        <translation>पाथ मेल नहीं</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="119"/>
         <source>Not installed</source>
-        <translation>Nicht installiert</translation>
+        <translation>इंस्टॉल नहीं</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="121"/>
         <source>Unknown</source>
-        <translation>Unbekannt</translation>
+        <translation>अज्ञात</translation>
     </message>
 </context>
 <context>
@@ -271,32 +271,32 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="47"/>
         <source>Network</source>
-        <translation>Netzwerk</translation>
+        <translation>नेटवर्क</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="61"/>
         <source>Connection</source>
-        <translation>Verbindung</translation>
+        <translation>कनेक्शन</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="66"/>
         <source>Address</source>
-        <translation>Adresse</translation>
+        <translation>पता</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="71"/>
         <source>Signal</source>
-        <translation>Signal</translation>
+        <translation>सिग्नल</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="97"/>
         <source>Latency</source>
-        <translation>Latenz</translation>
+        <translation>लेटेंसी</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="103"/>
         <source>Bitrate</source>
-        <translation>Bitrate</translation>
+        <translation>बिटरेट</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="109"/>
@@ -306,82 +306,82 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="115"/>
         <source>Uptime</source>
-        <translation>Betriebszeit</translation>
+        <translation>अपटाइम</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="126"/>
         <source>Device</source>
-        <translation>Gerät</translation>
+        <translation>डिवाइस</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="140"/>
         <source>Model</source>
-        <translation>Modell</translation>
+        <translation>मॉडल</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="145"/>
         <source>System</source>
-        <translation>System</translation>
+        <translation>सिस्टम</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="150"/>
         <source>Battery</source>
-        <translation>Akku</translation>
+        <translation>बैटरी</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="152"/>
         <source>charging</source>
-        <translation>lädt</translation>
+        <translation>चार्ज हो रहा है</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="157"/>
         <source>Lens</source>
-        <translation>Objektiv</translation>
+        <translation>लेंस</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="162"/>
         <source>Capture</source>
-        <translation>Aufnahme</translation>
+        <translation>कैप्चर</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="173"/>
         <source>Device control</source>
-        <translation>Gerätekontrolle</translation>
+        <translation>डिवाइस नियंत्रण</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="188"/>
         <source>Torch</source>
-        <translation>Taschenlampe</translation>
+        <translation>टॉर्च</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="189"/>
         <source>Rear flashlight</source>
-        <translation>Rückseitige Taschenlampe</translation>
+        <translation>पीछे की फ्लैशलाइट</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="189"/>
         <source>No flash on front camera</source>
-        <translation>Kein Blitz an der Frontkamera</translation>
+        <translation>फ्रंट कैमरे पर कोई फ्लैश नहीं</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="198"/>
         <source>Focus lock</source>
-        <translation>Fokussperre</translation>
+        <translation>फोकस लॉक</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="199"/>
         <source>Freeze autofocus</source>
-        <translation>Autofokus einfrieren</translation>
+        <translation>ऑटोफोकस फ्रीज करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="207"/>
         <source>Exposure lock</source>
-        <translation>Belichtungssperre</translation>
+        <translation>एक्सपोज़र लॉक</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="208"/>
         <source>Lock AE / AWB</source>
-        <translation>AE / AWB sperren</translation>
+        <translation>AE / AWB लॉक करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="217"/>
@@ -391,119 +391,119 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="218"/>
         <source>High dynamic range</source>
-        <translation>Hoher Dynamikumfang</translation>
+        <translation>उच्च डायनामिक रेंज</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="218"/>
         <source>Not supported on this device</source>
-        <translation>Auf diesem Gerät nicht unterstützt</translation>
+        <translation>इस डिवाइस पर समर्थित नहीं</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="227"/>
         <source>Resolution</source>
-        <translation>Auflösung</translation>
+        <translation>रिज़ॉल्यूशन</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="247"/>
         <source>Flip lens</source>
-        <translation>Kamera wechseln</translation>
+        <translation>कैमरा बदलें</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="254"/>
         <source>Tap to focus</source>
-        <translation>Tippen zum Fokussieren</translation>
+        <translation>फोकस करने के लिए टैप करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="274"/>
         <source>Optimization</source>
-        <translation>Optimierung</translation>
+        <translation>अनुकूलन</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="287"/>
         <source>Adaptive bitrate</source>
-        <translation>Adaptive Bitrate</translation>
+        <translation>अनुकूली बिटरेट</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="288"/>
         <source>Clamps to network</source>
-        <translation>Passt sich ans Netzwerk an</translation>
+        <translation>नेटवर्क से अनुकूलित</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="295"/>
         <source>Hardware acceleration</source>
-        <translation>Hardwarebeschleunigung</translation>
+        <translation>हार्डवेयर त्वरण</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="296"/>
         <source>GPU encode &amp; decode</source>
-        <translation>GPU-Kodierung &amp; -Dekodierung</translation>
+        <translation>GPU एनकोड और डिकोड</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="303"/>
         <source>Adaptive resolution</source>
-        <translation>Adaptive Auflösung</translation>
+        <translation>अनुकूली रिज़ॉल्यूशन</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="304"/>
         <source>Drop res before frames</source>
-        <translation>Auflösung vor Frames verringern</translation>
+        <translation>फ्रेम से पहले रिज़ॉल्यूशन घटाएं</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="311"/>
         <source>Low-light boost</source>
-        <translation>Schwachlicht-Verstärkung</translation>
+        <translation>लो-लाइट बूस्ट</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="312"/>
         <source>Brighten dim scenes</source>
-        <translation>Dunkle Szenen aufhellen</translation>
+        <translation>धुंधले दृश्यों को उज्जवल करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="319"/>
         <source>Noise reduction</source>
-        <translation>Rauschunterdrückung</translation>
+        <translation>शोर में कमी</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="320"/>
         <source>Temporal denoise</source>
-        <translation>Zeitliche Rauschunterdrückung</translation>
+        <translation>टेम्पोरल डीनॉइज़</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="327"/>
         <source>Mirror image</source>
-        <translation>Spiegelbild</translation>
+        <translation>दर्पण छवि</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="328"/>
         <source>Flip horizontally</source>
-        <translation>Horizontal spiegeln</translation>
+        <translation>क्षैतिज रूप से पलटें</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="335"/>
         <source>Color profile</source>
-        <translation>Farbprofil</translation>
+        <translation>रंग प्रोफ़ाइल</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="337"/>
         <source>Auto</source>
-        <translation>Auto</translation>
+        <translation>स्वतः</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="343"/>
         <source>Audio sample rate</source>
-        <translation>Audio-Abtastrate</translation>
+        <translation>ऑडियो सैंपल रेट</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="379"/>
         <source>This feature is currently unavailable!
  Please wait for the next update...</source>
-        <translation>Diese Funktion ist derzeit nicht verfügbar!
- Bitte warte auf das nächste Update...</translation>
+        <translation>यह सुविधा अभी उपलब्ध नहीं है!
+ कृपया अगले अपडेट की प्रतीक्षा करें...</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="434"/>
         <source>Disconnect device</source>
-        <translation>Gerät trennen</translation>
+        <translation>डिवाइस डिसकनेक्ट करें</translation>
     </message>
 </context>
 <context>
@@ -511,277 +511,277 @@
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="21"/>
         <source>Settings</source>
-        <translation>Einstellungen</translation>
+        <translation>सेटिंग्स</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="31"/>
         <source>Engine, network and appearance preferences for %1.</source>
-        <translation>Motor-, Netzwerk- und Darstellungseinstellungen für %1.</translation>
+        <translation>%1 के लिए इंजन, नेटवर्क और रूप प्राथमिकताएं।</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="41"/>
         <source>Stream engine</source>
-        <translation>Stream-Engine</translation>
+        <translation>स्ट्रीम इंजन</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="46"/>
         <source>Hardware acceleration</source>
-        <translation>Hardwarebeschleunigung</translation>
+        <translation>हार्डवेयर त्वरण</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="47"/>
         <source>Use GPU encoder (VideoToolbox / NVENC)</source>
-        <translation>GPU-Encoder verwenden (VideoToolbox / NVENC)</translation>
+        <translation>GPU एनकोडर उपयोग करें (VideoToolbox / NVENC)</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="48"/>
         <source>GPU video encoding — encodes the virtual-camera stream on the GPU (NVENC / VideoToolbox). Off = CPU encoding.</source>
-        <translation>GPU-Videokodierung — kodiert den virtuellen Kamera-Stream auf der GPU (NVENC / VideoToolbox). Aus = CPU-Kodierung.</translation>
+        <translation>GPU वीडियो एनकोडिंग — वर्चुअल कैमरा स्ट्रीम को GPU पर एनकोड करता है (NVENC / VideoToolbox)। बंद = CPU एनकोडिंग।</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="56"/>
         <source>GPU processing</source>
-        <translation>GPU-Verarbeitung</translation>
+        <translation>GPU प्रोसेसिंग</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="58"/>
         <source>Active: %1</source>
-        <translation>Aktiv: %1</translation>
+        <translation>सक्रिय: %1</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="59"/>
         <source>Frame processing &amp; filters</source>
-        <translation>Frame-Verarbeitung &amp; Filter</translation>
+        <translation>फ्रेम प्रोसेसिंग और फ़िल्टर</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="60"/>
         <source>GPU-accelerated frame processing &amp; filters — CUDA on NVIDIA, Vulkan compute on AMD/Intel. Off = CPU.</source>
-        <translation>GPU-beschleunigte Frame-Verarbeitung &amp; Filter — CUDA auf NVIDIA, Vulkan auf AMD/Intel. Aus = CPU.</translation>
+        <translation>GPU-त्वरित फ्रेम प्रोसेसिंग और फ़िल्टर — NVIDIA पर CUDA, AMD/Intel पर Vulkan। बंद = CPU।</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="68"/>
         <source>Stream protocol</source>
-        <translation>Stream-Protokoll</translation>
+        <translation>स्ट्रीम प्रोटोकॉल</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="69"/>
         <source>MJPEG active · H.264/H.265 require mobile update</source>
-        <translation>MJPEG aktiv · H.264/H.265 erfordern mobiles Update</translation>
+        <translation>MJPEG सक्रिय · H.264/H.265 के लिए मोबाइल अपडेट आवश्यक</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="78"/>
         <source>Encoder preset</source>
-        <translation>Encoder-Voreinstellung</translation>
+        <translation>एनकोडर प्रीसेट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="79"/>
         <source>MJPEG quality / H.264 speed trade-off</source>
-        <translation>MJPEG-Qualität / H.264-Geschwindigkeitskompromiss</translation>
+        <translation>MJPEG गुणवत्ता / H.264 गति समझौता</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Quality</source>
-        <translation>Qualität</translation>
+        <translation>गुणवत्ता</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Balanced</source>
-        <translation>Ausgewogen</translation>
+        <translation>संतुलित</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Speed</source>
-        <translation>Geschwindigkeit</translation>
+        <translation>गति</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="88"/>
         <source>Max output resolution</source>
-        <translation>Max. Ausgabeauflösung</translation>
+        <translation>अधिकतम आउटपुट रिज़ॉल्यूशन</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="89"/>
         <source>Virtual camera ceiling</source>
-        <translation>Virtuelle Kamera Obergrenze</translation>
+        <translation>वर्चुअल कैमरा अधिकतम सीमा</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="98"/>
         <source>Keyframe interval</source>
-        <translation>Keyframe-Intervall</translation>
+        <translation>कीफ्रेम अंतराल</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="99"/>
         <source>I-frame rate for H.264/H.265 — no effect on MJPEG</source>
-        <translation>I-Frame-Rate für H.264/H.265 — kein Effekt auf MJPEG</translation>
+        <translation>H.264/H.265 के लिए I-फ्रेम दर — MJPEG पर कोई प्रभाव नहीं</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="122"/>
         <source>Buffered frames</source>
-        <translation>Gepufferte Frames</translation>
+        <translation>बफ़र किए गए फ्रेम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="123"/>
         <source>Delays display by N frames to smooth network jitter</source>
-        <translation>Verzögert die Anzeige um N Frames zur Glättung von Netzwerkjitter</translation>
+        <translation>नेटवर्क जिटर को कम करने के लिए N फ्रेम की देरी से प्रदर्शित करता है</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="133"/>
         <source>Off</source>
-        <translation>Aus</translation>
+        <translation>बंद</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="133"/>
         <source> frames</source>
-        <translation> Frames</translation>
+        <translation> फ्रेम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="149"/>
         <source>Network</source>
-        <translation>Netzwerk</translation>
+        <translation>नेटवर्क</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="154"/>
         <source>Automatic discovery</source>
-        <translation>Automatische Erkennung</translation>
+        <translation>स्वचालित खोज</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="155"/>
         <source>Announce this computer to nearby phones</source>
-        <translation>Diesen Computer in der Nähe befindlichen Telefonen ankündigen</translation>
+        <translation>पास के फ़ोन को इस कंप्यूटर की सूचना दें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="163"/>
         <source>Listen port</source>
-        <translation>Empfangsport</translation>
+        <translation>लिसन पोर्ट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="164"/>
         <source>TCP stream socket — applies on next connect</source>
-        <translation>TCP-Stream-Socket — gilt ab nächster Verbindung</translation>
+        <translation>TCP स्ट्रीम सॉकेट — अगले कनेक्शन पर लागू</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="191"/>
         <source>Auto-reconnect</source>
-        <translation>Automatisch wiederherstellen</translation>
+        <translation>स्वतः पुनः कनेक्ट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="192"/>
         <source>Re-pair when a device drops off</source>
-        <translation>Erneut koppeln, wenn ein Gerät getrennt wird</translation>
+        <translation>डिवाइस डिसकनेक्ट होने पर पुनः पेयर करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="200"/>
         <source>Restrict to local subnet</source>
-        <translation>Auf lokales Subnetz beschränken</translation>
+        <translation>स्थानीय सबनेट तक सीमित करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="201"/>
         <source>Only allow same-network devices</source>
-        <translation>Nur Geräte im selben Netzwerk zulassen</translation>
+        <translation>केवल समान नेटवर्क डिवाइस की अनुमति दें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="212"/>
         <source>Appearance</source>
-        <translation>Darstellung</translation>
+        <translation>रूप</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="217"/>
         <source>Theme</source>
-        <translation>Thema</translation>
+        <translation>थीम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="218"/>
         <source>Studio appearance</source>
-        <translation>Studio-Erscheinungsbild</translation>
+        <translation>स्टूडियो रूप</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="220"/>
         <source>Dark</source>
-        <translation>Dunkel</translation>
+        <translation>डार्क</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="220"/>
         <source>Light</source>
-        <translation>Hell</translation>
+        <translation>लाइट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="224"/>
         <source>Language</source>
-        <translation>Sprache</translation>
+        <translation>भाषा</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="225"/>
         <source>App display language</source>
-        <translation>Anzeigesprache der App</translation>
+        <translation>ऐप प्रदर्शन भाषा</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="228"/>
         <source>System</source>
-        <translation>System</translation>
+        <translation>सिस्टम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="238"/>
         <source>Accent color</source>
-        <translation>Akzentfarbe</translation>
+        <translation>एक्सेंट रंग</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="239"/>
         <source>Highlights and active states</source>
-        <translation>Hervorhebungen und aktive Zustände</translation>
+        <translation>हाइलाइट और सक्रिय अवस्थाएं</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="285"/>
         <source>Telemetry overlay</source>
-        <translation>Telemetrie-Overlay</translation>
+        <translation>टेलीमेट्री ओवरले</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="286"/>
         <source>Bitrate, FPS and latency on the viewfinder</source>
-        <translation>Bitrate, FPS und Latenz im Sucher</translation>
+        <translation>व्यूफाइंडर पर बिटरेट, FPS और लेटेंसी</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="294"/>
         <source>Compact sidebar</source>
-        <translation>Kompakte Seitenleiste</translation>
+        <translation>कॉम्पैक्ट साइडबार</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="295"/>
         <source>Denser navigation and device list</source>
-        <translation>Kompaktere Navigation und Geräteliste</translation>
+        <translation>घना नेविगेशन और डिवाइस सूची</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="303"/>
         <source>Launch at login</source>
-        <translation>Bei Anmeldung starten</translation>
+        <translation>लॉगिन पर लॉन्च करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="304"/>
         <source>Start ViewCam in the background</source>
-        <translation>ViewCam im Hintergrund starten</translation>
+        <translation>ViewCam को बैकग्राउंड में शुरू करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="315"/>
         <source>About</source>
-        <translation>Über</translation>
+        <translation>जानकारी</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="321"/>
         <source>Version %1 · build %2</source>
-        <translation>Version %1 · Build %2</translation>
+        <translation>संस्करण %1 · बिल्ड %2</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="324"/>
         <source>Check for updates</source>
-        <translation>Nach Updates suchen</translation>
+        <translation>अपडेट की जांच करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="329"/>
         <source>Qt runtime</source>
-        <translation>Qt-Laufzeit</translation>
+        <translation>Qt रनटाइम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="330"/>
         <source>Cross-platform framework</source>
-        <translation>Plattformübergreifendes Framework</translation>
+        <translation>क्रॉस-प्लेटफ़ॉर्म फ्रेमवर्क</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="332"/>
@@ -791,75 +791,75 @@
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="341"/>
         <source>CUDA runtime</source>
-        <translation>CUDA-Laufzeit</translation>
+        <translation>CUDA रनटाइम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="342"/>
         <source>NVIDIA parallel computing platform</source>
-        <translation>NVIDIA-Parallelrechenplattform</translation>
+        <translation>NVIDIA समानांतर कंप्यूटिंग प्लेटफ़ॉर्म</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="353"/>
         <source>Renderer</source>
-        <translation>Renderer</translation>
+        <translation>रेंडरर</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="354"/>
         <source>Graphics backend</source>
-        <translation>Grafik-Backend</translation>
+        <translation>ग्राफ़िक्स बैकएंड</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="374"/>
         <source>Open-source licenses</source>
-        <translation>Open-Source-Lizenzen</translation>
+        <translation>ओपन-सोर्स लाइसेंस</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="375"/>
         <source>Third-party components</source>
-        <translation>Drittanbieter-Komponenten</translation>
+        <translation>थर्ड-पार्टी घटक</translation>
     </message>
 </context>
 <context>
     <name>SettingsTab</name>
     <message>
         <source>Settings</source>
-        <translation type="vanished">Einstellungen</translation>
+        <translation type="vanished">सेटिंग्स</translation>
     </message>
     <message>
         <source>VIRTUAL CAMERA</source>
-        <translation type="vanished">VIRTUELLE KAMERA</translation>
+        <translation type="vanished">वर्चुअल कैमरा</translation>
     </message>
     <message>
         <source>Backend</source>
-        <translation type="vanished">Backend</translation>
+        <translation type="vanished">बैकएंड</translation>
     </message>
     <message>
         <source>Device</source>
-        <translation type="vanished">Gerät</translation>
+        <translation type="vanished">डिवाइस</translation>
     </message>
     <message>
         <source>CONNECTION</source>
-        <translation type="vanished">VERBINDUNG</translation>
+        <translation type="vanished">कनेक्शन</translation>
     </message>
     <message>
         <source>Default Port</source>
-        <translation type="vanished">Standardport</translation>
+        <translation type="vanished">डिफ़ॉल्ट पोर्ट</translation>
     </message>
     <message>
         <source>Discovery</source>
-        <translation type="vanished">Erkennung</translation>
+        <translation type="vanished">खोज</translation>
     </message>
     <message>
         <source>ABOUT</source>
-        <translation type="vanished">ÜBER</translation>
+        <translation type="vanished">जानकारी</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation type="vanished">Version</translation>
+        <translation type="vanished">संस्करण</translation>
     </message>
     <message>
         <source>Protocol</source>
-        <translation type="vanished">Protokoll</translation>
+        <translation type="vanished">प्रोटोकॉल</translation>
     </message>
 </context>
 <context>
@@ -867,52 +867,52 @@
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="69"/>
         <source>Live View</source>
-        <translation>Live-Ansicht</translation>
+        <translation>लाइव व्यू</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="75"/>
         <source>Sources</source>
-        <translation>Quellen</translation>
+        <translation>स्रोत</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="81"/>
         <source>Settings</source>
-        <translation>Einstellungen</translation>
+        <translation>सेटिंग्स</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="109"/>
         <source>Devices</source>
-        <translation>Geräte</translation>
+        <translation>डिवाइस</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="141"/>
         <source>Scanning</source>
-        <translation>Suche läuft</translation>
+        <translation>स्कैनिंग</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="306"/>
         <source>Other devices</source>
-        <translation>Andere Geräte</translation>
+        <translation>अन्य डिवाइस</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="306"/>
         <source>Available devices</source>
-        <translation>Verfügbare Geräte</translation>
+        <translation>उपलब्ध डिवाइस</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="337"/>
         <source>Connect manually</source>
-        <translation>Manuell verbinden</translation>
+        <translation>मैन्युअली कनेक्ट करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="389"/>
         <source>Operator</source>
-        <translation>Betreiber</translation>
+        <translation>ऑपरेटर</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="396"/>
         <source>Free plan</source>
-        <translation>Kostenloser Plan</translation>
+        <translation>मुफ्त योजना</translation>
     </message>
 </context>
 <context>
@@ -920,199 +920,199 @@
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="30"/>
         <source>Sources</source>
-        <translation>Quellen</translation>
+        <translation>स्रोत</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="45"/>
         <source>How this computer captures, mixes and plays back audio. The connected phone is already linked — no re-pairing needed.</source>
-        <translation>Wie dieser Computer Audio aufnimmt, mischt und abspielt. Das verbundene Telefon ist bereits verknüpft — kein erneutes Koppeln erforderlich.</translation>
+        <translation>यह कंप्यूटर ऑडियो कैसे कैप्चर, मिक्स और प्लेबैक करता है। कनेक्ट किया गया फ़ोन पहले से लिंक है — पुनः पेयरिंग की ज़रूरत नहीं।</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="58"/>
         <source>Inputs</source>
-        <translation>Eingänge</translation>
+        <translation>इनपुट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="64"/>
         <source> — Microphone</source>
-        <translation> — Mikrofon</translation>
+        <translation> — माइक्रोफ़ोन</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="64"/>
         <source>Phone microphone</source>
-        <translation>Telefonmikrofon</translation>
+        <translation>फ़ोन माइक्रोफ़ोन</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="65"/>
         <source>From phone · Compressed 64 Kb/s · 48 kHz</source>
-        <translation>Vom Telefon · Komprimiert 64 Kb/s · 48 kHz</translation>
+        <translation>फ़ोन से · संपीड़ित 64 Kb/s · 48 kHz</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="73"/>
         <source>Capture system audio</source>
-        <translation>Systemton aufnehmen</translation>
+        <translation>सिस्टम ऑडियो कैप्चर करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="74"/>
         <source>Record what you hear from this computer</source>
-        <translation>Aufnehmen, was von diesem Computer zu hören ist</translation>
+        <translation>इस कंप्यूटर से सुनाई देने वाला ऑडियो रिकॉर्ड करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="82"/>
         <source>Application capture</source>
-        <translation>Anwendungsaufnahme</translation>
+        <translation>एप्लिकेशन कैप्चर</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="83"/>
         <source>Capture audio from one app only</source>
-        <translation>Audio nur von einer App aufnehmen</translation>
+        <translation>केवल एक ऐप से ऑडियो कैप्चर करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="85"/>
         <source>Off</source>
-        <translation>Aus</translation>
+        <translation>बंद</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="85"/>
         <source>Pick app</source>
-        <translation>App auswählen</translation>
+        <translation>ऐप चुनें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="92"/>
         <source>Loopback device</source>
-        <translation>Loopback-Gerät</translation>
+        <translation>लूपबैक डिवाइस</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="93"/>
         <source>Virtual cable for routing to other apps</source>
-        <translation>Virtuelles Kabel zur Weiterleitung an andere Apps</translation>
+        <translation>अन्य ऐप में रूट करने के लिए वर्चुअल केबल</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="109"/>
         <source>Output &amp; monitoring</source>
-        <translation>Ausgabe &amp; Überwachung</translation>
+        <translation>आउटपुट और मॉनिटरिंग</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="115"/>
         <source>Output device</source>
-        <translation>Ausgabegerät</translation>
+        <translation>आउटपुट डिवाइस</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="116"/>
         <source>Where the return feed plays</source>
-        <translation>Wo der Rückkanal abgespielt wird</translation>
+        <translation>रिटर्न फीड कहां बजती है</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="118"/>
         <source>System default</source>
-        <translation>Systemstandard</translation>
+        <translation>सिस्टम डिफ़ॉल्ट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="126"/>
         <source>Monitor volume</source>
-        <translation>Abhörlautstärke</translation>
+        <translation>मॉनिटर वॉल्यूम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="127"/>
         <source>Loopback monitoring level</source>
-        <translation>Loopback-Überwachungspegel</translation>
+        <translation>लूपबैक मॉनिटरिंग स्तर</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="137"/>
         <source>Mute monitor while talking</source>
-        <translation>Monitor beim Sprechen stumm</translation>
+        <translation>बात करते समय मॉनिटर म्यूट करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="138"/>
         <source>Avoid echo on calls</source>
-        <translation>Echo bei Anrufen vermeiden</translation>
+        <translation>कॉल पर इको से बचें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="152"/>
         <source>Processing</source>
-        <translation>Verarbeitung</translation>
+        <translation>प्रोसेसिंग</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="158"/>
         <source>Sample rate</source>
-        <translation>Abtastrate</translation>
+        <translation>सैंपल रेट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="159"/>
         <source>Mixer clock</source>
-        <translation>Mixer-Takt</translation>
+        <translation>मिक्सर क्लॉक</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="168"/>
         <source>Buffer size</source>
-        <translation>Puffergröße</translation>
+        <translation>बफर आकार</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="169"/>
         <source>Lower = less delay</source>
-        <translation>Niedriger = weniger Verzögerung</translation>
+        <translation>कम = कम देरी</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>Low</source>
-        <translation>Niedrig</translation>
+        <translation>कम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>Medium</source>
-        <translation>Mittel</translation>
+        <translation>मध्यम</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>High</source>
-        <translation>Hoch</translation>
+        <translation>उच्च</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="178"/>
         <source>A/V sync offset</source>
-        <translation>A/V-Sync-Versatz</translation>
+        <translation>A/V सिंक ऑफसेट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="179"/>
         <source>Nudge audio against video</source>
-        <translation>Audio gegenüber Video verschieben</translation>
+        <translation>वीडियो के विरुद्ध ऑडियो समायोजित करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="189"/>
         <source>Channels</source>
-        <translation>Kanäle</translation>
+        <translation>चैनल</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="190"/>
         <source>Mono is lighter on the network</source>
-        <translation>Mono belastet das Netzwerk weniger</translation>
+        <translation>मोनो नेटवर्क पर हल्का है</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="192"/>
         <source>Mono</source>
-        <translation>Mono</translation>
+        <translation>मोनो</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="192"/>
         <source>Stereo</source>
-        <translation>Stereo</translation>
+        <translation>स्टीरियो</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="199"/>
         <source>Noise gate</source>
-        <translation>Noise Gate</translation>
+        <translation>नॉइज़ गेट</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="200"/>
         <source>Silence the feed below a threshold</source>
-        <translation>Feed unterhalb eines Schwellenwerts stumm schalten</translation>
+        <translation>थ्रेशोल्ड से नीचे फीड म्यूट करें</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="241"/>
         <source>This feature is currently unavailable!
  Please wait for the next update...</source>
-        <translation>Diese Funktion ist derzeit nicht verfügbar!
- Bitte warte auf das nächste Update...</translation>
+        <translation>यह सुविधा अभी उपलब्ध नहीं है!
+ कृपया अगले अपडेट की प्रतीक्षा करें...</translation>
     </message>
 </context>
 <context>
@@ -1120,7 +1120,7 @@
     <message>
         <location filename="../qml/components/VcDeviceRow.qml" line="70"/>
         <source>Connect</source>
-        <translation>Verbinden</translation>
+        <translation>कनेक्ट करें</translation>
     </message>
 </context>
 </TS>

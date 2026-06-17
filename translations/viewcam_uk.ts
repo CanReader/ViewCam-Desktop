@@ -1,100 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="de">
+<TS version="2.1" language="uk">
 <context>
     <name>Application</name>
     <message>
         <source>Connected</source>
-        <translation type="vanished">Verbunden</translation>
+        <translation type="vanished">Підключено</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">Відключено</translation>
     </message>
     <message>
         <source>Error: </source>
-        <translation type="vanished">Fehler: </translation>
+        <translation type="vanished">Помилка: </translation>
     </message>
     <message>
         <source>Last</source>
-        <translation type="vanished">Letzte</translation>
+        <translation type="vanished">Останній</translation>
     </message>
 </context>
 <context>
     <name>AudioTab</name>
     <message>
         <source>Audio Sources</source>
-        <translation type="vanished">Audioquellen</translation>
+        <translation type="vanished">Джерела звуку</translation>
     </message>
     <message>
         <source>Audio streaming features are coming in a future release.</source>
-        <translation type="vanished">Audio-Streaming-Funktionen werden in einer zukünftigen Version hinzugefügt.</translation>
+        <translation type="vanished">Функції аудіотрансляції з'являться в майбутньому випуску.</translation>
     </message>
     <message>
         <source>Microphone</source>
-        <translation type="vanished">Mikrofon</translation>
+        <translation type="vanished">Мікрофон</translation>
     </message>
     <message>
         <source>Receive microphone audio from your phone</source>
-        <translation type="vanished">Mikrofonaudio von deinem Telefon empfangen</translation>
+        <translation type="vanished">Отримуйте звук мікрофона з телефону</translation>
     </message>
     <message>
         <source>Speaker</source>
-        <translation type="vanished">Lautsprecher</translation>
+        <translation type="vanished">Динамік</translation>
     </message>
     <message>
         <source>Send desktop audio to your phone</source>
-        <translation type="vanished">Desktop-Audio an dein Telefon senden</translation>
+        <translation type="vanished">Надсилайте звук робочого столу на телефон</translation>
     </message>
 </context>
 <context>
     <name>CameraPreviewWidget</name>
     <message>
         <source>No Signal</source>
-        <translation type="vanished">Kein Signal</translation>
+        <translation type="vanished">Немає сигналу</translation>
     </message>
     <message>
         <source>Waiting for connection…</source>
-        <translation type="vanished">Warte auf Verbindung…</translation>
+        <translation type="vanished">Очікування підключення…</translation>
     </message>
 </context>
 <context>
     <name>ConnectionPanel</name>
     <message>
         <source>Discovered Devices</source>
-        <translation type="vanished">Gefundene Geräte</translation>
+        <translation type="vanished">Знайдені пристрої</translation>
     </message>
     <message>
         <source>Manual...</source>
-        <translation type="vanished">Manuell...</translation>
+        <translation type="vanished">Вручну...</translation>
     </message>
     <message>
         <source>Connect by Address</source>
-        <translation type="vanished">Per Adresse verbinden</translation>
+        <translation type="vanished">Підключити за адресою</translation>
     </message>
     <message>
         <source>IP address (e.g. 192.168.1.100)</source>
-        <translation type="vanished">IP-Adresse (z. B. 192.168.1.100)</translation>
+        <translation type="vanished">IP-адреса (напр. 192.168.1.100)</translation>
     </message>
     <message>
         <source>Port: </source>
-        <translation type="vanished">Port: </translation>
+        <translation type="vanished">Порт: </translation>
     </message>
     <message>
         <source>Connect</source>
-        <translation type="vanished">Verbinden</translation>
+        <translation type="vanished">Підключити</translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation type="vanished">Trennen</translation>
+        <translation type="vanished">Відключити</translation>
     </message>
     <message>
         <source>Connected</source>
-        <translation type="vanished">Verbunden</translation>
+        <translation type="vanished">Підключено</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">Відключено</translation>
     </message>
     <message>
         <source>%1 FPS</source>
@@ -106,77 +106,77 @@
     <message>
         <location filename="../qml/screens/Launcher.qml" line="88"/>
         <source>Pair a device</source>
-        <translation>Gerät koppeln</translation>
+        <translation>Підключити пристрій</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="99"/>
         <source>Connect your phone</source>
-        <translation>Telefon verbinden</translation>
+        <translation>Підключіть телефон</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="112"/>
         <source>%1 turns any phone into a wireless camera and microphone for this computer.</source>
-        <translation>%1 verwandelt jedes Telefon in eine kabellose Kamera und ein Mikrofon für diesen Computer.</translation>
+        <translation>%1 перетворює будь-який телефон на бездротову камеру та мікрофон для цього комп'ютера.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="132"/>
         <source>Open ViewCam on your phone</source>
-        <translation>ViewCam auf deinem Telefon öffnen</translation>
+        <translation>Відкрий ViewCam на телефоні</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="133"/>
         <source>Launch the mobile app and keep it in the foreground.</source>
-        <translation>Mobile App starten und im Vordergrund behalten.</translation>
+        <translation>Запусти мобільний застосунок і тримай його на передньому плані.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="136"/>
         <source>Join the same Wi-Fi</source>
-        <translation>Gleiches Wi-Fi beitreten</translation>
+        <translation>Підключись до того самого Wi-Fi</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="137"/>
         <source>Both devices need to be on one network.</source>
-        <translation>Beide Geräte müssen im selben Netzwerk sein.</translation>
+        <translation>Обидва пристрої мають бути в одній мережі.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="140"/>
         <source>Pick it from the list →</source>
-        <translation>Aus der Liste auswählen →</translation>
+        <translation>Вибери зі списку →</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="141"/>
         <source>Your phone shows up on the right within a few seconds.</source>
-        <translation>Dein Telefon erscheint innerhalb von Sekunden rechts.</translation>
+        <translation>Телефон з'явиться праворуч за кілька секунд.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="253"/>
         <source>Scanning your network…</source>
-        <translation>Netzwerk wird gescannt…</translation>
+        <translation>Пошук у мережі…</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="284"/>
         <source>Available devices</source>
-        <translation>Verfügbare Geräte</translation>
+        <translation>Доступні пристрої</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="318"/>
         <source>Scanning…</source>
-        <translation>Suche…</translation>
+        <translation>Пошук…</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="358"/>
         <source>Or connect manually</source>
-        <translation>Oder manuell verbinden</translation>
+        <translation>Або підключити вручну</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="405"/>
         <source>Virtual camera ready · %1</source>
-        <translation>Virtuelle Kamera bereit · %1</translation>
+        <translation>Віртуальна камера готова · %1</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="405"/>
         <source>Virtual camera inactive · 0 clients</source>
-        <translation>Virtuelle Kamera inaktiv · 0 Clients</translation>
+        <translation>Віртуальна камера неактивна · 0 клієнтів</translation>
     </message>
 </context>
 <context>
@@ -184,32 +184,32 @@
     <message>
         <location filename="../qml/screens/LiveView.qml" line="112"/>
         <source>Session ended</source>
-        <translation>Sitzung beendet</translation>
+        <translation>Сеанс завершено</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="112"/>
         <source>No camera connected</source>
-        <translation>Keine Kamera verbunden</translation>
+        <translation>Камеру не підключено</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="123"/>
         <source>Free tier session limit reached. Reconnect to continue.</source>
-        <translation>Sitzungslimit des kostenlosen Tarifs erreicht. Erneut verbinden zum Fortfahren.</translation>
+        <translation>Досягнуто ліміт сеансів безкоштовного тарифу. Перепідключіться для продовження.</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="123"/>
         <source>Connect a phone running ViewCam to start the live feed.</source>
-        <translation>Verbinde ein Telefon mit ViewCam, um den Live-Feed zu starten.</translation>
+        <translation>Підключи телефон з ViewCam для запуску прямої трансляції.</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="136"/>
         <source>Scan for devices</source>
-        <translation>Nach Geräten suchen</translation>
+        <translation>Знайти пристрої</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="333"/>
         <source>Virtual Camera</source>
-        <translation>Virtuelle Kamera</translation>
+        <translation>Віртуальна камера</translation>
     </message>
 </context>
 <context>
@@ -224,46 +224,46 @@
     </message>
     <message>
         <source>  Player  </source>
-        <translation type="vanished">  Player  </translation>
+        <translation type="vanished">  Програвач  </translation>
     </message>
     <message>
         <source>  Audio  </source>
-        <translation type="vanished">  Audio  </translation>
+        <translation type="vanished">  Аудіо  </translation>
     </message>
     <message>
         <source>  Settings  </source>
-        <translation type="vanished">  Einstellungen  </translation>
+        <translation type="vanished">  Налаштування  </translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">Відключено</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Coming Soon</source>
-        <translation type="vanished">Demnächst</translation>
+        <translation type="vanished">Незабаром</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="117"/>
         <source>Installed</source>
-        <translation>Installiert</translation>
+        <translation>Встановлено</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="118"/>
         <source>Path mismatch</source>
-        <translation>Pfadabweichung</translation>
+        <translation>Невідповідність шляху</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="119"/>
         <source>Not installed</source>
-        <translation>Nicht installiert</translation>
+        <translation>Не встановлено</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="121"/>
         <source>Unknown</source>
-        <translation>Unbekannt</translation>
+        <translation>Невідомо</translation>
     </message>
 </context>
 <context>
@@ -271,32 +271,32 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="47"/>
         <source>Network</source>
-        <translation>Netzwerk</translation>
+        <translation>Мережа</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="61"/>
         <source>Connection</source>
-        <translation>Verbindung</translation>
+        <translation>З'єднання</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="66"/>
         <source>Address</source>
-        <translation>Adresse</translation>
+        <translation>Адреса</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="71"/>
         <source>Signal</source>
-        <translation>Signal</translation>
+        <translation>Сигнал</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="97"/>
         <source>Latency</source>
-        <translation>Latenz</translation>
+        <translation>Затримка</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="103"/>
         <source>Bitrate</source>
-        <translation>Bitrate</translation>
+        <translation>Бітрейт</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="109"/>
@@ -306,82 +306,82 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="115"/>
         <source>Uptime</source>
-        <translation>Betriebszeit</translation>
+        <translation>Час роботи</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="126"/>
         <source>Device</source>
-        <translation>Gerät</translation>
+        <translation>Пристрій</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="140"/>
         <source>Model</source>
-        <translation>Modell</translation>
+        <translation>Модель</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="145"/>
         <source>System</source>
-        <translation>System</translation>
+        <translation>Система</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="150"/>
         <source>Battery</source>
-        <translation>Akku</translation>
+        <translation>Акумулятор</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="152"/>
         <source>charging</source>
-        <translation>lädt</translation>
+        <translation>заряджається</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="157"/>
         <source>Lens</source>
-        <translation>Objektiv</translation>
+        <translation>Об'єктив</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="162"/>
         <source>Capture</source>
-        <translation>Aufnahme</translation>
+        <translation>Зйомка</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="173"/>
         <source>Device control</source>
-        <translation>Gerätekontrolle</translation>
+        <translation>Керування пристроєм</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="188"/>
         <source>Torch</source>
-        <translation>Taschenlampe</translation>
+        <translation>Ліхтарик</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="189"/>
         <source>Rear flashlight</source>
-        <translation>Rückseitige Taschenlampe</translation>
+        <translation>Задній ліхтарик</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="189"/>
         <source>No flash on front camera</source>
-        <translation>Kein Blitz an der Frontkamera</translation>
+        <translation>Немає спалаху на фронтальній камері</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="198"/>
         <source>Focus lock</source>
-        <translation>Fokussperre</translation>
+        <translation>Фіксація фокусу</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="199"/>
         <source>Freeze autofocus</source>
-        <translation>Autofokus einfrieren</translation>
+        <translation>Заморозити автофокус</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="207"/>
         <source>Exposure lock</source>
-        <translation>Belichtungssperre</translation>
+        <translation>Фіксація експозиції</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="208"/>
         <source>Lock AE / AWB</source>
-        <translation>AE / AWB sperren</translation>
+        <translation>Зафіксувати AE / AWB</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="217"/>
@@ -391,119 +391,119 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="218"/>
         <source>High dynamic range</source>
-        <translation>Hoher Dynamikumfang</translation>
+        <translation>Широкий динамічний діапазон</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="218"/>
         <source>Not supported on this device</source>
-        <translation>Auf diesem Gerät nicht unterstützt</translation>
+        <translation>Не підтримується на цьому пристрої</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="227"/>
         <source>Resolution</source>
-        <translation>Auflösung</translation>
+        <translation>Роздільна здатність</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="247"/>
         <source>Flip lens</source>
-        <translation>Kamera wechseln</translation>
+        <translation>Переключити камеру</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="254"/>
         <source>Tap to focus</source>
-        <translation>Tippen zum Fokussieren</translation>
+        <translation>Торкніться для фокусування</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="274"/>
         <source>Optimization</source>
-        <translation>Optimierung</translation>
+        <translation>Оптимізація</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="287"/>
         <source>Adaptive bitrate</source>
-        <translation>Adaptive Bitrate</translation>
+        <translation>Адаптивний бітрейт</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="288"/>
         <source>Clamps to network</source>
-        <translation>Passt sich ans Netzwerk an</translation>
+        <translation>Адаптується до мережі</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="295"/>
         <source>Hardware acceleration</source>
-        <translation>Hardwarebeschleunigung</translation>
+        <translation>Апаратне прискорення</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="296"/>
         <source>GPU encode &amp; decode</source>
-        <translation>GPU-Kodierung &amp; -Dekodierung</translation>
+        <translation>GPU-кодування та декодування</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="303"/>
         <source>Adaptive resolution</source>
-        <translation>Adaptive Auflösung</translation>
+        <translation>Адаптивна роздільна здатність</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="304"/>
         <source>Drop res before frames</source>
-        <translation>Auflösung vor Frames verringern</translation>
+        <translation>Знижувати роздільну здатність перед кадрами</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="311"/>
         <source>Low-light boost</source>
-        <translation>Schwachlicht-Verstärkung</translation>
+        <translation>Підсилення при слабкому освітленні</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="312"/>
         <source>Brighten dim scenes</source>
-        <translation>Dunkle Szenen aufhellen</translation>
+        <translation>Освітлити темні сцени</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="319"/>
         <source>Noise reduction</source>
-        <translation>Rauschunterdrückung</translation>
+        <translation>Шумопридушення</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="320"/>
         <source>Temporal denoise</source>
-        <translation>Zeitliche Rauschunterdrückung</translation>
+        <translation>Часове шумопридушення</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="327"/>
         <source>Mirror image</source>
-        <translation>Spiegelbild</translation>
+        <translation>Дзеркальне відображення</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="328"/>
         <source>Flip horizontally</source>
-        <translation>Horizontal spiegeln</translation>
+        <translation>Відобразити горизонтально</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="335"/>
         <source>Color profile</source>
-        <translation>Farbprofil</translation>
+        <translation>Кольоровий профіль</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="337"/>
         <source>Auto</source>
-        <translation>Auto</translation>
+        <translation>Авто</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="343"/>
         <source>Audio sample rate</source>
-        <translation>Audio-Abtastrate</translation>
+        <translation>Частота дискретизації аудіо</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="379"/>
         <source>This feature is currently unavailable!
  Please wait for the next update...</source>
-        <translation>Diese Funktion ist derzeit nicht verfügbar!
- Bitte warte auf das nächste Update...</translation>
+        <translation>Ця функція наразі недоступна!
+ Зачекайте наступного оновлення...</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="434"/>
         <source>Disconnect device</source>
-        <translation>Gerät trennen</translation>
+        <translation>Відключити пристрій</translation>
     </message>
 </context>
 <context>
@@ -511,277 +511,277 @@
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="21"/>
         <source>Settings</source>
-        <translation>Einstellungen</translation>
+        <translation>Налаштування</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="31"/>
         <source>Engine, network and appearance preferences for %1.</source>
-        <translation>Motor-, Netzwerk- und Darstellungseinstellungen für %1.</translation>
+        <translation>Параметри рушія, мережі та вигляду для %1.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="41"/>
         <source>Stream engine</source>
-        <translation>Stream-Engine</translation>
+        <translation>Рушій трансляції</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="46"/>
         <source>Hardware acceleration</source>
-        <translation>Hardwarebeschleunigung</translation>
+        <translation>Апаратне прискорення</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="47"/>
         <source>Use GPU encoder (VideoToolbox / NVENC)</source>
-        <translation>GPU-Encoder verwenden (VideoToolbox / NVENC)</translation>
+        <translation>Використовувати GPU-кодер (VideoToolbox / NVENC)</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="48"/>
         <source>GPU video encoding — encodes the virtual-camera stream on the GPU (NVENC / VideoToolbox). Off = CPU encoding.</source>
-        <translation>GPU-Videokodierung — kodiert den virtuellen Kamera-Stream auf der GPU (NVENC / VideoToolbox). Aus = CPU-Kodierung.</translation>
+        <translation>GPU-відеокодування — кодує потік віртуальної камери на GPU (NVENC / VideoToolbox). Вимк = кодування на CPU.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="56"/>
         <source>GPU processing</source>
-        <translation>GPU-Verarbeitung</translation>
+        <translation>Обробка на GPU</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="58"/>
         <source>Active: %1</source>
-        <translation>Aktiv: %1</translation>
+        <translation>Активно: %1</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="59"/>
         <source>Frame processing &amp; filters</source>
-        <translation>Frame-Verarbeitung &amp; Filter</translation>
+        <translation>Обробка кадрів та фільтри</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="60"/>
         <source>GPU-accelerated frame processing &amp; filters — CUDA on NVIDIA, Vulkan compute on AMD/Intel. Off = CPU.</source>
-        <translation>GPU-beschleunigte Frame-Verarbeitung &amp; Filter — CUDA auf NVIDIA, Vulkan auf AMD/Intel. Aus = CPU.</translation>
+        <translation>GPU-прискорена обробка кадрів і фільтри — CUDA на NVIDIA, Vulkan Compute на AMD/Intel. Вимк = CPU.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="68"/>
         <source>Stream protocol</source>
-        <translation>Stream-Protokoll</translation>
+        <translation>Протокол трансляції</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="69"/>
         <source>MJPEG active · H.264/H.265 require mobile update</source>
-        <translation>MJPEG aktiv · H.264/H.265 erfordern mobiles Update</translation>
+        <translation>MJPEG активний · H.264/H.265 потребують оновлення мобільного застосунку</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="78"/>
         <source>Encoder preset</source>
-        <translation>Encoder-Voreinstellung</translation>
+        <translation>Попередньо встановлений профіль</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="79"/>
         <source>MJPEG quality / H.264 speed trade-off</source>
-        <translation>MJPEG-Qualität / H.264-Geschwindigkeitskompromiss</translation>
+        <translation>Баланс якості MJPEG / швидкості H.264</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Quality</source>
-        <translation>Qualität</translation>
+        <translation>Якість</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Balanced</source>
-        <translation>Ausgewogen</translation>
+        <translation>Збалансований</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Speed</source>
-        <translation>Geschwindigkeit</translation>
+        <translation>Швидкість</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="88"/>
         <source>Max output resolution</source>
-        <translation>Max. Ausgabeauflösung</translation>
+        <translation>Максимальна роздільна здатність виводу</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="89"/>
         <source>Virtual camera ceiling</source>
-        <translation>Virtuelle Kamera Obergrenze</translation>
+        <translation>Максимальна роздільна здатність віртуальної камери</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="98"/>
         <source>Keyframe interval</source>
-        <translation>Keyframe-Intervall</translation>
+        <translation>Інтервал ключових кадрів</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="99"/>
         <source>I-frame rate for H.264/H.265 — no effect on MJPEG</source>
-        <translation>I-Frame-Rate für H.264/H.265 — kein Effekt auf MJPEG</translation>
+        <translation>Частота I-кадрів для H.264/H.265 — не впливає на MJPEG</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="122"/>
         <source>Buffered frames</source>
-        <translation>Gepufferte Frames</translation>
+        <translation>Кадри в буфері</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="123"/>
         <source>Delays display by N frames to smooth network jitter</source>
-        <translation>Verzögert die Anzeige um N Frames zur Glättung von Netzwerkjitter</translation>
+        <translation>Затримує відображення на N кадрів для згладжування мережевого джиттеру</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="133"/>
         <source>Off</source>
-        <translation>Aus</translation>
+        <translation>Вимк</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="133"/>
         <source> frames</source>
-        <translation> Frames</translation>
+        <translation> кадрів</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="149"/>
         <source>Network</source>
-        <translation>Netzwerk</translation>
+        <translation>Мережа</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="154"/>
         <source>Automatic discovery</source>
-        <translation>Automatische Erkennung</translation>
+        <translation>Автовизначення</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="155"/>
         <source>Announce this computer to nearby phones</source>
-        <translation>Diesen Computer in der Nähe befindlichen Telefonen ankündigen</translation>
+        <translation>Повідомляти телефони про цей комп'ютер</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="163"/>
         <source>Listen port</source>
-        <translation>Empfangsport</translation>
+        <translation>Порт прослуховування</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="164"/>
         <source>TCP stream socket — applies on next connect</source>
-        <translation>TCP-Stream-Socket — gilt ab nächster Verbindung</translation>
+        <translation>TCP-сокет — застосовується при наступному підключенні</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="191"/>
         <source>Auto-reconnect</source>
-        <translation>Automatisch wiederherstellen</translation>
+        <translation>Автоперепідключення</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="192"/>
         <source>Re-pair when a device drops off</source>
-        <translation>Erneut koppeln, wenn ein Gerät getrennt wird</translation>
+        <translation>Переп'єднуватись при відключенні пристрою</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="200"/>
         <source>Restrict to local subnet</source>
-        <translation>Auf lokales Subnetz beschränken</translation>
+        <translation>Обмежити локальною підмережею</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="201"/>
         <source>Only allow same-network devices</source>
-        <translation>Nur Geräte im selben Netzwerk zulassen</translation>
+        <translation>Дозволяти лише пристрої з тієї самої мережі</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="212"/>
         <source>Appearance</source>
-        <translation>Darstellung</translation>
+        <translation>Вигляд</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="217"/>
         <source>Theme</source>
-        <translation>Thema</translation>
+        <translation>Тема</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="218"/>
         <source>Studio appearance</source>
-        <translation>Studio-Erscheinungsbild</translation>
+        <translation>Оформлення студії</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="220"/>
         <source>Dark</source>
-        <translation>Dunkel</translation>
+        <translation>Темна</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="220"/>
         <source>Light</source>
-        <translation>Hell</translation>
+        <translation>Світла</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="224"/>
         <source>Language</source>
-        <translation>Sprache</translation>
+        <translation>Мова</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="225"/>
         <source>App display language</source>
-        <translation>Anzeigesprache der App</translation>
+        <translation>Мова інтерфейсу</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="228"/>
         <source>System</source>
-        <translation>System</translation>
+        <translation>Система</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="238"/>
         <source>Accent color</source>
-        <translation>Akzentfarbe</translation>
+        <translation>Акцентний колір</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="239"/>
         <source>Highlights and active states</source>
-        <translation>Hervorhebungen und aktive Zustände</translation>
+        <translation>Акценти та активні стани</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="285"/>
         <source>Telemetry overlay</source>
-        <translation>Telemetrie-Overlay</translation>
+        <translation>Оверлей телеметрії</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="286"/>
         <source>Bitrate, FPS and latency on the viewfinder</source>
-        <translation>Bitrate, FPS und Latenz im Sucher</translation>
+        <translation>Бітрейт, FPS і затримка у видошукачі</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="294"/>
         <source>Compact sidebar</source>
-        <translation>Kompakte Seitenleiste</translation>
+        <translation>Компактна бічна панель</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="295"/>
         <source>Denser navigation and device list</source>
-        <translation>Kompaktere Navigation und Geräteliste</translation>
+        <translation>Компактна навігація та список пристроїв</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="303"/>
         <source>Launch at login</source>
-        <translation>Bei Anmeldung starten</translation>
+        <translation>Запускати при вході</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="304"/>
         <source>Start ViewCam in the background</source>
-        <translation>ViewCam im Hintergrund starten</translation>
+        <translation>Запускати ViewCam у фоні</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="315"/>
         <source>About</source>
-        <translation>Über</translation>
+        <translation>Про програму</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="321"/>
         <source>Version %1 · build %2</source>
-        <translation>Version %1 · Build %2</translation>
+        <translation>Версія %1 · збірка %2</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="324"/>
         <source>Check for updates</source>
-        <translation>Nach Updates suchen</translation>
+        <translation>Перевірити оновлення</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="329"/>
         <source>Qt runtime</source>
-        <translation>Qt-Laufzeit</translation>
+        <translation>Середовище виконання Qt</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="330"/>
         <source>Cross-platform framework</source>
-        <translation>Plattformübergreifendes Framework</translation>
+        <translation>Кросплатформний фреймворк</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="332"/>
@@ -791,75 +791,75 @@
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="341"/>
         <source>CUDA runtime</source>
-        <translation>CUDA-Laufzeit</translation>
+        <translation>Середовище виконання CUDA</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="342"/>
         <source>NVIDIA parallel computing platform</source>
-        <translation>NVIDIA-Parallelrechenplattform</translation>
+        <translation>Платформа паралельних обчислень NVIDIA</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="353"/>
         <source>Renderer</source>
-        <translation>Renderer</translation>
+        <translation>Рушій рендерингу</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="354"/>
         <source>Graphics backend</source>
-        <translation>Grafik-Backend</translation>
+        <translation>Графічний бекенд</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="374"/>
         <source>Open-source licenses</source>
-        <translation>Open-Source-Lizenzen</translation>
+        <translation>Ліцензії відкритого ПЗ</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="375"/>
         <source>Third-party components</source>
-        <translation>Drittanbieter-Komponenten</translation>
+        <translation>Сторонні компоненти</translation>
     </message>
 </context>
 <context>
     <name>SettingsTab</name>
     <message>
         <source>Settings</source>
-        <translation type="vanished">Einstellungen</translation>
+        <translation type="vanished">Налаштування</translation>
     </message>
     <message>
         <source>VIRTUAL CAMERA</source>
-        <translation type="vanished">VIRTUELLE KAMERA</translation>
+        <translation type="vanished">ВІРТУАЛЬНА КАМЕРА</translation>
     </message>
     <message>
         <source>Backend</source>
-        <translation type="vanished">Backend</translation>
+        <translation type="vanished">Бекенд</translation>
     </message>
     <message>
         <source>Device</source>
-        <translation type="vanished">Gerät</translation>
+        <translation type="vanished">Пристрій</translation>
     </message>
     <message>
         <source>CONNECTION</source>
-        <translation type="vanished">VERBINDUNG</translation>
+        <translation type="vanished">З'ЄДНАННЯ</translation>
     </message>
     <message>
         <source>Default Port</source>
-        <translation type="vanished">Standardport</translation>
+        <translation type="vanished">Порт за замовчуванням</translation>
     </message>
     <message>
         <source>Discovery</source>
-        <translation type="vanished">Erkennung</translation>
+        <translation type="vanished">Виявлення</translation>
     </message>
     <message>
         <source>ABOUT</source>
-        <translation type="vanished">ÜBER</translation>
+        <translation type="vanished">ПРО ПРОГРАМУ</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation type="vanished">Version</translation>
+        <translation type="vanished">Версія</translation>
     </message>
     <message>
         <source>Protocol</source>
-        <translation type="vanished">Protokoll</translation>
+        <translation type="vanished">Протокол</translation>
     </message>
 </context>
 <context>
@@ -867,52 +867,52 @@
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="69"/>
         <source>Live View</source>
-        <translation>Live-Ansicht</translation>
+        <translation>Пряма трансляція</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="75"/>
         <source>Sources</source>
-        <translation>Quellen</translation>
+        <translation>Джерела</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="81"/>
         <source>Settings</source>
-        <translation>Einstellungen</translation>
+        <translation>Налаштування</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="109"/>
         <source>Devices</source>
-        <translation>Geräte</translation>
+        <translation>Пристрої</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="141"/>
         <source>Scanning</source>
-        <translation>Suche läuft</translation>
+        <translation>Пошук</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="306"/>
         <source>Other devices</source>
-        <translation>Andere Geräte</translation>
+        <translation>Інші пристрої</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="306"/>
         <source>Available devices</source>
-        <translation>Verfügbare Geräte</translation>
+        <translation>Доступні пристрої</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="337"/>
         <source>Connect manually</source>
-        <translation>Manuell verbinden</translation>
+        <translation>Підключити вручну</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="389"/>
         <source>Operator</source>
-        <translation>Betreiber</translation>
+        <translation>Оператор</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="396"/>
         <source>Free plan</source>
-        <translation>Kostenloser Plan</translation>
+        <translation>Безкоштовний план</translation>
     </message>
 </context>
 <context>
@@ -920,199 +920,199 @@
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="30"/>
         <source>Sources</source>
-        <translation>Quellen</translation>
+        <translation>Джерела</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="45"/>
         <source>How this computer captures, mixes and plays back audio. The connected phone is already linked — no re-pairing needed.</source>
-        <translation>Wie dieser Computer Audio aufnimmt, mischt und abspielt. Das verbundene Telefon ist bereits verknüpft — kein erneutes Koppeln erforderlich.</translation>
+        <translation>Як цей комп'ютер захоплює, мікшує та відтворює аудіо. Підключений телефон уже зв'язаний — повторне сполучення не потрібне.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="58"/>
         <source>Inputs</source>
-        <translation>Eingänge</translation>
+        <translation>Входи</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="64"/>
         <source> — Microphone</source>
-        <translation> — Mikrofon</translation>
+        <translation> — Мікрофон</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="64"/>
         <source>Phone microphone</source>
-        <translation>Telefonmikrofon</translation>
+        <translation>Мікрофон телефону</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="65"/>
         <source>From phone · Compressed 64 Kb/s · 48 kHz</source>
-        <translation>Vom Telefon · Komprimiert 64 Kb/s · 48 kHz</translation>
+        <translation>З телефону · Стиснутий 64 Кбіт/с · 48 кГц</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="73"/>
         <source>Capture system audio</source>
-        <translation>Systemton aufnehmen</translation>
+        <translation>Захоплення системного звуку</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="74"/>
         <source>Record what you hear from this computer</source>
-        <translation>Aufnehmen, was von diesem Computer zu hören ist</translation>
+        <translation>Записувати те, що чути на цьому комп'ютері</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="82"/>
         <source>Application capture</source>
-        <translation>Anwendungsaufnahme</translation>
+        <translation>Захоплення з програми</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="83"/>
         <source>Capture audio from one app only</source>
-        <translation>Audio nur von einer App aufnehmen</translation>
+        <translation>Захоплювати звук лише з одного застосунку</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="85"/>
         <source>Off</source>
-        <translation>Aus</translation>
+        <translation>Вимк</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="85"/>
         <source>Pick app</source>
-        <translation>App auswählen</translation>
+        <translation>Вибрати програму</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="92"/>
         <source>Loopback device</source>
-        <translation>Loopback-Gerät</translation>
+        <translation>Петльовий пристрій</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="93"/>
         <source>Virtual cable for routing to other apps</source>
-        <translation>Virtuelles Kabel zur Weiterleitung an andere Apps</translation>
+        <translation>Віртуальний кабель для маршрутизації до інших застосунків</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="109"/>
         <source>Output &amp; monitoring</source>
-        <translation>Ausgabe &amp; Überwachung</translation>
+        <translation>Вивід і моніторинг</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="115"/>
         <source>Output device</source>
-        <translation>Ausgabegerät</translation>
+        <translation>Пристрій виводу</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="116"/>
         <source>Where the return feed plays</source>
-        <translation>Wo der Rückkanal abgespielt wird</translation>
+        <translation>Де відтворюється зворотний сигнал</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="118"/>
         <source>System default</source>
-        <translation>Systemstandard</translation>
+        <translation>Системний за замовчуванням</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="126"/>
         <source>Monitor volume</source>
-        <translation>Abhörlautstärke</translation>
+        <translation>Гучність моніторингу</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="127"/>
         <source>Loopback monitoring level</source>
-        <translation>Loopback-Überwachungspegel</translation>
+        <translation>Рівень моніторингу петлі</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="137"/>
         <source>Mute monitor while talking</source>
-        <translation>Monitor beim Sprechen stumm</translation>
+        <translation>Вимикати монітор під час розмови</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="138"/>
         <source>Avoid echo on calls</source>
-        <translation>Echo bei Anrufen vermeiden</translation>
+        <translation>Уникати луни під час дзвінків</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="152"/>
         <source>Processing</source>
-        <translation>Verarbeitung</translation>
+        <translation>Обробка</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="158"/>
         <source>Sample rate</source>
-        <translation>Abtastrate</translation>
+        <translation>Частота дискретизації</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="159"/>
         <source>Mixer clock</source>
-        <translation>Mixer-Takt</translation>
+        <translation>Тактовий генератор мікшера</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="168"/>
         <source>Buffer size</source>
-        <translation>Puffergröße</translation>
+        <translation>Розмір буфера</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="169"/>
         <source>Lower = less delay</source>
-        <translation>Niedriger = weniger Verzögerung</translation>
+        <translation>Менше = менша затримка</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>Low</source>
-        <translation>Niedrig</translation>
+        <translation>Низький</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>Medium</source>
-        <translation>Mittel</translation>
+        <translation>Середній</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>High</source>
-        <translation>Hoch</translation>
+        <translation>Високий</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="178"/>
         <source>A/V sync offset</source>
-        <translation>A/V-Sync-Versatz</translation>
+        <translation>Зсув синхронізації А/В</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="179"/>
         <source>Nudge audio against video</source>
-        <translation>Audio gegenüber Video verschieben</translation>
+        <translation>Зсунути аудіо відносно відео</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="189"/>
         <source>Channels</source>
-        <translation>Kanäle</translation>
+        <translation>Канали</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="190"/>
         <source>Mono is lighter on the network</source>
-        <translation>Mono belastet das Netzwerk weniger</translation>
+        <translation>Моно легше для мережі</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="192"/>
         <source>Mono</source>
-        <translation>Mono</translation>
+        <translation>Моно</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="192"/>
         <source>Stereo</source>
-        <translation>Stereo</translation>
+        <translation>Стерео</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="199"/>
         <source>Noise gate</source>
-        <translation>Noise Gate</translation>
+        <translation>Шумові ворота</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="200"/>
         <source>Silence the feed below a threshold</source>
-        <translation>Feed unterhalb eines Schwellenwerts stumm schalten</translation>
+        <translation>Глушити сигнал нижче порогу</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="241"/>
         <source>This feature is currently unavailable!
  Please wait for the next update...</source>
-        <translation>Diese Funktion ist derzeit nicht verfügbar!
- Bitte warte auf das nächste Update...</translation>
+        <translation>Ця функція наразі недоступна!
+ Зачекайте наступного оновлення...</translation>
     </message>
 </context>
 <context>
@@ -1120,7 +1120,7 @@
     <message>
         <location filename="../qml/components/VcDeviceRow.qml" line="70"/>
         <source>Connect</source>
-        <translation>Verbinden</translation>
+        <translation>Підключити</translation>
     </message>
 </context>
 </TS>

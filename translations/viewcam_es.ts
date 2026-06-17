@@ -1,100 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="de">
+<TS version="2.1" language="es">
 <context>
     <name>Application</name>
     <message>
         <source>Connected</source>
-        <translation type="vanished">Verbunden</translation>
+        <translation type="vanished">Conectado</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">Desconectado</translation>
     </message>
     <message>
         <source>Error: </source>
-        <translation type="vanished">Fehler: </translation>
+        <translation type="vanished">Error: </translation>
     </message>
     <message>
         <source>Last</source>
-        <translation type="vanished">Letzte</translation>
+        <translation type="vanished">Último</translation>
     </message>
 </context>
 <context>
     <name>AudioTab</name>
     <message>
         <source>Audio Sources</source>
-        <translation type="vanished">Audioquellen</translation>
+        <translation type="vanished">Fuentes de audio</translation>
     </message>
     <message>
         <source>Audio streaming features are coming in a future release.</source>
-        <translation type="vanished">Audio-Streaming-Funktionen werden in einer zukünftigen Version hinzugefügt.</translation>
+        <translation type="vanished">Las funciones de transmisión de audio llegarán en una versión futura.</translation>
     </message>
     <message>
         <source>Microphone</source>
-        <translation type="vanished">Mikrofon</translation>
+        <translation type="vanished">Micrófono</translation>
     </message>
     <message>
         <source>Receive microphone audio from your phone</source>
-        <translation type="vanished">Mikrofonaudio von deinem Telefon empfangen</translation>
+        <translation type="vanished">Recibe audio del micrófono de tu teléfono</translation>
     </message>
     <message>
         <source>Speaker</source>
-        <translation type="vanished">Lautsprecher</translation>
+        <translation type="vanished">Altavoz</translation>
     </message>
     <message>
         <source>Send desktop audio to your phone</source>
-        <translation type="vanished">Desktop-Audio an dein Telefon senden</translation>
+        <translation type="vanished">Envía el audio del escritorio a tu teléfono</translation>
     </message>
 </context>
 <context>
     <name>CameraPreviewWidget</name>
     <message>
         <source>No Signal</source>
-        <translation type="vanished">Kein Signal</translation>
+        <translation type="vanished">Sin señal</translation>
     </message>
     <message>
         <source>Waiting for connection…</source>
-        <translation type="vanished">Warte auf Verbindung…</translation>
+        <translation type="vanished">Esperando conexión…</translation>
     </message>
 </context>
 <context>
     <name>ConnectionPanel</name>
     <message>
         <source>Discovered Devices</source>
-        <translation type="vanished">Gefundene Geräte</translation>
+        <translation type="vanished">Dispositivos detectados</translation>
     </message>
     <message>
         <source>Manual...</source>
-        <translation type="vanished">Manuell...</translation>
+        <translation type="vanished">Manual...</translation>
     </message>
     <message>
         <source>Connect by Address</source>
-        <translation type="vanished">Per Adresse verbinden</translation>
+        <translation type="vanished">Conectar por dirección</translation>
     </message>
     <message>
         <source>IP address (e.g. 192.168.1.100)</source>
-        <translation type="vanished">IP-Adresse (z. B. 192.168.1.100)</translation>
+        <translation type="vanished">Dirección IP (ej. 192.168.1.100)</translation>
     </message>
     <message>
         <source>Port: </source>
-        <translation type="vanished">Port: </translation>
+        <translation type="vanished">Puerto: </translation>
     </message>
     <message>
         <source>Connect</source>
-        <translation type="vanished">Verbinden</translation>
+        <translation type="vanished">Conectar</translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation type="vanished">Trennen</translation>
+        <translation type="vanished">Desconectar</translation>
     </message>
     <message>
         <source>Connected</source>
-        <translation type="vanished">Verbunden</translation>
+        <translation type="vanished">Conectado</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">Desconectado</translation>
     </message>
     <message>
         <source>%1 FPS</source>
@@ -106,77 +106,77 @@
     <message>
         <location filename="../qml/screens/Launcher.qml" line="88"/>
         <source>Pair a device</source>
-        <translation>Gerät koppeln</translation>
+        <translation>Emparejar dispositivo</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="99"/>
         <source>Connect your phone</source>
-        <translation>Telefon verbinden</translation>
+        <translation>Conecta tu teléfono</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="112"/>
         <source>%1 turns any phone into a wireless camera and microphone for this computer.</source>
-        <translation>%1 verwandelt jedes Telefon in eine kabellose Kamera und ein Mikrofon für diesen Computer.</translation>
+        <translation>%1 convierte cualquier teléfono en una cámara inalámbrica y micrófono para este equipo.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="132"/>
         <source>Open ViewCam on your phone</source>
-        <translation>ViewCam auf deinem Telefon öffnen</translation>
+        <translation>Abre ViewCam en tu teléfono</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="133"/>
         <source>Launch the mobile app and keep it in the foreground.</source>
-        <translation>Mobile App starten und im Vordergrund behalten.</translation>
+        <translation>Inicia la app móvil y mantenla en primer plano.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="136"/>
         <source>Join the same Wi-Fi</source>
-        <translation>Gleiches Wi-Fi beitreten</translation>
+        <translation>Conéctate al mismo Wi-Fi</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="137"/>
         <source>Both devices need to be on one network.</source>
-        <translation>Beide Geräte müssen im selben Netzwerk sein.</translation>
+        <translation>Ambos dispositivos deben estar en la misma red.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="140"/>
         <source>Pick it from the list →</source>
-        <translation>Aus der Liste auswählen →</translation>
+        <translation>Selecciónalo de la lista →</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="141"/>
         <source>Your phone shows up on the right within a few seconds.</source>
-        <translation>Dein Telefon erscheint innerhalb von Sekunden rechts.</translation>
+        <translation>Tu teléfono aparece a la derecha en segundos.</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="253"/>
         <source>Scanning your network…</source>
-        <translation>Netzwerk wird gescannt…</translation>
+        <translation>Escaneando tu red…</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="284"/>
         <source>Available devices</source>
-        <translation>Verfügbare Geräte</translation>
+        <translation>Dispositivos disponibles</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="318"/>
         <source>Scanning…</source>
-        <translation>Suche…</translation>
+        <translation>Buscando…</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="358"/>
         <source>Or connect manually</source>
-        <translation>Oder manuell verbinden</translation>
+        <translation>O conectar manualmente</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="405"/>
         <source>Virtual camera ready · %1</source>
-        <translation>Virtuelle Kamera bereit · %1</translation>
+        <translation>Cámara virtual lista · %1</translation>
     </message>
     <message>
         <location filename="../qml/screens/Launcher.qml" line="405"/>
         <source>Virtual camera inactive · 0 clients</source>
-        <translation>Virtuelle Kamera inaktiv · 0 Clients</translation>
+        <translation>Cámara virtual inactiva · 0 clientes</translation>
     </message>
 </context>
 <context>
@@ -184,32 +184,32 @@
     <message>
         <location filename="../qml/screens/LiveView.qml" line="112"/>
         <source>Session ended</source>
-        <translation>Sitzung beendet</translation>
+        <translation>Sesión finalizada</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="112"/>
         <source>No camera connected</source>
-        <translation>Keine Kamera verbunden</translation>
+        <translation>Sin cámara conectada</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="123"/>
         <source>Free tier session limit reached. Reconnect to continue.</source>
-        <translation>Sitzungslimit des kostenlosen Tarifs erreicht. Erneut verbinden zum Fortfahren.</translation>
+        <translation>Límite de sesión del plan gratuito alcanzado. Reconéctate para continuar.</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="123"/>
         <source>Connect a phone running ViewCam to start the live feed.</source>
-        <translation>Verbinde ein Telefon mit ViewCam, um den Live-Feed zu starten.</translation>
+        <translation>Conecta un teléfono con ViewCam para iniciar el feed en vivo.</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="136"/>
         <source>Scan for devices</source>
-        <translation>Nach Geräten suchen</translation>
+        <translation>Buscar dispositivos</translation>
     </message>
     <message>
         <location filename="../qml/screens/LiveView.qml" line="333"/>
         <source>Virtual Camera</source>
-        <translation>Virtuelle Kamera</translation>
+        <translation>Cámara virtual</translation>
     </message>
 </context>
 <context>
@@ -224,7 +224,7 @@
     </message>
     <message>
         <source>  Player  </source>
-        <translation type="vanished">  Player  </translation>
+        <translation type="vanished">  Reproductor  </translation>
     </message>
     <message>
         <source>  Audio  </source>
@@ -232,38 +232,38 @@
     </message>
     <message>
         <source>  Settings  </source>
-        <translation type="vanished">  Einstellungen  </translation>
+        <translation type="vanished">  Ajustes  </translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="vanished">Getrennt</translation>
+        <translation type="vanished">Desconectado</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Coming Soon</source>
-        <translation type="vanished">Demnächst</translation>
+        <translation type="vanished">Próximamente</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="117"/>
         <source>Installed</source>
-        <translation>Installiert</translation>
+        <translation>Instalado</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="118"/>
         <source>Path mismatch</source>
-        <translation>Pfadabweichung</translation>
+        <translation>Ruta incorrecta</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="119"/>
         <source>Not installed</source>
-        <translation>Nicht installiert</translation>
+        <translation>No instalado</translation>
     </message>
     <message>
         <location filename="../src/virtualcam/windows/FilterRegistrar.cpp" line="121"/>
         <source>Unknown</source>
-        <translation>Unbekannt</translation>
+        <translation>Desconocido</translation>
     </message>
 </context>
 <context>
@@ -271,32 +271,32 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="47"/>
         <source>Network</source>
-        <translation>Netzwerk</translation>
+        <translation>Red</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="61"/>
         <source>Connection</source>
-        <translation>Verbindung</translation>
+        <translation>Conexión</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="66"/>
         <source>Address</source>
-        <translation>Adresse</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="71"/>
         <source>Signal</source>
-        <translation>Signal</translation>
+        <translation>Señal</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="97"/>
         <source>Latency</source>
-        <translation>Latenz</translation>
+        <translation>Latencia</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="103"/>
         <source>Bitrate</source>
-        <translation>Bitrate</translation>
+        <translation>Tasa de bits</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="109"/>
@@ -306,82 +306,82 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="115"/>
         <source>Uptime</source>
-        <translation>Betriebszeit</translation>
+        <translation>Tiempo activo</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="126"/>
         <source>Device</source>
-        <translation>Gerät</translation>
+        <translation>Dispositivo</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="140"/>
         <source>Model</source>
-        <translation>Modell</translation>
+        <translation>Modelo</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="145"/>
         <source>System</source>
-        <translation>System</translation>
+        <translation>Sistema</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="150"/>
         <source>Battery</source>
-        <translation>Akku</translation>
+        <translation>Batería</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="152"/>
         <source>charging</source>
-        <translation>lädt</translation>
+        <translation>cargando</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="157"/>
         <source>Lens</source>
-        <translation>Objektiv</translation>
+        <translation>Objetivo</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="162"/>
         <source>Capture</source>
-        <translation>Aufnahme</translation>
+        <translation>Captura</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="173"/>
         <source>Device control</source>
-        <translation>Gerätekontrolle</translation>
+        <translation>Control del dispositivo</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="188"/>
         <source>Torch</source>
-        <translation>Taschenlampe</translation>
+        <translation>Linterna</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="189"/>
         <source>Rear flashlight</source>
-        <translation>Rückseitige Taschenlampe</translation>
+        <translation>Flash trasero</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="189"/>
         <source>No flash on front camera</source>
-        <translation>Kein Blitz an der Frontkamera</translation>
+        <translation>Sin flash en cámara frontal</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="198"/>
         <source>Focus lock</source>
-        <translation>Fokussperre</translation>
+        <translation>Bloqueo de enfoque</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="199"/>
         <source>Freeze autofocus</source>
-        <translation>Autofokus einfrieren</translation>
+        <translation>Fijar autoenfoque</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="207"/>
         <source>Exposure lock</source>
-        <translation>Belichtungssperre</translation>
+        <translation>Bloqueo de exposición</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="208"/>
         <source>Lock AE / AWB</source>
-        <translation>AE / AWB sperren</translation>
+        <translation>Bloquear AE / AWB</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="217"/>
@@ -391,97 +391,97 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="218"/>
         <source>High dynamic range</source>
-        <translation>Hoher Dynamikumfang</translation>
+        <translation>Alto rango dinámico</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="218"/>
         <source>Not supported on this device</source>
-        <translation>Auf diesem Gerät nicht unterstützt</translation>
+        <translation>No compatible con este dispositivo</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="227"/>
         <source>Resolution</source>
-        <translation>Auflösung</translation>
+        <translation>Resolución</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="247"/>
         <source>Flip lens</source>
-        <translation>Kamera wechseln</translation>
+        <translation>Cambiar lente</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="254"/>
         <source>Tap to focus</source>
-        <translation>Tippen zum Fokussieren</translation>
+        <translation>Toca para enfocar</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="274"/>
         <source>Optimization</source>
-        <translation>Optimierung</translation>
+        <translation>Optimización</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="287"/>
         <source>Adaptive bitrate</source>
-        <translation>Adaptive Bitrate</translation>
+        <translation>Tasa de bits adaptativa</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="288"/>
         <source>Clamps to network</source>
-        <translation>Passt sich ans Netzwerk an</translation>
+        <translation>Se adapta a la red</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="295"/>
         <source>Hardware acceleration</source>
-        <translation>Hardwarebeschleunigung</translation>
+        <translation>Aceleración por hardware</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="296"/>
         <source>GPU encode &amp; decode</source>
-        <translation>GPU-Kodierung &amp; -Dekodierung</translation>
+        <translation>Codificación y decodificación GPU</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="303"/>
         <source>Adaptive resolution</source>
-        <translation>Adaptive Auflösung</translation>
+        <translation>Resolución adaptativa</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="304"/>
         <source>Drop res before frames</source>
-        <translation>Auflösung vor Frames verringern</translation>
+        <translation>Bajar resolución antes que fotogramas</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="311"/>
         <source>Low-light boost</source>
-        <translation>Schwachlicht-Verstärkung</translation>
+        <translation>Potenciador de poca luz</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="312"/>
         <source>Brighten dim scenes</source>
-        <translation>Dunkle Szenen aufhellen</translation>
+        <translation>Iluminar escenas oscuras</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="319"/>
         <source>Noise reduction</source>
-        <translation>Rauschunterdrückung</translation>
+        <translation>Reducción de ruido</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="320"/>
         <source>Temporal denoise</source>
-        <translation>Zeitliche Rauschunterdrückung</translation>
+        <translation>Eliminación temporal del ruido</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="327"/>
         <source>Mirror image</source>
-        <translation>Spiegelbild</translation>
+        <translation>Imagen espejo</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="328"/>
         <source>Flip horizontally</source>
-        <translation>Horizontal spiegeln</translation>
+        <translation>Voltear horizontalmente</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="335"/>
         <source>Color profile</source>
-        <translation>Farbprofil</translation>
+        <translation>Perfil de color</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="337"/>
@@ -491,19 +491,19 @@
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="343"/>
         <source>Audio sample rate</source>
-        <translation>Audio-Abtastrate</translation>
+        <translation>Frecuencia de muestreo de audio</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="379"/>
         <source>This feature is currently unavailable!
  Please wait for the next update...</source>
-        <translation>Diese Funktion ist derzeit nicht verfügbar!
- Bitte warte auf das nächste Update...</translation>
+        <translation>¡Esta función no está disponible!
+ Espera la próxima actualización...</translation>
     </message>
     <message>
         <location filename="../qml/screens/RightPanel.qml" line="434"/>
         <source>Disconnect device</source>
-        <translation>Gerät trennen</translation>
+        <translation>Desconectar dispositivo</translation>
     </message>
 </context>
 <context>
@@ -511,277 +511,277 @@
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="21"/>
         <source>Settings</source>
-        <translation>Einstellungen</translation>
+        <translation>Ajustes</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="31"/>
         <source>Engine, network and appearance preferences for %1.</source>
-        <translation>Motor-, Netzwerk- und Darstellungseinstellungen für %1.</translation>
+        <translation>Preferencias de motor, red y apariencia para %1.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="41"/>
         <source>Stream engine</source>
-        <translation>Stream-Engine</translation>
+        <translation>Motor de streaming</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="46"/>
         <source>Hardware acceleration</source>
-        <translation>Hardwarebeschleunigung</translation>
+        <translation>Aceleración por hardware</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="47"/>
         <source>Use GPU encoder (VideoToolbox / NVENC)</source>
-        <translation>GPU-Encoder verwenden (VideoToolbox / NVENC)</translation>
+        <translation>Usar codificador GPU (VideoToolbox / NVENC)</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="48"/>
         <source>GPU video encoding — encodes the virtual-camera stream on the GPU (NVENC / VideoToolbox). Off = CPU encoding.</source>
-        <translation>GPU-Videokodierung — kodiert den virtuellen Kamera-Stream auf der GPU (NVENC / VideoToolbox). Aus = CPU-Kodierung.</translation>
+        <translation>Codificación de video GPU — codifica el stream de la cámara virtual en la GPU (NVENC / VideoToolbox). Apagado = codificación CPU.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="56"/>
         <source>GPU processing</source>
-        <translation>GPU-Verarbeitung</translation>
+        <translation>Procesamiento GPU</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="58"/>
         <source>Active: %1</source>
-        <translation>Aktiv: %1</translation>
+        <translation>Activo: %1</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="59"/>
         <source>Frame processing &amp; filters</source>
-        <translation>Frame-Verarbeitung &amp; Filter</translation>
+        <translation>Procesamiento de fotogramas y filtros</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="60"/>
         <source>GPU-accelerated frame processing &amp; filters — CUDA on NVIDIA, Vulkan compute on AMD/Intel. Off = CPU.</source>
-        <translation>GPU-beschleunigte Frame-Verarbeitung &amp; Filter — CUDA auf NVIDIA, Vulkan auf AMD/Intel. Aus = CPU.</translation>
+        <translation>Procesamiento de fotogramas acelerado por GPU — CUDA en NVIDIA, Vulkan en AMD/Intel. Apagado = CPU.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="68"/>
         <source>Stream protocol</source>
-        <translation>Stream-Protokoll</translation>
+        <translation>Protocolo de streaming</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="69"/>
         <source>MJPEG active · H.264/H.265 require mobile update</source>
-        <translation>MJPEG aktiv · H.264/H.265 erfordern mobiles Update</translation>
+        <translation>MJPEG activo · H.264/H.265 requieren actualización móvil</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="78"/>
         <source>Encoder preset</source>
-        <translation>Encoder-Voreinstellung</translation>
+        <translation>Perfil del codificador</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="79"/>
         <source>MJPEG quality / H.264 speed trade-off</source>
-        <translation>MJPEG-Qualität / H.264-Geschwindigkeitskompromiss</translation>
+        <translation>Equilibrio calidad MJPEG / velocidad H.264</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Quality</source>
-        <translation>Qualität</translation>
+        <translation>Calidad</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Balanced</source>
-        <translation>Ausgewogen</translation>
+        <translation>Equilibrado</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="81"/>
         <source>Speed</source>
-        <translation>Geschwindigkeit</translation>
+        <translation>Velocidad</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="88"/>
         <source>Max output resolution</source>
-        <translation>Max. Ausgabeauflösung</translation>
+        <translation>Resolución máxima de salida</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="89"/>
         <source>Virtual camera ceiling</source>
-        <translation>Virtuelle Kamera Obergrenze</translation>
+        <translation>Límite de la cámara virtual</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="98"/>
         <source>Keyframe interval</source>
-        <translation>Keyframe-Intervall</translation>
+        <translation>Intervalo de fotograma clave</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="99"/>
         <source>I-frame rate for H.264/H.265 — no effect on MJPEG</source>
-        <translation>I-Frame-Rate für H.264/H.265 — kein Effekt auf MJPEG</translation>
+        <translation>Tasa de fotogramas I para H.264/H.265 — sin efecto en MJPEG</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="122"/>
         <source>Buffered frames</source>
-        <translation>Gepufferte Frames</translation>
+        <translation>Fotogramas en búfer</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="123"/>
         <source>Delays display by N frames to smooth network jitter</source>
-        <translation>Verzögert die Anzeige um N Frames zur Glättung von Netzwerkjitter</translation>
+        <translation>Retrasa la visualización N fotogramas para suavizar el jitter de red</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="133"/>
         <source>Off</source>
-        <translation>Aus</translation>
+        <translation>Apagado</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="133"/>
         <source> frames</source>
-        <translation> Frames</translation>
+        <translation> fotogramas</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="149"/>
         <source>Network</source>
-        <translation>Netzwerk</translation>
+        <translation>Red</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="154"/>
         <source>Automatic discovery</source>
-        <translation>Automatische Erkennung</translation>
+        <translation>Detección automática</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="155"/>
         <source>Announce this computer to nearby phones</source>
-        <translation>Diesen Computer in der Nähe befindlichen Telefonen ankündigen</translation>
+        <translation>Anunciar este equipo a los teléfonos cercanos</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="163"/>
         <source>Listen port</source>
-        <translation>Empfangsport</translation>
+        <translation>Puerto de escucha</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="164"/>
         <source>TCP stream socket — applies on next connect</source>
-        <translation>TCP-Stream-Socket — gilt ab nächster Verbindung</translation>
+        <translation>Socket de stream TCP — se aplica en la próxima conexión</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="191"/>
         <source>Auto-reconnect</source>
-        <translation>Automatisch wiederherstellen</translation>
+        <translation>Reconexión automática</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="192"/>
         <source>Re-pair when a device drops off</source>
-        <translation>Erneut koppeln, wenn ein Gerät getrennt wird</translation>
+        <translation>Reemparejar cuando se desconecte un dispositivo</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="200"/>
         <source>Restrict to local subnet</source>
-        <translation>Auf lokales Subnetz beschränken</translation>
+        <translation>Restringir a subred local</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="201"/>
         <source>Only allow same-network devices</source>
-        <translation>Nur Geräte im selben Netzwerk zulassen</translation>
+        <translation>Solo permitir dispositivos en la misma red</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="212"/>
         <source>Appearance</source>
-        <translation>Darstellung</translation>
+        <translation>Apariencia</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="217"/>
         <source>Theme</source>
-        <translation>Thema</translation>
+        <translation>Tema</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="218"/>
         <source>Studio appearance</source>
-        <translation>Studio-Erscheinungsbild</translation>
+        <translation>Apariencia de estudio</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="220"/>
         <source>Dark</source>
-        <translation>Dunkel</translation>
+        <translation>Oscuro</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="220"/>
         <source>Light</source>
-        <translation>Hell</translation>
+        <translation>Claro</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="224"/>
         <source>Language</source>
-        <translation>Sprache</translation>
+        <translation>Idioma</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="225"/>
         <source>App display language</source>
-        <translation>Anzeigesprache der App</translation>
+        <translation>Idioma de la aplicación</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="228"/>
         <source>System</source>
-        <translation>System</translation>
+        <translation>Sistema</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="238"/>
         <source>Accent color</source>
-        <translation>Akzentfarbe</translation>
+        <translation>Color de acento</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="239"/>
         <source>Highlights and active states</source>
-        <translation>Hervorhebungen und aktive Zustände</translation>
+        <translation>Resaltados y estados activos</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="285"/>
         <source>Telemetry overlay</source>
-        <translation>Telemetrie-Overlay</translation>
+        <translation>Superposición de telemetría</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="286"/>
         <source>Bitrate, FPS and latency on the viewfinder</source>
-        <translation>Bitrate, FPS und Latenz im Sucher</translation>
+        <translation>Tasa de bits, FPS y latencia en el visor</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="294"/>
         <source>Compact sidebar</source>
-        <translation>Kompakte Seitenleiste</translation>
+        <translation>Barra lateral compacta</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="295"/>
         <source>Denser navigation and device list</source>
-        <translation>Kompaktere Navigation und Geräteliste</translation>
+        <translation>Navegación y lista de dispositivos más compacta</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="303"/>
         <source>Launch at login</source>
-        <translation>Bei Anmeldung starten</translation>
+        <translation>Iniciar al arrancar</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="304"/>
         <source>Start ViewCam in the background</source>
-        <translation>ViewCam im Hintergrund starten</translation>
+        <translation>Iniciar ViewCam en segundo plano</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="315"/>
         <source>About</source>
-        <translation>Über</translation>
+        <translation>Acerca de</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="321"/>
         <source>Version %1 · build %2</source>
-        <translation>Version %1 · Build %2</translation>
+        <translation>Versión %1 · build %2</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="324"/>
         <source>Check for updates</source>
-        <translation>Nach Updates suchen</translation>
+        <translation>Buscar actualizaciones</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="329"/>
         <source>Qt runtime</source>
-        <translation>Qt-Laufzeit</translation>
+        <translation>Tiempo de ejecución Qt</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="330"/>
         <source>Cross-platform framework</source>
-        <translation>Plattformübergreifendes Framework</translation>
+        <translation>Framework multiplataforma</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="332"/>
@@ -791,43 +791,43 @@
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="341"/>
         <source>CUDA runtime</source>
-        <translation>CUDA-Laufzeit</translation>
+        <translation>Tiempo de ejecución CUDA</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="342"/>
         <source>NVIDIA parallel computing platform</source>
-        <translation>NVIDIA-Parallelrechenplattform</translation>
+        <translation>Plataforma de cómputo paralelo NVIDIA</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="353"/>
         <source>Renderer</source>
-        <translation>Renderer</translation>
+        <translation>Renderizador</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="354"/>
         <source>Graphics backend</source>
-        <translation>Grafik-Backend</translation>
+        <translation>Backend gráfico</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="374"/>
         <source>Open-source licenses</source>
-        <translation>Open-Source-Lizenzen</translation>
+        <translation>Licencias de código abierto</translation>
     </message>
     <message>
         <location filename="../qml/screens/SettingsPage.qml" line="375"/>
         <source>Third-party components</source>
-        <translation>Drittanbieter-Komponenten</translation>
+        <translation>Componentes de terceros</translation>
     </message>
 </context>
 <context>
     <name>SettingsTab</name>
     <message>
         <source>Settings</source>
-        <translation type="vanished">Einstellungen</translation>
+        <translation type="vanished">Ajustes</translation>
     </message>
     <message>
         <source>VIRTUAL CAMERA</source>
-        <translation type="vanished">VIRTUELLE KAMERA</translation>
+        <translation type="vanished">CÁMARA VIRTUAL</translation>
     </message>
     <message>
         <source>Backend</source>
@@ -835,31 +835,31 @@
     </message>
     <message>
         <source>Device</source>
-        <translation type="vanished">Gerät</translation>
+        <translation type="vanished">Dispositivo</translation>
     </message>
     <message>
         <source>CONNECTION</source>
-        <translation type="vanished">VERBINDUNG</translation>
+        <translation type="vanished">CONEXIÓN</translation>
     </message>
     <message>
         <source>Default Port</source>
-        <translation type="vanished">Standardport</translation>
+        <translation type="vanished">Puerto predeterminado</translation>
     </message>
     <message>
         <source>Discovery</source>
-        <translation type="vanished">Erkennung</translation>
+        <translation type="vanished">Detección</translation>
     </message>
     <message>
         <source>ABOUT</source>
-        <translation type="vanished">ÜBER</translation>
+        <translation type="vanished">ACERCA DE</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation type="vanished">Version</translation>
+        <translation type="vanished">Versión</translation>
     </message>
     <message>
         <source>Protocol</source>
-        <translation type="vanished">Protokoll</translation>
+        <translation type="vanished">Protocolo</translation>
     </message>
 </context>
 <context>
@@ -867,52 +867,52 @@
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="69"/>
         <source>Live View</source>
-        <translation>Live-Ansicht</translation>
+        <translation>Vista en vivo</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="75"/>
         <source>Sources</source>
-        <translation>Quellen</translation>
+        <translation>Fuentes</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="81"/>
         <source>Settings</source>
-        <translation>Einstellungen</translation>
+        <translation>Ajustes</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="109"/>
         <source>Devices</source>
-        <translation>Geräte</translation>
+        <translation>Dispositivos</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="141"/>
         <source>Scanning</source>
-        <translation>Suche läuft</translation>
+        <translation>Buscando</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="306"/>
         <source>Other devices</source>
-        <translation>Andere Geräte</translation>
+        <translation>Otros dispositivos</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="306"/>
         <source>Available devices</source>
-        <translation>Verfügbare Geräte</translation>
+        <translation>Dispositivos disponibles</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="337"/>
         <source>Connect manually</source>
-        <translation>Manuell verbinden</translation>
+        <translation>Conectar manualmente</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="389"/>
         <source>Operator</source>
-        <translation>Betreiber</translation>
+        <translation>Operador</translation>
     </message>
     <message>
         <location filename="../qml/screens/Sidebar.qml" line="396"/>
         <source>Free plan</source>
-        <translation>Kostenloser Plan</translation>
+        <translation>Plan gratuito</translation>
     </message>
 </context>
 <context>
@@ -920,172 +920,172 @@
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="30"/>
         <source>Sources</source>
-        <translation>Quellen</translation>
+        <translation>Fuentes</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="45"/>
         <source>How this computer captures, mixes and plays back audio. The connected phone is already linked — no re-pairing needed.</source>
-        <translation>Wie dieser Computer Audio aufnimmt, mischt und abspielt. Das verbundene Telefon ist bereits verknüpft — kein erneutes Koppeln erforderlich.</translation>
+        <translation>Cómo este equipo captura, mezcla y reproduce audio. El teléfono conectado ya está vinculado — no es necesario volver a emparejar.</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="58"/>
         <source>Inputs</source>
-        <translation>Eingänge</translation>
+        <translation>Entradas</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="64"/>
         <source> — Microphone</source>
-        <translation> — Mikrofon</translation>
+        <translation> — Micrófono</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="64"/>
         <source>Phone microphone</source>
-        <translation>Telefonmikrofon</translation>
+        <translation>Micrófono del teléfono</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="65"/>
         <source>From phone · Compressed 64 Kb/s · 48 kHz</source>
-        <translation>Vom Telefon · Komprimiert 64 Kb/s · 48 kHz</translation>
+        <translation>Del teléfono · Comprimido 64 Kb/s · 48 kHz</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="73"/>
         <source>Capture system audio</source>
-        <translation>Systemton aufnehmen</translation>
+        <translation>Capturar audio del sistema</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="74"/>
         <source>Record what you hear from this computer</source>
-        <translation>Aufnehmen, was von diesem Computer zu hören ist</translation>
+        <translation>Graba lo que escuchas de este equipo</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="82"/>
         <source>Application capture</source>
-        <translation>Anwendungsaufnahme</translation>
+        <translation>Captura de aplicación</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="83"/>
         <source>Capture audio from one app only</source>
-        <translation>Audio nur von einer App aufnehmen</translation>
+        <translation>Capturar audio solo de una app</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="85"/>
         <source>Off</source>
-        <translation>Aus</translation>
+        <translation>Apagado</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="85"/>
         <source>Pick app</source>
-        <translation>App auswählen</translation>
+        <translation>Elegir app</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="92"/>
         <source>Loopback device</source>
-        <translation>Loopback-Gerät</translation>
+        <translation>Dispositivo loopback</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="93"/>
         <source>Virtual cable for routing to other apps</source>
-        <translation>Virtuelles Kabel zur Weiterleitung an andere Apps</translation>
+        <translation>Cable virtual para enrutar a otras apps</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="109"/>
         <source>Output &amp; monitoring</source>
-        <translation>Ausgabe &amp; Überwachung</translation>
+        <translation>Salida y monitorización</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="115"/>
         <source>Output device</source>
-        <translation>Ausgabegerät</translation>
+        <translation>Dispositivo de salida</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="116"/>
         <source>Where the return feed plays</source>
-        <translation>Wo der Rückkanal abgespielt wird</translation>
+        <translation>Donde se reproduce el feed de retorno</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="118"/>
         <source>System default</source>
-        <translation>Systemstandard</translation>
+        <translation>Predeterminado del sistema</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="126"/>
         <source>Monitor volume</source>
-        <translation>Abhörlautstärke</translation>
+        <translation>Volumen de monitorización</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="127"/>
         <source>Loopback monitoring level</source>
-        <translation>Loopback-Überwachungspegel</translation>
+        <translation>Nivel de monitorización en bucle</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="137"/>
         <source>Mute monitor while talking</source>
-        <translation>Monitor beim Sprechen stumm</translation>
+        <translation>Silenciar monitor al hablar</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="138"/>
         <source>Avoid echo on calls</source>
-        <translation>Echo bei Anrufen vermeiden</translation>
+        <translation>Evitar eco en llamadas</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="152"/>
         <source>Processing</source>
-        <translation>Verarbeitung</translation>
+        <translation>Procesamiento</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="158"/>
         <source>Sample rate</source>
-        <translation>Abtastrate</translation>
+        <translation>Frecuencia de muestreo</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="159"/>
         <source>Mixer clock</source>
-        <translation>Mixer-Takt</translation>
+        <translation>Reloj del mezclador</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="168"/>
         <source>Buffer size</source>
-        <translation>Puffergröße</translation>
+        <translation>Tamaño del búfer</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="169"/>
         <source>Lower = less delay</source>
-        <translation>Niedriger = weniger Verzögerung</translation>
+        <translation>Menor = menos delay</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>Low</source>
-        <translation>Niedrig</translation>
+        <translation>Bajo</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>Medium</source>
-        <translation>Mittel</translation>
+        <translation>Medio</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="171"/>
         <source>High</source>
-        <translation>Hoch</translation>
+        <translation>Alto</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="178"/>
         <source>A/V sync offset</source>
-        <translation>A/V-Sync-Versatz</translation>
+        <translation>Compensación sincronía A/V</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="179"/>
         <source>Nudge audio against video</source>
-        <translation>Audio gegenüber Video verschieben</translation>
+        <translation>Ajustar audio respecto al video</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="189"/>
         <source>Channels</source>
-        <translation>Kanäle</translation>
+        <translation>Canales</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="190"/>
         <source>Mono is lighter on the network</source>
-        <translation>Mono belastet das Netzwerk weniger</translation>
+        <translation>Mono es más ligero en la red</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="192"/>
@@ -1095,24 +1095,24 @@
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="192"/>
         <source>Stereo</source>
-        <translation>Stereo</translation>
+        <translation>Estéreo</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="199"/>
         <source>Noise gate</source>
-        <translation>Noise Gate</translation>
+        <translation>Puerta de ruido</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="200"/>
         <source>Silence the feed below a threshold</source>
-        <translation>Feed unterhalb eines Schwellenwerts stumm schalten</translation>
+        <translation>Silenciar el feed por debajo de un umbral</translation>
     </message>
     <message>
         <location filename="../qml/screens/SourcesPage.qml" line="241"/>
         <source>This feature is currently unavailable!
  Please wait for the next update...</source>
-        <translation>Diese Funktion ist derzeit nicht verfügbar!
- Bitte warte auf das nächste Update...</translation>
+        <translation>¡Esta función no está disponible!
+ Espera la próxima actualización...</translation>
     </message>
 </context>
 <context>
@@ -1120,7 +1120,7 @@
     <message>
         <location filename="../qml/components/VcDeviceRow.qml" line="70"/>
         <source>Connect</source>
-        <translation>Verbinden</translation>
+        <translation>Conectar</translation>
     </message>
 </context>
 </TS>

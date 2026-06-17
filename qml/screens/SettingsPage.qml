@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import ViewCam.Studio
 
 // Settings page: stream engine, network, appearance, about.
@@ -226,15 +227,92 @@ Flickable {
                 icon: "globe"
                 title: qsTr("Language")
                 description: qsTr("App display language")
-                VcSeg {
-                    readonly property var codes:   ["",   "en",     "tr",     "de",     "fr"]
-                    readonly property var labels:  [qsTr("System"), "EN", "TR", "DE", "FR"]
-                    model: labels
-                    currentIndex: {
-                        const idx = codes.indexOf(root.s.language)
-                        return idx < 0 ? 0 : idx
+
+                Item {
+                    id: langPicker
+                    readonly property var codes:  ["",          "en",      "tr",       "de",       "fr",        "ar",       "hi",     "zh",   "es",       "ru",        "uk"          ]
+                    readonly property var labels: [qsTr("System"), "English", "Türkçe", "Deutsch", "Français", "العربية", "हिन्दी", "中文", "Español", "Русский", "Українська"]
+
+                    width: langBtn.implicitWidth
+                    height: langBtn.implicitHeight
+
+                    Rectangle {
+                        id: langBtn
+                        implicitWidth: langBtnLabel.implicitWidth + 32
+                        implicitHeight: 30
+                        radius: 8
+                        color: langBtnArea.containsMouse ? Theme.bg3 : Theme.bg2
+                        border.color: Theme.line1
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            Text {
+                                id: langBtnLabel
+                                text: {
+                                    const idx = langPicker.codes.indexOf(root.s.language)
+                                    return idx < 0 ? langPicker.labels[0] : langPicker.labels[idx]
+                                }
+                                font.family: Theme.fontSans
+                                font.pixelSize: 13
+                                color: Theme.fg1
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "▾"
+                                font.pixelSize: 11
+                                color: Theme.fg3
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                        MouseArea {
+                            id: langBtnArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: langPopup.open()
+                        }
                     }
-                    onActivated: (i) => root.s.language = codes[i]
+
+                    Popup {
+                        id: langPopup
+                        parent: langBtn
+                        y: parent.height + 4
+                        x: parent.width - width
+                        padding: 6
+                        background: Rectangle {
+                            color: Theme.bg2
+                            radius: Theme.radiusMd
+                            border.color: Theme.line1
+                        }
+                        Column {
+                            spacing: 2
+                            Repeater {
+                                model: langPicker.labels
+                                delegate: Rectangle {
+                                    required property string modelData
+                                    required property int index
+                                    readonly property bool sel: langPicker.codes[index] === root.s.language
+                                    width: 170; height: 32; radius: 6
+                                    color: rowHover.containsMouse ? Theme.bg3 : (sel ? Theme.irisSoft : "transparent")
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 12
+                                        text: modelData
+                                        font.family: Theme.fontSans
+                                        font.pixelSize: 13
+                                        color: sel ? Theme.iris : Theme.fg1
+                                    }
+                                    MouseArea {
+                                        id: rowHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: { root.s.language = langPicker.codes[index]; langPopup.close() }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             VcSettingRow {
