@@ -3,6 +3,8 @@
 
 #include <QProcess>
 #include <QPainter>
+#include <QFont>
+#include <QFontMetrics>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -217,6 +219,30 @@ void V4L2LoopbackWriter::convertRgbToYuyv(const uchar *rgb, int width, int heigh
     }
 }
 
+static void drawFrameWatermark(QImage &img) {
+    const QString text = "ViewCam";
+    QFont font;
+    font.setPixelSize(14);
+    font.setWeight(QFont::DemiBold);
+
+    QFontMetrics fm(font);
+    int tw = fm.horizontalAdvance(text);
+    int rh = fm.height() + 10;
+    int rw = tw + 18;
+    int rx = img.width()  - rw - 14;
+    int ry = 14;
+
+    QPainter p(&img);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setRenderHint(QPainter::TextAntialiasing);
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(0, 0, 0, 100));
+    p.drawRoundedRect(rx, ry, rw, rh, rh / 2, rh / 2);
+    p.setFont(font);
+    p.setPen(QColor(255, 255, 255, 200));
+    p.drawText(rx + 9, ry + 5 + fm.ascent(), text);
+}
+
 void V4L2LoopbackWriter::writeFrame(const QImage &image) {
     if (m_fd < 0 || m_disabled)
         return;
@@ -276,6 +302,10 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
         h = m_height;
     }
 
+    // Burn watermark into the frame before virtual camera output.
+    if (m_watermarkEnabled)
+        drawFrameWatermark(rgb);
+
     // handle scanline padding
     if (rgb.bytesPerLine() == w * 3) {
         convertRgbToYuyv(rgb.constBits(), w, h);
@@ -290,5 +320,8 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
     ssize_t written = ::write(m_fd, m_yuyvBuffer.data(), m_yuyvBuffer.size());
     if (written < 0) {
         VC_ERROR("Failed to write frame to virtual camera: {}", strerror(errno));
+    } else if (static_cast<size_t>(written) != m_yuyvBuffer.size()) {
+        VC_WARN("Short write to virtual camera: {} of {} bytes",
+                written, m_yuyvBuffer.size());
     }
 }

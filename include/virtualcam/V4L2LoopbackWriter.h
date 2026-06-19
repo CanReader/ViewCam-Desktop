@@ -16,6 +16,7 @@ public:
     void close();
     bool isOpen() const;
     std::string devicePath() const;
+    void setWatermarkEnabled(bool enabled) { m_watermarkEnabled = enabled; }
 
 public slots:
     void writeFrame(const QImage &image);
@@ -35,5 +36,6 @@ private:
     int m_requestedHeight = 0;
     bool m_formatSet = false;
     bool m_disabled = false;
+    bool m_watermarkEnabled = true;
     std::vector<uint8_t> m_yuyvBuffer;
 };
