@@ -12,8 +12,11 @@ Rectangle {
     readonly property var s: AppController.settings
     // camera controls — backed by the phone over the CONTROL channel
     readonly property var cc: AppController.cameraControl
+    readonly property bool isPro: false   // wire to AppController.settings.isPro when IAP lands
 
     property bool optimizationBlurred: true
+
+    VcProGateDialog { id: proGate }
 
     color: Theme.bg2
 
@@ -217,6 +220,9 @@ Rectangle {
                     title: qsTr("HDR")
                     description: root.cc.hdrSupported ? qsTr("High dynamic range") : qsTr("Not supported on this device")
                     opacity: root.cc.hdrSupported ? 1.0 : 0.45
+                    pro: true
+                    isPro: root.isPro
+                    onProGateTapped: proGate.open()
                     VcToggle {
                         checked: root.cc.hdr
                         enabled: root.conn.connected && root.cc.hdrSupported

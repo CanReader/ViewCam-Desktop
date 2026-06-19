@@ -20,6 +20,10 @@ Item {
         open: true  // Component.onCompleted overrides from C++ connection state
     }
 
+    UpdateScreen {
+        anchors.fill: parent
+    }
+
     Component.onCompleted: {
         // Restore UI state from persistent C++ singletons.
         // AppController.activePage and AppController.connection.connected
@@ -33,8 +37,11 @@ Item {
         target: AppController.connection
         function onStateChanged() {
             if (AppController.connection.connected) {
-                launcher.open = false;
-                shell.page = AppController.activePage;
+                launcher.open = false
+                shell.page = AppController.activePage
+            } else {
+                // Reopen launcher when connection drops or fails
+                launcher.open = true
             }
         }
     }

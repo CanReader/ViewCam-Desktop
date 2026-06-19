@@ -7,6 +7,9 @@ Flickable {
     id: root
 
     readonly property var s: AppController.settings
+    readonly property bool isPro: false   // wire to AppController.settings.isPro when IAP lands
+
+    VcProGateDialog { id: proGate }
 
     contentHeight: content.implicitHeight + 128
     clip: true
@@ -47,6 +50,9 @@ Flickable {
                 title: qsTr("Hardware acceleration")
                 description: qsTr("Use GPU encoder (VideoToolbox / NVENC)")
                 tooltip: qsTr("GPU video encoding — encodes the virtual-camera stream on the GPU (NVENC / VideoToolbox). Off = CPU encoding.")
+                pro: true
+                isPro: root.isPro
+                onProGateTapped: proGate.open()
                 VcToggle {
                     checked: root.s.hardwareAccel
                     onToggled: (c) => root.s.hardwareAccel = c
@@ -59,6 +65,9 @@ Flickable {
                              ? qsTr("Active: %1").arg(AppController.gpuBackend)
                              : qsTr("Frame processing & filters")
                 tooltip: qsTr("GPU-accelerated frame processing & filters — CUDA on NVIDIA, Vulkan compute on AMD/Intel. Off = CPU.")
+                pro: true
+                isPro: root.isPro
+                onProGateTapped: proGate.open()
                 VcToggle {
                     checked: root.s.gpuProcessing
                     onToggled: (c) => root.s.gpuProcessing = c
@@ -68,6 +77,9 @@ Flickable {
                 icon: "protocol"
                 title: qsTr("Stream protocol")
                 description: qsTr("MJPEG active · H.264/H.265 require mobile update")
+                pro: true
+                isPro: root.isPro
+                onProGateTapped: proGate.open()
                 VcSeg {
                     model: ["MJPEG", "H.264", "H.265"]
                     currentIndex: root.s.streamProtocol
@@ -78,6 +90,9 @@ Flickable {
                 icon: "plus"
                 title: qsTr("Encoder preset")
                 description: qsTr("MJPEG quality / H.264 speed trade-off")
+                pro: true
+                isPro: root.isPro
+                onProGateTapped: proGate.open()
                 VcSeg {
                     model: [qsTr("Quality"), qsTr("Balanced"), qsTr("Speed")]
                     currentIndex: root.s.encoderPreset
@@ -88,6 +103,9 @@ Flickable {
                 icon: "resolution"
                 title: qsTr("Max output resolution")
                 description: qsTr("Virtual camera ceiling")
+                pro: true
+                isPro: root.isPro
+                onProGateTapped: proGate.open()
                 VcSeg {
                     model: ["720p", "1080p", "4K"]
                     currentIndex: root.s.maxResolution
@@ -98,6 +116,9 @@ Flickable {
                 icon: "clock"
                 title: qsTr("Keyframe interval")
                 description: qsTr("I-frame rate for H.264/H.265 — no effect on MJPEG")
+                pro: true
+                isPro: root.isPro
+                onProGateTapped: proGate.open()
                 Row {
                     spacing: 4
                     anchors.verticalCenter: parent.verticalCenter
@@ -122,6 +143,9 @@ Flickable {
                 icon: "arch"
                 title: qsTr("Buffered frames")
                 description: qsTr("Delays display by N frames to smooth network jitter")
+                pro: true
+                isPro: root.isPro
+                onProGateTapped: proGate.open()
                 Row {
                     spacing: 4
                     anchors.verticalCenter: parent.verticalCenter
@@ -414,6 +438,7 @@ Flickable {
                 VcButton {
                     kind: "soft"
                     text: qsTr("Check for updates")
+                    onClicked: UpdateChecker.checkNow()
                 }
             }
             VcSettingRow {

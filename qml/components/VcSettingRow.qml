@@ -14,6 +14,9 @@ Item {
     property string description: ""
     property string tooltip: ""       // optional hover help (info glyph)
     property bool showDivider: true
+    property bool pro: false
+    property bool isPro: false
+    signal proGateTapped()
     default property alias rightSlot: right.data
 
     width: parent ? parent.width : 0
@@ -66,6 +69,10 @@ Item {
                     color: Theme.fg1
                     elide: Text.ElideRight
                 }
+                VcProBadge {
+                    Layout.alignment: Qt.AlignVCenter
+                    visible: root.pro && !root.isPro
+                }
                 VcTooltip {
                     Layout.alignment: Qt.AlignVCenter
                     visible: root.tooltip !== ""
@@ -84,9 +91,28 @@ Item {
             }
         }
 
-        Row {
-            id: right
-            spacing: 8
+        // Wrapper so the gate MouseArea can sit on top of controls via z-order.
+        Item {
+            id: rightWrapper
+            implicitWidth: right.implicitWidth
+            implicitHeight: right.implicitHeight
+            Layout.alignment: Qt.AlignVCenter
+
+            Row {
+                id: right
+                anchors.centerIn: parent
+                spacing: 8
+                opacity: (root.pro && !root.isPro) ? 0.32 : 1.0
+            }
+
+            // Gate overlay — declared after Row so it renders on top;
+            // blocks all mouse events to the controls when Pro-locked.
+            MouseArea {
+                anchors.fill: parent
+                visible: root.pro && !root.isPro
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.proGateTapped()
+            }
         }
     }
 }
