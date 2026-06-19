@@ -287,7 +287,10 @@ bool VulkanComputeBackend::runProofOfLife() {
     VkFenceCreateInfo fci{};
     fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     VkFence fence = VK_NULL_HANDLE;
-    vkCreateFence(d->device, &fci, nullptr, &fence);
+    if (vkCreateFence(d->device, &fci, nullptr, &fence) != VK_SUCCESS) {
+        vkFreeCommandBuffers(d->device, d->cmdPool, 1, &cb);
+        return false;
+    }
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
@@ -295,6 +298,10 @@ bool VulkanComputeBackend::runProofOfLife() {
     bool ok = vkQueueSubmit(d->queue, 1, &si, fence) == VK_SUCCESS;
     if (ok)
         ok = vkWaitForFences(d->device, 1, &fence, VK_TRUE, 2'000'000'000ull) == VK_SUCCESS;
+    if (!ok) {
+        // Ensure GPU finishes before we free anything
+        vkDeviceWaitIdle(d->device);
+    }
     vkDestroyFence(d->device, fence, nullptr);
     vkFreeCommandBuffers(d->device, d->cmdPool, 1, &cb);
 
