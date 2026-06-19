@@ -68,9 +68,14 @@ void StreamReceiver::sendControl(const QJsonObject &patch) {
         return;
     }
     const QByteArray body = QJsonDocument(patch).toJson(QJsonDocument::Compact);
-    m_socket->write(makeHeader(static_cast<quint32>(body.size()), 0, 0,
-                               vc::FrameFormat::Control, vc::FrameType::Control));
-    m_socket->write(body);
+    const QByteArray header = makeHeader(static_cast<quint32>(body.size()), 0, 0,
+                                         vc::FrameFormat::Control, vc::FrameType::Control);
+    if (m_socket->write(header) != header.size() ||
+        m_socket->write(body)   != body.size()) {
+        VC_ERROR("sendControl write failed: {}", m_socket->errorString().toStdString());
+        emit errorOccurred(m_socket->errorString());
+        return;
+    }
     VC_INFO("CONTROL -> phone: {}", body.constData());
 }
 
@@ -89,11 +94,12 @@ bool StreamReceiver::parseFrame() {
         if (idx < 0) {
             VC_WARN("Lost sync, no VCAM magic, discarding {} bytes", m_buffer.size());
             m_buffer.clear();
+            return false; // nothing left to parse
         } else {
             VC_WARN("Lost sync, skipping {} bytes to resync", idx);
             m_buffer.remove(0, idx);
+            return true;  // re-enter to attempt parse at new position
         }
-        return false;
     }
 
     // Parse header (little-endian, see CONNECTIVITY_PROTOCOL.md §4)
