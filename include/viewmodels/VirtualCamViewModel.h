@@ -31,6 +31,6 @@ signals:
 
 private:
     bool m_available = false;
-    bool m_enabled = true;
+    bool m_enabled = false;
     QString m_devicePath;
 };

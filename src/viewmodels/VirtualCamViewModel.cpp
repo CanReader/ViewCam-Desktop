@@ -9,6 +9,10 @@ void VirtualCamViewModel::setAvailable(bool available,
     return;
   m_available = available;
   m_devicePath = devicePath;
+  if (!available && m_enabled) {
+    m_enabled = false;
+    emit enabledChanged();
+  }
   emit availableChanged();
 }
 
