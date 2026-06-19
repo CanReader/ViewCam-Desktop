@@ -30,7 +30,6 @@ Row {
 
                 SequentialAnimation {
                     running: root.running && root.visible
-                    loops: Animation.Infinite
 
                     PauseAnimation { duration: Math.floor(Math.random() * 1100) }
                     SequentialAnimation {

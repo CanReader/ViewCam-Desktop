@@ -19,10 +19,10 @@ Rectangle {
     radius: primary ? Theme.radiusPill : Theme.radiusLg
     color: {
         if (primary)
-            return Theme.iris
+            return hover.hovered ? Theme.irisHover : Theme.iris
         return hover.hovered ? Theme.bg4 : Theme.bg3
     }
-    opacity: primary && hover.hovered ? 1.1 : 1.0
+    opacity: 1.0
     border.width: primary ? 0 : 1
     border.color: Theme.line1
 

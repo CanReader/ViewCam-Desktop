@@ -223,6 +223,7 @@ Rectangle {
                 }
 
                 Row {
+                    visible: AppController.settings.autoDiscovery
                     spacing: 9
 
                     Rectangle {
@@ -292,6 +293,7 @@ Rectangle {
                         Layout.fillWidth: true
                     }
                     Row {
+                        visible: AppController.settings.autoDiscovery
                         spacing: 6
 
                         Rectangle {
@@ -345,7 +347,7 @@ Rectangle {
 
                         width: deviceList.width
                         deviceName: name
-                        appearDelay: 150 + index * 500
+                        appearDelay: 150 + index * 50
                         onClicked: AppController.connectToDevice(name, host, port)
                     }
                 }

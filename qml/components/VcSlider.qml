@@ -7,6 +7,7 @@ Item {
     id: root
 
     property real value: 0.6
+    property real _internal: value
     signal moved(real value)
 
     implicitWidth: 96
@@ -23,7 +24,7 @@ Item {
 
     Rectangle {
         anchors.verticalCenter: parent.verticalCenter
-        width: track.width * root.value
+        width: track.width * root._internal
         height: 4
         radius: Theme.radiusPill
         color: Theme.iris
@@ -31,7 +32,7 @@ Item {
 
     Rectangle {
         id: knob
-        x: track.width * root.value - width / 2
+        x: track.width * root._internal - width / 2
         anchors.verticalCenter: parent.verticalCenter
         width: 34
         height: 34
@@ -57,8 +58,9 @@ Item {
         onPositionChanged: (mouse) => { if (pressed) update(mouse.x) }
 
         function update(mx) {
-            root.value = Math.max(0, Math.min(1, mx / track.width))
-            root.moved(root.value)
+            const v = Math.max(0, Math.min(1, mx / track.width))
+            root._internal = v
+            root.moved(v)
         }
     }
 }

@@ -7,7 +7,7 @@ Item {
 
     signal openLauncher
 
-    property bool micOff: false
+    property bool micOff: AppController.audio.micMuted
     property real volume: 0.6
 
     readonly property var conn: AppController.connection
@@ -246,10 +246,47 @@ Item {
 
                 VcIcon {
                     anchors.centerIn: parent
-                    width: 18
-                    height: 18
-                    name: "battery-full"
-                    color: Theme.fg1
+                    width: 18; height: 18
+                    name: root.conn.charging ? "battery-charging"
+                          : root.conn.battery >= 60 ? "battery-full"
+                          : root.conn.battery >= 20 ? "battery-mid"
+                          : "battery-low"
+                    color: root.conn.battery < 20 ? Theme.statusError : Theme.fg1
+                }
+            }
+
+            // watermark — top-right, below battery chip (free tier)
+            Rectangle {
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.topMargin: 58
+                anchors.rightMargin: 16
+                height: 28
+                width: wmRow.implicitWidth + 18
+                radius: Theme.radiusPill
+                color: Theme.glassBg
+                border.width: 1
+                border.color: Theme.glassBorder
+
+                Row {
+                    id: wmRow
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Monogram {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 14
+                        height: 14
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "ViewCam"
+                        font.family: Theme.fontSans
+                        font.pixelSize: 12
+                        font.weight: Font.SemiBold
+                        font.letterSpacing: 0.04 * 12
+                        color: "white"
+                    }
                 }
             }
 
@@ -300,7 +337,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         icon: "mic"
                         off: root.micOff
-                        onClicked: root.micOff = !root.micOff
+                        onClicked: AppController.audio.micMuted = !root.micOff
                     }
 
                     Row {

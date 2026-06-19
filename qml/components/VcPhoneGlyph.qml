@@ -7,6 +7,8 @@ Rectangle {
 
     property bool active: false
 
+    onActiveChanged: screenTint.requestPaint()
+
     implicitWidth: 36
     implicitHeight: 52
     radius: 6

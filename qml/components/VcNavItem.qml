@@ -14,10 +14,11 @@ Rectangle {
     implicitHeight: 40
     radius: Theme.radiusLg
     color: active ? Theme.irisSoft : (hover.hovered ? Theme.bg3 : "transparent")
-    border.width: active ? 1 : 0
-    border.color: Theme.alpha(Theme.iris, 0.18)
+    border.width: 1
+    border.color: active ? Theme.alpha(Theme.iris, 0.18) : "transparent"
 
     Behavior on color { ColorAnimation { duration: Theme.durSnap } }
+    Behavior on border.color { ColorAnimation { duration: Theme.durSnap } }
 
     readonly property color tone: active ? Theme.iris
                                          : (hover.hovered ? Theme.fg2 : Theme.slate)

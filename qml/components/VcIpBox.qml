@@ -54,10 +54,11 @@ Rectangle {
         width: root.large ? 36 : 30
         height: root.large ? 36 : 30
         radius: Theme.radiusMd
-        color: Theme.iris
+        color: goHover.hovered ? Theme.irisHover : Theme.iris
 
         HoverHandler { id: goHover }
-        opacity: goHover.hovered ? 1.12 : 1.0
+        scale: goHover.hovered ? 1.05 : 1.0
+        Behavior on scale { NumberAnimation { duration: Theme.durSnap } }
 
         VcIcon {
             anchors.centerIn: parent

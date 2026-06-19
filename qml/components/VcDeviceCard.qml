@@ -23,10 +23,10 @@ Rectangle {
     Behavior on color { ColorAnimation { duration: Theme.durSnap } }
     Behavior on border.color { ColorAnimation { duration: Theme.durSnap } }
 
-    transform: Translate {
-        y: hover.hovered ? -1 : 0
-        Behavior on y { NumberAnimation { duration: Theme.durSnap } }
-    }
+    transform: [
+        Translate { id: enterTranslate; y: 8 },
+        Translate { y: hover.hovered ? -1 : 0; Behavior on y { NumberAnimation { duration: Theme.durSnap } } }
+    ]
 
     // entrance: fadeUp with stagger
     opacity: 0
@@ -36,7 +36,13 @@ Rectangle {
         PauseAnimation { duration: root.appearDelay }
         ParallelAnimation {
             NumberAnimation {
-                target: root; property: "opacity"; to: 1
+                target: root; property: "opacity"; from: 0; to: 1
+                duration: Theme.durPull
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.easeIris
+            }
+            NumberAnimation {
+                target: enterTranslate; property: "y"; from: 8; to: 0
                 duration: Theme.durPull
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Theme.easeIris
