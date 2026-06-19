@@ -143,7 +143,7 @@ void AppController::init() {
           [this](const QString &err) {
             VC_ERROR("Stream error: {}", err.toStdString());
             m_connection->markError(err);
-            if (!m_userDisconnect)
+            if (!m_userDisconnect && !m_connection->sessionLimited())
               scheduleReconnect();
           });
 
@@ -241,7 +241,9 @@ void AppController::onImageReady(const QImage &image) {
 
   const int bufSize = m_settingsVm->bufferedFrames();
   if (bufSize == 0) {
-    // No buffering: display immediately.
+    // Flush any queued frames before passing the new one through.
+    while (!m_frameBuffer.isEmpty())
+      publishFrame(m_frameBuffer.takeFirst());
     publishFrame(frame);
   } else {
     // Jitter buffer: queue the incoming frame and display the oldest once
@@ -269,6 +271,7 @@ void AppController::connectToDevice(const QString &name, const QString &host,
   m_sawFirstFrame = false;
   m_reconnectAttempts = 0;
   m_reconnectTimer.stop();
+  m_frameBuffer.clear();
   m_settings->setLastHost(host);
   m_settings->setPort(port);
   m_connection->beginConnecting(name, host, port);
@@ -279,13 +282,15 @@ void AppController::connectManual(const QString &ip) {
   const QString host = ip.trimmed();
   if (host.isEmpty())
     return;
-  connectToDevice(host, host, m_settingsVm->listenPort());
+  connectToDevice(QStringLiteral("Manual (%1)").arg(host), host,
+                  m_settingsVm->listenPort());
 }
 
 void AppController::disconnectDevice() {
   VC_INFO("Disconnect requested by user");
   m_userDisconnect = true;
   m_reconnectTimer.stop();
+  m_frameBuffer.clear();
   m_receiver->disconnect();
   m_connection->markDisconnected();
   m_cameraControl->reset();
