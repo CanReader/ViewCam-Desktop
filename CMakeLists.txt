@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(ViewCam
     VERSION 1.0.0
     DESCRIPTION "Turn your phone into a virtual webcam"
-    HOMEPAGE_URL "https://viewcam.io"
+    HOMEPAGE_URL "https://viewcam.tech"
     LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -16,7 +16,7 @@ set(VIEWCAM_DISPLAY_NAME "ViewCam Studio"      CACHE STRING "User-facing product
 set(VIEWCAM_EDITION      "Studio"              CACHE STRING "Product edition label")
 set(VIEWCAM_ORG_NAME     "Sleak Software"      CACHE STRING "Organization name (QSettings)")
 set(VIEWCAM_ORG_DOMAIN   "viewcam.io"          CACHE STRING "Organization domain")
-set(VIEWCAM_BUNDLE_ID    "io.viewcam.studio"   CACHE STRING "Reverse-DNS bundle identifier")
+set(VIEWCAM_BUNDLE_ID    "tech.viewcam.studio"   CACHE STRING "Reverse-DNS bundle identifier")
 set(VIEWCAM_BUILD_NUMBER 1                     CACHE STRING "Monotonic build number")
 set(VIEWCAM_COPYRIGHT    "(c) 2026 Sleak Software" CACHE STRING "Copyright line")
 set(VIEWCAM_STREAM_PORT  8080                  CACHE STRING "Default TCP stream port")
@@ -144,6 +144,7 @@ set(SOURCES
     src/gpu/GpuBackendFactory.cpp
     src/gpu/CudaBackend.cpp
     src/gpu/VulkanComputeBackend.cpp
+    src/updater/UpdateChecker.cpp
 )
 
 set(HEADERS
@@ -159,6 +160,7 @@ set(HEADERS
     include/gpu/CpuBackend.h
     include/gpu/CudaBackend.h
     include/gpu/VulkanComputeBackend.h
+    include/updater/UpdateChecker.h
 )
 
 # The CUDA proof-of-life kernel is compiled by nvcc only when CUDA is enabled.
@@ -189,6 +191,8 @@ set(VIEWCAM_QML_FILES
     qml/components/Monogram.qml
     qml/components/VcBadge.qml
     qml/components/VcButton.qml
+    qml/components/VcProBadge.qml
+    qml/components/VcProGateDialog.qml
     qml/components/VcCard.qml
     qml/components/VcDeviceCard.qml
     qml/components/VcDeviceRow.qml
@@ -212,6 +216,7 @@ set(VIEWCAM_QML_FILES
     qml/screens/Sidebar.qml
     qml/screens/SourcesPage.qml
     qml/screens/SettingsPage.qml
+    qml/screens/UpdateScreen.qml
 )
 
 file(GLOB VIEWCAM_ICON_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/icons/*.svg)
@@ -256,6 +261,8 @@ qt_add_qml_module(${PROJECT_NAME}
         src/viewmodels/SettingsViewModel.cpp
         include/viewmodels/VirtualCamViewModel.h
         src/viewmodels/VirtualCamViewModel.cpp
+        include/updater/UpdateChecker.h
+        src/updater/UpdateChecker.cpp
 )
 
 # ── External opaque resource bundle: bin/viewcam.rcc ──────────
@@ -270,6 +277,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     # qmltyperegistrations includes QML_ELEMENT headers by basename
     ${CMAKE_SOURCE_DIR}/include/viewmodels
+    ${CMAKE_SOURCE_DIR}/include/updater
     ${CMAKE_CURRENT_BINARY_DIR}/generated   # ViewCamConfig.h
     ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -326,6 +334,12 @@ endif()
 set(DEPLOY_DIR "${CMAKE_SOURCE_DIR}/bin")
 
 # Copy the external resource bundle next to the executable.
+# Attached to BOTH the rcc target and the binary so it runs whenever the rcc
+# is regenerated (QML-only changes don't relink the C++ binary).
+add_custom_command(TARGET viewcam_rcc POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${VIEWCAM_RCC_FILE}" "${DEPLOY_DIR}/viewcam.rcc"
+    COMMENT "Deploying viewcam.rcc to bin/ (rcc target)")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${VIEWCAM_RCC_FILE}" "${DEPLOY_DIR}/viewcam.rcc"
