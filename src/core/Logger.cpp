@@ -5,7 +5,12 @@ static std::shared_ptr<spdlog::logger> s_logger;
 
 void Logger::init(Level level) {
     s_logger = spdlog::stdout_color_mt("viewcam");
+#ifdef NDEBUG
+    // Release: clean output — no source file/line noise
+    s_logger->set_pattern("[%H:%M:%S.%e] [%^%l%$] %v");
+#else
     s_logger->set_pattern("[%H:%M:%S.%e] [%^%l%$] [%s:%#] %v");
+#endif
 
     switch (level) {
         case Level::Trace:    s_logger->set_level(spdlog::level::trace); break;

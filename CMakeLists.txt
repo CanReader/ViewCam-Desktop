@@ -186,6 +186,12 @@ endif()
 # ── Build ──────────────────────────────────────────────────────
 qt_add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
+# Release on Windows: no console window when double-clicked.
+# When launched from a terminal, main.cpp calls AttachConsole so stdout still works.
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE $<CONFIG:Release>)
+endif()
+
 # ── QML module: ViewModels (QML_ELEMENT) + QML UI + assets ───
 set(VIEWCAM_QML_FILES
     qml/Main.qml
