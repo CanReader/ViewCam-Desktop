@@ -540,6 +540,11 @@ if(WIN32)
         advapi32
     )
 
+    # Static-link libgcc and libstdc++ so the DLL has no MSYS2 runtime
+    # dependencies — the Windows Frame Server broker loads this DLL in a
+    # separate process and won't find MSYS2 DLLs in its search path.
+    target_link_options(ViewCamMFSource PRIVATE -static-libgcc -static-libstdc++)
+
     set_target_properties(ViewCamMFSource PROPERTIES
         PREFIX ""
         RUNTIME_OUTPUT_DIRECTORY "${DEPLOY_DIR}"
