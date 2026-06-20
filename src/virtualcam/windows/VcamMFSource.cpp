@@ -16,7 +16,6 @@
 #include <mfobjects.h>
 #include <propidl.h>
 #include <new>
-#include <atomic>
 
 #include "virtualcam/SharedFrameProtocol.h"
 
@@ -121,8 +120,8 @@ private:
     VcamMFSource           *m_src;
     IMFStreamDescriptor    *m_sd       = nullptr;
     IMFMediaEventQueue     *m_q        = nullptr;
-    std::atomic<bool>       m_active   {false};
-    std::atomic<bool>       m_shutdown {false};
+    volatile LONG           m_active   = 0;   // 1=active, 0=stopped
+    volatile LONG           m_shutdown = 0;   // 1=shut down
 
     HANDLE  m_hMem    = nullptr;
     HANDLE  m_hMutex  = nullptr;
@@ -133,7 +132,21 @@ private:
 };
 
 // ---- VcamMFSource ------------------------------------------------------------
-class VcamMFSource final : public IMFMediaSource {
+// IMFMediaSourceEx is required by the MF virtual camera framework — it QIs for
+// this interface during Start() and returns E_NOINTERFACE if absent.
+// IID: {3C9B2EB9-86D5-4514-A394-F56664F9F0D8}
+#ifndef __IMFMediaSourceEx_INTERFACE_DEFINED__
+#define __IMFMediaSourceEx_INTERFACE_DEFINED__
+MIDL_INTERFACE("3C9B2EB9-86D5-4514-A394-F56664F9F0D8")
+IMFMediaSourceEx : public IMFMediaSource {
+public:
+    virtual HRESULT STDMETHODCALLTYPE GetSourceAttributes(IMFAttributes **) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetStreamAttributes(DWORD, IMFAttributes **) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetD3DManager(IUnknown *) = 0;
+};
+#endif
+
+class VcamMFSource final : public IMFMediaSourceEx {
 public:
     VcamMFSource();
     ~VcamMFSource();
@@ -171,6 +184,19 @@ public:
     STDMETHODIMP Pause() override { return MF_E_INVALID_STATE_TRANSITION; }
     STDMETHODIMP Shutdown() override;
 
+    // IMFMediaSourceEx
+    STDMETHODIMP GetSourceAttributes(IMFAttributes **pp) override {
+        if (!pp) return E_POINTER;
+        *pp = nullptr;
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP GetStreamAttributes(DWORD, IMFAttributes **pp) override {
+        if (!pp) return E_POINTER;
+        *pp = nullptr;
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP SetD3DManager(IUnknown *) override { return S_OK; }
+
     VcamMFStream *GetStream() const { return m_stream; }
 
 private:
@@ -178,7 +204,7 @@ private:
     IMFMediaEventQueue         *m_q        = nullptr;
     IMFPresentationDescriptor  *m_pd       = nullptr;
     VcamMFStream               *m_stream   = nullptr;
-    std::atomic<bool>           m_shutdown {false};
+    volatile LONG               m_shutdown = 0;
 };
 
 // ---- Class factory -----------------------------------------------------------
@@ -408,7 +434,7 @@ HRESULT VcamMFStream::BuildAndQueueSample(IUnknown *token) {
 }
 
 void VcamMFStream::OnStart(LONGLONG pos) {
-    m_active  = true;
+    InterlockedExchange(&m_active, 1);
     m_tick    = 0;
     m_lastFrm = 0;
     EnsureHandles();
@@ -422,13 +448,13 @@ void VcamMFStream::OnStart(LONGLONG pos) {
 }
 
 void VcamMFStream::OnStop() {
-    m_active = false;
-    m_q->QueueEventParamVar(MEStreamStopped, GUID_NULL, S_OK, nullptr);
+    InterlockedExchange(&m_active, 0);
+    if (m_q) m_q->QueueEventParamVar(MEStreamStopped, GUID_NULL, S_OK, nullptr);
 }
 
 void VcamMFStream::OnShutdown() {
-    m_shutdown = true;
-    m_active   = false;
+    InterlockedExchange(&m_shutdown, 1);
+    InterlockedExchange(&m_active, 0);
     if (m_q) m_q->Shutdown();
 }
 
@@ -491,8 +517,8 @@ VcamMFSource::~VcamMFSource() {
 STDMETHODIMP VcamMFSource::QueryInterface(REFIID iid, void **ppv) {
     if (!ppv) return E_POINTER;
     if (iid == IID_IUnknown || iid == IID_IMFMediaEventGenerator ||
-        iid == IID_IMFMediaSource) {
-        *ppv = static_cast<IMFMediaSource *>(this);
+        iid == IID_IMFMediaSource || iid == __uuidof(IMFMediaSourceEx)) {
+        *ppv = static_cast<IMFMediaSourceEx *>(this);
         AddRef();
         return S_OK;
     }
@@ -554,7 +580,7 @@ STDMETHODIMP VcamMFSource::Stop() {
 
 STDMETHODIMP VcamMFSource::Shutdown() {
     if (m_shutdown) return MF_E_SHUTDOWN;
-    m_shutdown = true;
+    InterlockedExchange(&m_shutdown, 1);
     if (m_stream) m_stream->OnShutdown();
     if (m_q)      m_q->Shutdown();
     return S_OK;
