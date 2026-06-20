@@ -28,6 +28,7 @@ class FrameDecoder;
 class V4L2LoopbackWriter;
 #elif defined(_WIN32)
 class DirectShowVirtualCam;
+class MFVirtualCamManager;
 #endif
 
 // Root facade for QML. Owns the network/virtualcam backend and the
@@ -99,9 +100,10 @@ private:
     std::unique_ptr<DeviceDiscovery> m_discovery;
     std::unique_ptr<FrameDecoder> m_decoder;
 #ifdef __linux__
-    std::unique_ptr<V4L2LoopbackWriter> m_vcamWriter;
+    std::unique_ptr<V4L2LoopbackWriter>   m_vcamWriter;
 #elif defined(_WIN32)
     std::unique_ptr<DirectShowVirtualCam> m_vcamWriter;
+    std::unique_ptr<MFVirtualCamManager>  m_mfVirtualCam;
 #endif
 
     std::unique_ptr<DeviceListModel> m_deviceModel;

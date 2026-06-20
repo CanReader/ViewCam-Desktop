@@ -174,10 +174,13 @@ if(LINUX)
     list(APPEND HEADERS include/virtualcam/V4L2LoopbackWriter.h)
 elseif(WIN32)
     list(APPEND SOURCES src/virtualcam/windows/DirectShowVirtualCam.cpp
-                        src/virtualcam/windows/FilterRegistrar.cpp)
+                        src/virtualcam/windows/FilterRegistrar.cpp
+                        src/virtualcam/windows/MFVirtualCamManager.cpp)
     list(APPEND HEADERS include/virtualcam/DirectShowVirtualCam.h
                         include/virtualcam/SharedFrameProtocol.h
-                        include/virtualcam/FilterRegistrar.h)
+                        include/virtualcam/FilterRegistrar.h
+                        include/virtualcam/MFVirtualCamDefs.h
+                        src/virtualcam/windows/MFVirtualCamManager.h)
 endif()
 
 # ── Build ──────────────────────────────────────────────────────
@@ -280,6 +283,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include/updater
     ${CMAKE_CURRENT_BINARY_DIR}/generated   # ViewCamConfig.h
     ${CMAKE_CURRENT_BINARY_DIR}
+    # MFVirtualCamManager.h lives next to its .cpp (not in public include/)
+    $<$<PLATFORM_ID:Windows>:${CMAKE_SOURCE_DIR}/src/virtualcam/windows>
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -325,7 +330,7 @@ if(VIEWCAM_HAVE_VULKAN)
 endif()
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE advapi32 shell32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE advapi32 shell32 mfplat mfuuid ole32)
 endif()
 
 # ── Deploy (portable bin/ directory) ──────────────────────────
@@ -506,6 +511,37 @@ if(WIN32)
     )
 
     set_target_properties(ViewCamFilter PROPERTIES
+        PREFIX ""                          # GCC adds "lib" by default; strip it so the DLL is ViewCamFilter.dll
+        RUNTIME_OUTPUT_DIRECTORY "${DEPLOY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG "${DEPLOY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${DEPLOY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${DEPLOY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${DEPLOY_DIR}"
+    )
+endif()
+
+# ── MF Virtual Camera Source DLL (Windows 11 virtual camera API) ──────────────
+if(WIN32)
+    add_library(ViewCamMFSource SHARED
+        src/virtualcam/windows/VcamMFSource.cpp
+        src/virtualcam/windows/VcamMFSource.def
+    )
+
+    target_include_directories(ViewCamMFSource PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+    target_link_libraries(ViewCamMFSource PRIVATE
+        mfplat
+        mfuuid
+        ole32
+        oleaut32
+        uuid
+        advapi32
+    )
+
+    set_target_properties(ViewCamMFSource PROPERTIES
+        PREFIX ""
         RUNTIME_OUTPUT_DIRECTORY "${DEPLOY_DIR}"
         RUNTIME_OUTPUT_DIRECTORY_DEBUG "${DEPLOY_DIR}"
         RUNTIME_OUTPUT_DIRECTORY_RELEASE "${DEPLOY_DIR}"

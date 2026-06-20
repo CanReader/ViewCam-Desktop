@@ -6,7 +6,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <shellapi.h>
 #include <QCoreApplication>
 #include <QDir>
 
@@ -60,42 +59,38 @@ QString FilterRegistrar::expectedDllPath() {
     return filterDllPath();
 }
 
-static bool runRegsvr32(const QString &dllPath, bool unregister) {
-    QString args = unregister
-        ? QString("/s /u \"%1\"").arg(dllPath)
-        : QString("/s \"%1\"").arg(dllPath);
+// Call DllRegisterServer / DllUnregisterServer directly in this process.
+// This avoids regsvr32.exe, which runs from System32 and cannot find the GCC
+// runtime DLLs next to our exe. Running in-process, our application directory
+// (bin/) is on the DLL search path so all dependencies resolve. Non-elevated
+// writes to HKEY_CLASSES_ROOT are redirected by Windows to
+// HKCU\Software\Classes — no UAC required — and DirectShow reads that through
+// the HKCR merge, so OBS / Zoom / Meet all find the filter automatically.
+static bool runInProcess(const QString &dllPath, bool unregister) {
+    auto wPath = reinterpret_cast<const wchar_t *>(dllPath.utf16());
 
-    SHELLEXECUTEINFOW sei{};
-    sei.cbSize       = sizeof(sei);
-    sei.fMask        = SEE_MASK_NOCLOSEPROCESS;
-    sei.lpVerb       = L"runas";         // Triggers UAC elevation
-    sei.lpFile       = L"regsvr32.exe";
-    sei.lpParameters = reinterpret_cast<const wchar_t *>(args.utf16());
-    sei.nShow        = SW_HIDE;
-
-    if (!ShellExecuteExW(&sei)) {
-        DWORD err = GetLastError();
-        if (err == ERROR_CANCELLED) {
-            VC_WARN("User cancelled UAC prompt for filter {}registration",
-                    unregister ? "un" : "");
-        } else {
-            VC_ERROR("ShellExecuteEx failed for regsvr32: error {}", err);
-        }
+    HMODULE hDll = LoadLibraryW(wPath);
+    if (!hDll) {
+        VC_ERROR("LoadLibrary failed for {}: error {}", dllPath.toStdString(), GetLastError());
         return false;
     }
 
-    // Wait for regsvr32 to finish (should be fast)
-    WaitForSingleObject(sei.hProcess, 30000);
-
-    DWORD exitCode = 1;
-    GetExitCodeProcess(sei.hProcess, &exitCode);
-    CloseHandle(sei.hProcess);
-
-    if (exitCode != 0) {
-        VC_ERROR("regsvr32 exited with code {}", exitCode);
+    const char *fnName = unregister ? "DllUnregisterServer" : "DllRegisterServer";
+    using RegFn = HRESULT(STDAPICALLTYPE *)();
+    auto fn = reinterpret_cast<RegFn>(GetProcAddress(hDll, fnName));
+    if (!fn) {
+        VC_ERROR("GetProcAddress({}) failed", fnName);
+        FreeLibrary(hDll);
         return false;
     }
 
+    HRESULT hr = fn();
+    FreeLibrary(hDll);
+
+    if (FAILED(hr)) {
+        VC_ERROR("{}() returned HRESULT 0x{:08X}", fnName, static_cast<unsigned>(hr));
+        return false;
+    }
     VC_INFO("Filter {}registered successfully", unregister ? "un" : "");
     return true;
 }
@@ -103,13 +98,13 @@ static bool runRegsvr32(const QString &dllPath, bool unregister) {
 bool FilterRegistrar::registerFilter() {
     QString dll = filterDllPath();
     VC_INFO("Registering filter: {}", dll.toStdString());
-    return runRegsvr32(dll, false);
+    return runInProcess(dll, false);
 }
 
 bool FilterRegistrar::unregisterFilter() {
     QString dll = filterDllPath();
     VC_INFO("Unregistering filter: {}", dll.toStdString());
-    return runRegsvr32(dll, true);
+    return runInProcess(dll, true);
 }
 
 QString FilterRegistrar::statusText(Status s) {

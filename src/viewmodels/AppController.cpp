@@ -16,6 +16,7 @@
 #elif defined(_WIN32)
 #include "virtualcam/DirectShowVirtualCam.h"
 #include "virtualcam/FilterRegistrar.h"
+#include "MFVirtualCamManager.h"
 #endif
 
 #include <QJsonObject>
@@ -32,6 +33,7 @@ AppController::AppController(QObject *parent)
       m_vcamWriter(std::make_unique<V4L2LoopbackWriter>()),
 #elif defined(_WIN32)
       m_vcamWriter(std::make_unique<DirectShowVirtualCam>()),
+      m_mfVirtualCam(std::make_unique<MFVirtualCamManager>()),
 #endif
       m_deviceModel(std::make_unique<DeviceListModel>()),
       m_connection(std::make_unique<ConnectionViewModel>()),
@@ -180,14 +182,18 @@ void AppController::init() {
   // virtual camera backend
 #ifdef _WIN32
   {
+    // DirectShow filter — for OBS, VLC, legacy apps
     auto status = FilterRegistrar::checkStatus();
     VC_INFO("Filter status: {}",
             FilterRegistrar::statusText(status).toStdString());
     if (status == FilterRegistrar::Status::NotRegistered ||
         status == FilterRegistrar::Status::RegisteredStale) {
-      VC_INFO("Attempting filter registration (UAC prompt)...");
+      VC_INFO("Registering DirectShow filter...");
       FilterRegistrar::registerFilter();
     }
+
+    // Windows Virtual Camera API (Win 11 22H2+) — for Windows Camera, Teams, Zoom, Discord
+    m_mfVirtualCam->registerAndStart(L"ViewCam Studio");
   }
 #endif
   if (m_vcamWriter->open()) {
