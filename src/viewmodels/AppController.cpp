@@ -167,6 +167,25 @@ void AppController::init() {
             m_receiver->sendControl(QJsonObject{{QStringLiteral("jpegQuality"), q}});
           });
 
+  // Dead-connection watchdog: if no data arrives for 5 s after HELLO, abort
+  // the socket so the reconnect cycle fires (covers silent TCP loss / NAT expiry).
+  m_receiveWatchdog.setSingleShot(true);
+  m_receiveWatchdog.setInterval(RECEIVE_TIMEOUT_MS);
+  connect(&m_receiveWatchdog, &QTimer::timeout, this, [this]() {
+    VC_WARN("No data from phone for {}ms — forcing disconnect", RECEIVE_TIMEOUT_MS);
+    m_receiver->disconnect();
+  });
+  connect(m_receiver.get(), &StreamReceiver::helloReceived,
+          this, [this](auto...) { m_receiveWatchdog.start(); });
+  connect(m_receiver.get(), &StreamReceiver::frameReceived,
+          this, [this](const FrameData &) { m_receiveWatchdog.start(); });
+  connect(m_receiver.get(), &StreamReceiver::heartbeatReceived,
+          this, [this]() { m_receiveWatchdog.start(); });
+  connect(m_receiver.get(), &StreamReceiver::statusReceived,
+          this, [this](int, bool) { m_receiveWatchdog.start(); });
+  connect(m_receiver.get(), &StreamReceiver::disconnected,
+          this, [this]() { m_receiveWatchdog.stop(); });
+
   m_reconnectTimer.setSingleShot(true);
   m_reconnectTimer.setInterval(RECONNECT_DELAY_MS);
   connect(&m_reconnectTimer, &QTimer::timeout, this, [this]() {

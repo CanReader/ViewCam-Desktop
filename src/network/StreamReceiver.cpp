@@ -33,6 +33,13 @@ StreamReceiver::StreamReceiver(QObject *parent)
     connect(m_socket, &QTcpSocket::connected, this, &StreamReceiver::onConnected);
     connect(m_socket, &QTcpSocket::disconnected, this, &StreamReceiver::onDisconnected);
     connect(m_socket, &QTcpSocket::errorOccurred, this, &StreamReceiver::onError);
+
+    m_connectTimer.setSingleShot(true);
+    m_connectTimer.setInterval(CONNECT_TIMEOUT_MS);
+    connect(&m_connectTimer, &QTimer::timeout, this, [this]() {
+        VC_WARN("TCP connect timeout after {}ms — aborting", CONNECT_TIMEOUT_MS);
+        m_socket->abort();
+    });
     VC_DEBUG("StreamReceiver created");
 }
 
@@ -48,9 +55,11 @@ void StreamReceiver::connectToHost(const QString &host, int port) {
     }
     m_buffer.clear();
     m_socket->connectToHost(host, port);
+    m_connectTimer.start();
 }
 
 void StreamReceiver::disconnect() {
+    m_connectTimer.stop();
     if (m_socket->state() != QAbstractSocket::UnconnectedState) {
         VC_DEBUG("Disconnecting socket");
         m_socket->abort();
@@ -217,6 +226,7 @@ void StreamReceiver::dispatchStatus(const QByteArray &payload) {
 }
 
 void StreamReceiver::onConnected() {
+    m_connectTimer.stop();
     VC_INFO("TCP connection established to {}:{}",
             m_socket->peerAddress().toString().toStdString(),
             m_socket->peerPort());
