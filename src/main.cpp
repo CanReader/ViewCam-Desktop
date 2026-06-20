@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 #include "ViewCamConfig.h"
 #include "core/Logger.h"
 #include "core/QmlDevMode.h"
@@ -73,7 +77,18 @@ void installTranslations(QGuiApplication &app, QTranslator &translator) {
 } // namespace
 
 int main(int argc, char *argv[]) {
+#if defined(_WIN32) && defined(NDEBUG)
+  // GUI subsystem: no console on double-click, but reattach stdout when the
+  // user launches from a terminal so log output still reaches them.
+  if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+      FILE *fp = nullptr;
+      freopen_s(&fp, "CONOUT$", "w", stdout);
+      freopen_s(&fp, "CONOUT$", "w", stderr);
+  }
+  Logger::init(Logger::Level::Info);
+#else
   Logger::init(Logger::Level::Debug);
+#endif
   VC_INFO("{} v{} starting", VIEWCAM_DISPLAY_NAME, VIEWCAM_VERSION_STRING);
 
   int ret;
