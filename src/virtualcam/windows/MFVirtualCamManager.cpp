@@ -75,38 +75,39 @@ void MFVirtualCamManager::registerAndStart(const wchar_t *friendlyName) {
     }
 
     // --- Create and start the Windows virtual camera device ---
-    IMFVirtualCamera *vc = nullptr;
+    // Try AllUsers first (visible to all accounts); fall back to CurrentUser
+    // if Start() returns E_ACCESSDENIED (no admin rights).
+    struct { MFVirtualCameraAccess access; const char *label; } attempts[] = {
+        { MFVirtualCameraAccess_AllUsers,   "AllUsers"   },
+        { MFVirtualCameraAccess_CurrentUser, "CurrentUser" },
+    };
 
-    HRESULT hr = pfnCreate(
-        MFVirtualCameraType_SoftwareCameraSource,
-        MFVirtualCameraLifetime_Session,
-        MFVirtualCameraAccess_AllUsers,
-        friendlyName,
-        CLSID_ViewCamMFSource_Str,   // LPCWSTR sourceId, not GUID*
-        nullptr, 0,
-        &vc);
-    VC_INFO("MFCreateVirtualCamera(AllUsers): 0x{:08X}", (unsigned)hr);
-    if (FAILED(hr)) {
-        hr = pfnCreate(
+    IMFVirtualCamera *vc = nullptr;
+    for (auto &a : attempts) {
+        IMFVirtualCamera *candidate = nullptr;
+        HRESULT hr = pfnCreate(
             MFVirtualCameraType_SoftwareCameraSource,
             MFVirtualCameraLifetime_Session,
-            MFVirtualCameraAccess_CurrentUser,
+            a.access,
             friendlyName,
-            CLSID_ViewCamMFSource_Str,   // LPCWSTR sourceId, not GUID*
+            CLSID_ViewCamMFSource_Str,
             nullptr, 0,
-            &vc);
-        VC_INFO("MFCreateVirtualCamera(CurrentUser): 0x{:08X}", (unsigned)hr);
-    }
-    if (FAILED(hr)) {
-        VC_ERROR("MFCreateVirtualCamera failed: 0x{:08X}", (unsigned)hr);
-        return;
+            &candidate);
+        VC_INFO("MFCreateVirtualCamera({}): 0x{:08X}", a.label, (unsigned)hr);
+        if (FAILED(hr)) continue;
+
+        hr = candidate->Start(nullptr);
+        VC_INFO("IMFVirtualCamera::Start({}): 0x{:08X}", a.label, (unsigned)hr);
+        if (SUCCEEDED(hr)) {
+            vc = candidate;
+            break;
+        }
+        candidate->Remove();
+        candidate->Release();
     }
 
-    hr = vc->Start(nullptr);
-    if (FAILED(hr)) {
-        VC_ERROR("IMFVirtualCamera::Start failed: 0x{:08X}", (unsigned)hr);
-        vc->Remove();
-        vc->Release();
+    if (!vc) {
+        VC_ERROR("IMFVirtualCamera: all access scopes failed — virtual camera unavailable");
         return;
     }
 
