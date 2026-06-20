@@ -135,6 +135,7 @@ endif()
 # ── Sources (backend + viewmodels, no widget UI) ──────────────
 set(SOURCES
     src/main.cpp
+    $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_SOURCE_DIR}/resources/viewcam.rc>
     src/core/Settings.cpp
     src/core/Logger.cpp
     src/core/QmlDevMode.cpp
