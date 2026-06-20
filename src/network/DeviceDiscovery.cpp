@@ -51,7 +51,7 @@ void DeviceDiscovery::onReadyRead() {
         if (host.startsWith(QLatin1String("::ffff:")))
             host = host.mid(7);
 
-        if (deviceId.isEmpty() || port <= 0) {
+        if (deviceId.isEmpty() || port <= 0 || port > 65535) {
             VC_TRACE("Malformed beacon from {}", host.toStdString());
             continue;
         }

@@ -32,6 +32,7 @@ void MFVirtualCamManager::registerAndStart(const wchar_t *friendlyName) {
     HRESULT hrMF = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
     VC_INFO("MFStartup: 0x{:08X}", (unsigned)hrMF);
     if (FAILED(hrMF)) return;
+    m_mfStarted = true;
 
     VC_INFO("Loading mfsensorgroup.dll…");
     // MFCreateVirtualCamera is in mfsensorgroup.dll (Windows 11 22H2+)
@@ -124,6 +125,12 @@ void MFVirtualCamManager::stop() {
         m_vcam = nullptr;
         VC_INFO("Windows virtual camera stopped");
     }
+    // MFShutdown drains all MF work queues — must happen BEFORE FreeLibrary
+    // so that framework threads finish executing code in both DLLs.
+    if (m_mfStarted) {
+        MFShutdown();
+        m_mfStarted = false;
+    }
     if (m_hSrcDll) {
         FreeLibrary(static_cast<HMODULE>(m_hSrcDll));
         m_hSrcDll = nullptr;
@@ -132,7 +139,6 @@ void MFVirtualCamManager::stop() {
         FreeLibrary(static_cast<HMODULE>(m_hMF));
         m_hMF = nullptr;
     }
-    MFShutdown();
 }
 
 #endif // _WIN32

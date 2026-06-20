@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QTimer>
 #include <QByteArray>
 #include <QJsonObject>
 #include "core/Constants.h"
@@ -53,7 +54,9 @@ private:
     void dispatchStatus(const QByteArray &payload);
 
     QTcpSocket *m_socket;
-    QByteArray m_buffer;
+    QByteArray  m_buffer;
+    QTimer      m_connectTimer;   // aborts after 10 s if TCP handshake stalls
 
-    static constexpr int HEADER_SIZE = vc::kFrameHeaderSize;
+    static constexpr int HEADER_SIZE       = vc::kFrameHeaderSize;
+    static constexpr int CONNECT_TIMEOUT_MS = 10000;
 };

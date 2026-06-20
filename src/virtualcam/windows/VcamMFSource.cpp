@@ -16,6 +16,7 @@
 #include <mfobjects.h>
 #include <propidl.h>
 #include <new>
+#include <atomic>
 
 #include "virtualcam/SharedFrameProtocol.h"
 
@@ -91,16 +92,16 @@ public:
 
     // IMFMediaEventGenerator -- delegate to the event queue
     STDMETHODIMP GetEvent(DWORD f, IMFMediaEvent **e) override {
-        return m_shutdown ? MF_E_SHUTDOWN : m_q->GetEvent(f, e);
+        return (m_shutdown || !m_q) ? MF_E_SHUTDOWN : m_q->GetEvent(f, e);
     }
     STDMETHODIMP BeginGetEvent(IMFAsyncCallback *c, IUnknown *s) override {
-        return m_shutdown ? MF_E_SHUTDOWN : m_q->BeginGetEvent(c, s);
+        return (m_shutdown || !m_q) ? MF_E_SHUTDOWN : m_q->BeginGetEvent(c, s);
     }
     STDMETHODIMP EndGetEvent(IMFAsyncResult *r, IMFMediaEvent **e) override {
-        return m_shutdown ? MF_E_SHUTDOWN : m_q->EndGetEvent(r, e);
+        return (m_shutdown || !m_q) ? MF_E_SHUTDOWN : m_q->EndGetEvent(r, e);
     }
     STDMETHODIMP QueueEvent(MediaEventType t, REFGUID g, HRESULT s, const PROPVARIANT *v) override {
-        return m_shutdown ? MF_E_SHUTDOWN : m_q->QueueEventParamVar(t, g, s, v);
+        return (m_shutdown || !m_q) ? MF_E_SHUTDOWN : m_q->QueueEventParamVar(t, g, s, v);
     }
 
     // IMFMediaStream
@@ -116,12 +117,12 @@ private:
     void    EnsureHandles();
     HRESULT BuildAndQueueSample(IUnknown *token);
 
-    volatile LONG        m_ref      = 1;
-    VcamMFSource        *m_src;
-    IMFStreamDescriptor *m_sd      = nullptr;
-    IMFMediaEventQueue  *m_q       = nullptr;
-    bool                 m_active   = false;
-    bool                 m_shutdown = false;
+    volatile LONG           m_ref      = 1;
+    VcamMFSource           *m_src;
+    IMFStreamDescriptor    *m_sd       = nullptr;
+    IMFMediaEventQueue     *m_q        = nullptr;
+    std::atomic<bool>       m_active   {false};
+    std::atomic<bool>       m_shutdown {false};
 
     HANDLE  m_hMem    = nullptr;
     HANDLE  m_hMutex  = nullptr;
@@ -150,16 +151,16 @@ public:
 
     // IMFMediaEventGenerator
     STDMETHODIMP GetEvent(DWORD f, IMFMediaEvent **e) override {
-        return m_shutdown ? MF_E_SHUTDOWN : m_q->GetEvent(f, e);
+        return (m_shutdown || !m_q) ? MF_E_SHUTDOWN : m_q->GetEvent(f, e);
     }
     STDMETHODIMP BeginGetEvent(IMFAsyncCallback *c, IUnknown *s) override {
-        return m_shutdown ? MF_E_SHUTDOWN : m_q->BeginGetEvent(c, s);
+        return (m_shutdown || !m_q) ? MF_E_SHUTDOWN : m_q->BeginGetEvent(c, s);
     }
     STDMETHODIMP EndGetEvent(IMFAsyncResult *r, IMFMediaEvent **e) override {
-        return m_shutdown ? MF_E_SHUTDOWN : m_q->EndGetEvent(r, e);
+        return (m_shutdown || !m_q) ? MF_E_SHUTDOWN : m_q->EndGetEvent(r, e);
     }
     STDMETHODIMP QueueEvent(MediaEventType t, REFGUID g, HRESULT s, const PROPVARIANT *v) override {
-        return m_shutdown ? MF_E_SHUTDOWN : m_q->QueueEventParamVar(t, g, s, v);
+        return (m_shutdown || !m_q) ? MF_E_SHUTDOWN : m_q->QueueEventParamVar(t, g, s, v);
     }
 
     // IMFMediaSource
@@ -177,7 +178,7 @@ private:
     IMFMediaEventQueue         *m_q        = nullptr;
     IMFPresentationDescriptor  *m_pd       = nullptr;
     VcamMFStream               *m_stream   = nullptr;
-    bool                        m_shutdown = false;
+    std::atomic<bool>           m_shutdown {false};
 };
 
 // ---- Class factory -----------------------------------------------------------
@@ -236,7 +237,8 @@ STDAPI DllCanUnloadNow() {
 
 STDAPI DllRegisterServer() {
     wchar_t dllPath[MAX_PATH]{};
-    GetModuleFileNameW(g_hModule, dllPath, MAX_PATH);
+    const DWORD len = GetModuleFileNameW(g_hModule, dllPath, MAX_PATH);
+    if (len == 0 || len >= MAX_PATH) return E_UNEXPECTED;
 
     static const wchar_t kRoot[]   =
         L"Software\\Classes\\CLSID\\{2C7B3A5F-8D91-4E2F-B7C6-1A9E3D0F4C8B}";
@@ -277,8 +279,9 @@ STDAPI DllUnregisterServer() {
 VcamMFStream::VcamMFStream(VcamMFSource *src, IMFStreamDescriptor *sd)
     : m_src(src), m_sd(sd)
 {
+    m_src->AddRef();   // keep source alive at least as long as this stream
     if (m_sd) m_sd->AddRef();
-    MFCreateEventQueue(&m_q);
+    MFCreateEventQueue(&m_q);   // m_q stays null on OOM; methods guard against it
     InterlockedIncrement(&g_refCount);
 }
 
@@ -289,6 +292,7 @@ VcamMFStream::~VcamMFStream() {
     if (m_hEvent)  CloseHandle(m_hEvent);
     SAFE_RELEASE(m_sd);
     SAFE_RELEASE(m_q);
+    m_src->Release();  // matched by AddRef in constructor
     InterlockedDecrement(&g_refCount);
 }
 
@@ -520,21 +524,23 @@ STDMETHODIMP VcamMFSource::Start(IMFPresentationDescriptor *,
 
     m_stream->OnStart(startPos);
 
-    PROPVARIANT pv;
-    PropVariantInit(&pv);
-    pv.vt            = VT_I8;
-    pv.hVal.QuadPart = startPos;
-    m_q->QueueEventParamVar(MESourceStarted, GUID_NULL, S_OK, &pv);
-    PropVariantClear(&pv);
+    if (m_q) {
+        PROPVARIANT pv;
+        PropVariantInit(&pv);
+        pv.vt            = VT_I8;
+        pv.hVal.QuadPart = startPos;
+        m_q->QueueEventParamVar(MESourceStarted, GUID_NULL, S_OK, &pv);
+        PropVariantClear(&pv);
 
-    // Announce the stream to source readers / media sessions
-    PROPVARIANT sv;
-    PropVariantInit(&sv);
-    sv.vt      = VT_UNKNOWN;
-    sv.punkVal = m_stream;
-    m_stream->AddRef();
-    m_q->QueueEventParamVar(MENewStream, GUID_NULL, S_OK, &sv);
-    PropVariantClear(&sv);
+        // Announce the stream to source readers / media sessions
+        PROPVARIANT sv;
+        PropVariantInit(&sv);
+        sv.vt      = VT_UNKNOWN;
+        sv.punkVal = m_stream;
+        m_stream->AddRef();
+        m_q->QueueEventParamVar(MENewStream, GUID_NULL, S_OK, &sv);
+        PropVariantClear(&sv);
+    }
 
     return S_OK;
 }
@@ -542,7 +548,7 @@ STDMETHODIMP VcamMFSource::Start(IMFPresentationDescriptor *,
 STDMETHODIMP VcamMFSource::Stop() {
     if (m_shutdown) return MF_E_SHUTDOWN;
     if (m_stream)   m_stream->OnStop();
-    m_q->QueueEventParamVar(MESourceStopped, GUID_NULL, S_OK, nullptr);
+    if (m_q) m_q->QueueEventParamVar(MESourceStopped, GUID_NULL, S_OK, nullptr);
     return S_OK;
 }
 

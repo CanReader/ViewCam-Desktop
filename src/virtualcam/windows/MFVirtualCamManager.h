@@ -18,9 +18,10 @@ public:
     bool isActive() const { return m_vcam != nullptr; }
 
 private:
-    void *m_vcam    = nullptr;   // IMFVirtualCamera* (opaque to avoid header dep)
-    void *m_hMF     = nullptr;   // HMODULE mf.dll
-    void *m_hSrcDll = nullptr;   // HMODULE ViewCamMFSource.dll (keeps refcount)
+    void *m_vcam      = nullptr;   // IMFVirtualCamera* (opaque to avoid header dep)
+    void *m_hMF       = nullptr;   // HMODULE mfsensorgroup.dll
+    void *m_hSrcDll   = nullptr;   // HMODULE ViewCamMFSource.dll
+    bool  m_mfStarted = false;     // true only when MFStartup succeeded
 };
 
 #endif // _WIN32

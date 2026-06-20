@@ -128,10 +128,12 @@ private:
     QList<QImage> m_frameBuffer;
 
     QTimer m_reconnectTimer;
+    QTimer m_receiveWatchdog;   // fires if no data arrives for RECEIVE_TIMEOUT_MS
     bool m_userDisconnect = false;
     bool m_sawFirstFrame = false;
     int m_reconnectAttempts = 0;
 
-    static constexpr int RECONNECT_DELAY_MS = 2500;
+    static constexpr int RECONNECT_DELAY_MS    = 2500;
     static constexpr int RECONNECT_MAX_ATTEMPTS = 5;
+    static constexpr int RECEIVE_TIMEOUT_MS    = 5000;
 };
