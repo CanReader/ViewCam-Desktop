@@ -2,7 +2,7 @@
 ; Build: iscc installer\viewcam_setup.iss  (from the project root)
 
 #define AppName        "ViewCam Studio"
-#define AppVersion     "1.0.0"
+#define AppVersion     "1.0.1"
 #define AppPublisher   "Sleak Software"
 #define AppURL         "https://viewcam.tech"
 #define AppExeName     "ViewCam.exe"
