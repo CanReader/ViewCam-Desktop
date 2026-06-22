@@ -513,6 +513,24 @@ else()
         )
     endforeach()
 
+    # Copy GL + Wayland integration plugins. WITHOUT xcbglintegrations the bundled
+    # Qt cannot create an OpenGL context on X11/XWayland ("neither GLX nor EGL are
+    # enabled") and Qt Quick aborts ("Failed to create RHI"). The wayland-* dirs let
+    # it run as a native Wayland client instead of falling back to xcb.
+    set(_qt_integration_plugin_dirs
+        xcbglintegrations
+        wayland-shell-integration
+        wayland-graphics-integration-client
+        wayland-decoration-client)
+    foreach(_pdir ${_qt_integration_plugin_dirs})
+        if(EXISTS "${QT_PLUGINS_DIR}/${_pdir}")
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    "${QT_PLUGINS_DIR}/${_pdir}" "${DEPLOY_DIR}/plugins/${_pdir}"
+                COMMENT "Copying Qt integration plugin dir ${_pdir}")
+        endif()
+    endforeach()
+
     # Copy SVG icon plugin (needed for QIcon/Image to render SVG)
     set(DEPLOY_IMAGEFORMATS_DIR "${DEPLOY_DIR}/plugins/imageformats")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
