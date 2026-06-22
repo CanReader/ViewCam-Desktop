@@ -69,6 +69,10 @@ UpdateChecker *UpdateChecker::instance() {
 UpdateChecker::UpdateChecker(QObject *parent) : QObject(parent) {
     m_nam = new QNetworkAccessManager(this);
     m_channel = settingsChannel();
+    // Silent auto-update is ON by default (no banner): on launch we check, then
+    // download + verify + apply + relaunch automatically. User can disable it in
+    // Settings → Updates (persisted key "updates/autoDownload").
+    m_autoDownload = QSettings().value(QStringLiteral("updates/autoDownload"), true).toBool();
 }
 
 // ── Channel / manifest URL ─────────────────────────────────────────────────
@@ -296,8 +300,10 @@ void UpdateChecker::onManifestReply(QNetworkReply *reply) {
     setStatusText(tr("Update %1 is available").arg(remoteStr));
     setState(State::UpdateAvailable);
 
-    // Do NOT auto-download by default; the UI calls download(). The
-    // m_autoDownload path is here for a future "automatic" setting.
+    // Silent auto-update: download → verify → apply → relaunch, no banner. The
+    // progress overlay (UpdateScreen) shows during it. installable() must be true
+    // to actually apply (logged here so a denied install is obvious).
+    VC_INFO("Auto-update: enabled={}, installable={}", m_autoDownload, installable());
     if (m_autoDownload)
         download();
 }
@@ -560,7 +566,12 @@ void UpdateChecker::verifyStaged() {
     setStatusText(tr("Update %1 verified and ready").arg(m_latestVersion));
     setState(State::ReadyToApply);
 
-    // Phase 1 stops here. applyStaged() is the seam for Phase 2.
+    // Silent auto-update: apply immediately once verified (extract + helper swap
+    // + relaunch). The manual path leaves this to the UI's apply() slot.
+    if (m_autoDownload) {
+        VC_INFO("Auto-update: applying {} now", m_latestVersion.toStdString());
+        applyStaged();
+    }
 }
 
 // ── Step 4 seam (Phase 2): extract + atomic swap via vc-updater ────────────

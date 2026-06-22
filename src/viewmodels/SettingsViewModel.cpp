@@ -120,7 +120,7 @@ VC_IMPL(int, bufferedFrames, setBufferedFrames, bufferedFramesChanged, "engine/b
 
 // Updates: auto-download toggle + periodic check frequency.
 // updateFrequency: 0 = On launch, 1 = Daily, 2 = Weekly. Default Daily.
-VC_IMPL(bool, autoUpdate, setAutoUpdate, autoUpdateChanged, "updates/autoDownload", false)
+VC_IMPL(bool, autoUpdate, setAutoUpdate, autoUpdateChanged, "updates/autoDownload", true)
 VC_IMPL(int, updateFrequency, setUpdateFrequency, updateFrequencyChanged, "updates/frequency", 1)
 
 VC_IMPL(bool, autoDiscovery, setAutoDiscovery, autoDiscoveryChanged, "network/autoDiscovery", true)
