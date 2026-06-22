@@ -8,7 +8,7 @@ Item {
 
     Image {
         anchors.fill: parent
-        source: Theme.assetBase + "images/monogram.svg"
+        source: Theme.assetBase + "images/Logo.svg"
         sourceSize: Qt.size(Math.max(1, Math.round(parent.width * 2)),
                             Math.max(1, Math.round(parent.height * 2)))
         fillMode: Image.PreserveAspectFit
