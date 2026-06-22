@@ -1,6 +1,8 @@
 build/
 build-release
 bin/
+dist/
+installer/output/
 cmake-build-*/
 .cache/
 compile_commands.json
