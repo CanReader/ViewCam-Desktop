@@ -17,19 +17,36 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QSysInfo>
+#include <QTimer>
 #include <QUrl>
+#include <QUuid>
 #include <QVersionNumber>
 
 #include <openssl/evp.h>
+
+#include <memory>
+
+#if defined(Q_OS_WIN)
+#include <windows.h>
+#include <shellapi.h>
+#endif
 
 namespace {
 
 constexpr int CHECK_TIMEOUT_MS    = 8000;
 constexpr int DOWNLOAD_TIMEOUT_MS = 0;  // no transfer timeout while downloading
 
+// Bounded retry/backoff for TRANSIENT network failures (manifest + download).
+// 4xx and verify failures are permanent → never retried.
+constexpr int MAX_NET_ATTEMPTS    = 4;       // total tries incl. the first
+constexpr int BACKOFF_BASE_MS     = 1000;    // 1s, 2s, 4s …
+constexpr int BACKOFF_CAP_MS      = 30000;   // cap any single backoff at 30s
+
 // QSettings key for the user-selected update channel (overrides the
 // compiled-in VIEWCAM_UPDATE_CHANNEL when set).
-constexpr char CHANNEL_KEY[] = "updates/channel";
+constexpr char CHANNEL_KEY[]    = "updates/channel";
+// Sticky per-install random id used for the staged-rollout dice roll.
+constexpr char INSTALL_ID_KEY[] = "updates/install_id";
 
 QByteArray hexToBytes(const QByteArray &hex) {
     return QByteArray::fromHex(hex);
@@ -129,9 +146,14 @@ void UpdateChecker::start() {
     setState(State::Checking);
     setStatusText(tr("Checking for updates…"));
     setProgress(0);
+    m_manifestAttempt = 0;  // fresh check → reset retry budget
+    startManifestFetch();
+}
 
+void UpdateChecker::startManifestFetch() {
     const QString url = manifestUrl();
-    VC_INFO("Update check: GET {}", url.toStdString());
+    VC_INFO("Update check: GET {} (attempt {}/{})", url.toStdString(),
+            m_manifestAttempt + 1, MAX_NET_ATTEMPTS);
 
     QNetworkRequest req((QUrl(url)));
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
@@ -147,6 +169,16 @@ void UpdateChecker::onManifestReply(QNetworkReply *reply) {
     reply->deleteLater();
 
     if (reply->error() != QNetworkReply::NoError) {
+        // Retry only TRANSIENT failures (timeouts, dropped connections). HTTP
+        // 4xx and the like are permanent and must not be retried.
+        if (isTransient(reply) && m_manifestAttempt + 1 < MAX_NET_ATTEMPTS) {
+            const int delay = backoffMs(m_manifestAttempt);
+            ++m_manifestAttempt;
+            VC_WARN("manifest fetch transient error ({}); retry {} in {}ms",
+                    reply->errorString().toStdString(), m_manifestAttempt, delay);
+            QTimer::singleShot(delay, this, [this]() { startManifestFetch(); });
+            return;
+        }
         fail("manifest fetch failed: " + reply->errorString(),
              tr("Could not check for updates — network error"));
         return;
@@ -228,6 +260,29 @@ void UpdateChecker::onManifestReply(QNetworkReply *reply) {
         return;
     }
 
+    // Staged rollout: honor manifest "rollout" (0..1) with a STICKY per-install
+    // decision. Hash the persisted install id to a stable fraction; only surface
+    // the update if that fraction < rollout. Missing/invalid → treat as 1.0
+    // (fully rolled out). A device's verdict never flip-flops between checks.
+    const QJsonValue rolloutVal = obj.value(QStringLiteral("rollout"));
+    double rollout = rolloutVal.isUndefined() ? 1.0 : rolloutVal.toDouble(1.0);
+    if (rollout < 0.0) rollout = 0.0;
+    if (rollout > 1.0) rollout = 1.0;
+    if (rollout < 1.0) {
+        const double frac = rolloutFraction();
+        if (frac >= rollout) {
+            VC_INFO("Rollout gate: {} held back (frac={:.4f} >= rollout={:.4f})",
+                    remoteStr.toStdString(), frac, rollout);
+            // Not yet in this device's rollout slice. Report up-to-date so the UI
+            // stays quiet; a later manifest with a higher rollout will let it in.
+            setStatusText(tr("ViewCam is up to date"));
+            setState(State::UpToDate);
+            return;
+        }
+        VC_INFO("Rollout gate: {} admitted (frac={:.4f} < rollout={:.4f})",
+                remoteStr.toStdString(), frac, rollout);
+    }
+
     m_archiveUrl         = url;
     m_expectedSha256Hex  = sha;
     m_expectedSize       = size;
@@ -267,66 +322,167 @@ void UpdateChecker::download() {
         return;
     }
 
-    // Final staged path is …/staging/<version>; we stream to <path>.part first.
-    m_stagedPath = QDir(dir).absoluteFilePath(m_latestVersion);
-    const QString partPath = m_stagedPath + QStringLiteral(".part");
-    QFile::remove(partPath);  // drop any prior partial
+    // Final staged path is …/staging/<artifact> (version on Linux, <ver>.exe on
+    // Windows). We stream to <path>.part first, then atomically rename.
+    m_stagedPath = QDir(dir).absoluteFilePath(stagedArtifactName());
 
-    auto *part = new QFile(partPath);
-    if (!part->open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        delete part;
-        fail("cannot open staging .part for write: " + partPath,
-             tr("Install failed — cannot write to disk"));
+    // Idempotent: if a fully-downloaded artifact of the right size is already
+    // staged, skip the network entirely and go straight to verify. (Verify will
+    // re-check size + hash + signature, so a stale/corrupt one is still caught.)
+    QFileInfo fi(m_stagedPath);
+    if (fi.exists() && fi.size() == m_expectedSize) {
+        VC_INFO("Artifact already staged ({} bytes) — skipping download",
+                m_expectedSize);
+        setState(State::Downloading);
+        setProgress(100);
+        verifyStaged();
         return;
     }
 
     setState(State::Downloading);
     setStatusText(tr("Downloading %1…").arg(m_latestVersion));
     setProgress(0);
-    VC_INFO("Downloading {} -> {}", m_archiveUrl.toStdString(),
-            partPath.toStdString());
+    m_downloadAttempt = 0;  // fresh download → reset retry budget
+    startDownload();
+}
+
+void UpdateChecker::startDownload() {
+    const QString partPath = m_stagedPath + QStringLiteral(".part");
+
+    // Resume support: if a partial .part exists, try an HTTP Range request from
+    // where we left off. If the server ignores Range (200 instead of 206), we
+    // detect that on first bytes and restart cleanly — we NEVER verify a partial
+    // or a concatenation of mismatched ranges.
+    qint64 resumeFrom = 0;
+    QFileInfo partFi(partPath);
+    if (partFi.exists() && partFi.size() > 0 && partFi.size() < m_expectedSize) {
+        resumeFrom = partFi.size();
+    } else if (partFi.exists() && partFi.size() >= m_expectedSize) {
+        QFile::remove(partPath);  // bogus/over-long partial → discard, restart
+    }
+
+    // Open the .part: append when resuming, truncate when starting fresh.
+    auto *part = new QFile(partPath);
+    const QIODevice::OpenMode mode =
+        resumeFrom > 0 ? (QIODevice::WriteOnly | QIODevice::Append)
+                       : (QIODevice::WriteOnly | QIODevice::Truncate);
+    if (!part->open(mode)) {
+        delete part;
+        fail("cannot open staging .part for write: " + partPath,
+             tr("Install failed — cannot write to disk"));
+        return;
+    }
+
+    VC_INFO("Downloading {} -> {} (attempt {}/{}, resumeFrom={})",
+            m_archiveUrl.toStdString(), partPath.toStdString(),
+            m_downloadAttempt + 1, MAX_NET_ATTEMPTS, resumeFrom);
 
     QNetworkRequest req((QUrl(m_archiveUrl)));
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                      QNetworkRequest::NoLessSafeRedirectPolicy);
     req.setTransferTimeout(DOWNLOAD_TIMEOUT_MS);
+    if (resumeFrom > 0) {
+        req.setRawHeader("Range",
+                         "bytes=" + QByteArray::number(resumeFrom) + "-");
+    }
 
     QNetworkReply *reply = m_nam->get(req);
 
-    // Stream to disk as data arrives (don't buffer the whole archive in RAM).
-    connect(reply, &QNetworkReply::readyRead, this, [reply, part]() {
-        part->write(reply->readAll());
-    });
+    // Track whether the server actually honored our Range. Shared so the
+    // readyRead/finished lambdas agree on what to do with the bytes.
+    auto rangeHonored = std::make_shared<bool>(resumeFrom == 0);
+    auto restarted    = std::make_shared<bool>(false);
+
+    auto checkRange = [this, reply, part, partPath, resumeFrom,
+                       rangeHonored, restarted]() {
+        if (resumeFrom == 0 || *rangeHonored || *restarted)
+            return;
+        const int status =
+            reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (status == 206) {
+            *rangeHonored = true;  // server is sending only the requested tail
+        } else {
+            // Server ignored Range (200) → the body is the WHOLE file. Discard
+            // our partial and start the .part over so we never mix ranges.
+            VC_WARN("server ignored Range (HTTP {}); restarting download clean",
+                    status);
+            *restarted = true;
+            part->seek(0);
+            part->resize(0);
+        }
+    };
+
+    connect(reply, &QNetworkReply::readyRead, this,
+            [reply, part, checkRange]() {
+                checkRange();
+                part->write(reply->readAll());
+            });
     connect(reply, &QNetworkReply::downloadProgress, this,
-            [this](qint64 received, qint64 total) {
-                if (total > 0)
-                    setProgress(static_cast<int>(received * 100 / total));
+            [this, resumeFrom, rangeHonored](qint64 received, qint64 total) {
+                // When resuming, `received`/`total` are for the tail only; map
+                // back onto the full file for a sane progress bar.
+                const qint64 base = (*rangeHonored && resumeFrom > 0) ? resumeFrom : 0;
+                const qint64 got  = base + received;
+                const qint64 all  = (base > 0 && total > 0) ? base + total
+                                    : (m_expectedSize > 0 ? m_expectedSize : total);
+                if (all > 0)
+                    setProgress(static_cast<int>(got * 100 / all));
             });
     connect(reply, &QNetworkReply::finished, this,
-            [this, reply, part, partPath]() {
+            [this, reply, part, partPath, checkRange]() {
+                checkRange();
                 part->write(reply->readAll());
                 part->flush();
                 part->close();
+                delete part;
                 reply->deleteLater();
 
                 if (reply->error() != QNetworkReply::NoError) {
+                    // Keep the .part on transient errors so we can resume; retry
+                    // with backoff. Permanent errors / exhausted budget → fail.
+                    if (isTransient(reply) &&
+                        m_downloadAttempt + 1 < MAX_NET_ATTEMPTS) {
+                        const int delay = backoffMs(m_downloadAttempt);
+                        ++m_downloadAttempt;
+                        VC_WARN("download transient error ({}); retry {} in {}ms",
+                                reply->errorString().toStdString(),
+                                m_downloadAttempt, delay);
+                        QTimer::singleShot(delay, this,
+                                           [this]() { startDownload(); });
+                        return;
+                    }
                     QFile::remove(partPath);
-                    delete part;
                     fail("download failed: " + reply->errorString(),
                          tr("Download failed — visit viewcam.tech"));
                     return;
                 }
 
-                // .part → final staged name.
+                // Refuse to finalize a wrong-sized body (truncated transfer that
+                // still reported NoError, or a Range mishap). Restart clean.
+                const qint64 got = QFileInfo(partPath).size();
+                if (got != m_expectedSize) {
+                    VC_WARN("downloaded {} bytes, expected {} — discarding partial",
+                            got, m_expectedSize);
+                    QFile::remove(partPath);
+                    if (m_downloadAttempt + 1 < MAX_NET_ATTEMPTS) {
+                        ++m_downloadAttempt;
+                        QTimer::singleShot(backoffMs(m_downloadAttempt), this,
+                                           [this]() { startDownload(); });
+                        return;
+                    }
+                    fail("download size mismatch after retries",
+                         tr("Download failed — visit viewcam.tech"));
+                    return;
+                }
+
+                // .part → final staged name (only ever a complete file).
                 QFile::remove(m_stagedPath);
                 if (!QFile::rename(partPath, m_stagedPath)) {
                     QFile::remove(partPath);
-                    delete part;
                     fail("could not finalize staged file: " + m_stagedPath,
                          tr("Install failed — cannot write to disk"));
                     return;
                 }
-                delete part;
                 onDownloadFinished(reply);
             });
 }
@@ -425,6 +581,8 @@ void UpdateChecker::applyStaged() {
     const QString runningExe = QCoreApplication::applicationFilePath();
 
     // §1: never swap a system/packaged or read-only install — notify instead.
+    // NOTE: isSelfUpdatable() is platform-aware. On Windows it's ALWAYS true
+    // (the Setup.exe self-elevates), so Windows never falls into notify-only.
     QString why;
     if (!vcam::isSelfUpdatable(root, runningExe, &why)) {
         VC_WARN("Self-update not possible ({}); deferring to installer", why.toStdString());
@@ -434,6 +592,13 @@ void UpdateChecker::applyStaged() {
         return;
     }
 
+#if defined(Q_OS_WIN)
+    // Windows apply path: the verified staged artifact IS the signed Setup.exe.
+    // Launch it (it self-elevates via UAC and upgrades in place + re-registers
+    // the system virtual camera), then quit. No versioned-swap, no vc-updater.
+    applyWindowsInstaller();
+    return;
+#else
     const QString newVersionDir = vcam::versionDir(root, m_latestVersion);
 
     // Already extracted on a previous attempt? Skip re-extraction (idempotent).
@@ -512,7 +677,64 @@ void UpdateChecker::applyStaged() {
     // Hand off: quit so the helper can repoint `current` and relaunch us. We
     // never touch in-use files ourselves.
     QCoreApplication::quit();
+#endif  // !Q_OS_WIN
 }
+
+#if defined(Q_OS_WIN)
+// ── Windows apply: launch the verified Setup.exe and quit ──────────────────
+//
+// The staged artifact has already passed size + SHA-256 + Ed25519 (verifyStaged)
+// — it is the authentic, maintainer-signed installer. We hand control to it and
+// quit so it can replace files in Program Files. The installer:
+//   • self-elevates (PrivilegesRequired=admin → UAC),
+//   • detects + closes the running instance via AppMutex (/CLOSEAPPLICATIONS),
+//   • upgrades in place (same AppId) and re-runs regsvr32 for the cam DLLs,
+//   • relaunches ViewCam afterwards (/RESTARTAPPLICATIONS + [Run] postinstall).
+//
+// Flags (Inno Setup 6):
+//   /SILENT              progress only, no wizard pages (vs /VERYSILENT = none).
+//   /CLOSEAPPLICATIONS   close apps using files being updated (needs AppMutex).
+//   /RESTARTAPPLICATIONS restart them when done (relaunch ViewCam).
+//   /NORESTART           never reboot the machine without asking.
+void UpdateChecker::applyWindowsInstaller() {
+    const QString setup = QDir::toNativeSeparators(m_stagedPath);
+    if (!QFileInfo::exists(setup)) {
+        fail("Windows installer artifact missing: " + setup,
+             tr("Install failed — nothing staged"));
+        return;
+    }
+
+    const QString params = QStringLiteral(
+        "/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTART");
+
+    VC_INFO("Launching Windows installer: {} {}", setup.toStdString(),
+            params.toStdString());
+
+    // ShellExecuteW with "runas" is unnecessary — the installer's manifest is
+    // PrivilegesRequired=admin, so Windows shows the UAC prompt itself. We use
+    // "open"; the elevation comes from the installer's own manifest.
+    const HINSTANCE rc = ShellExecuteW(
+        nullptr, L"open",
+        reinterpret_cast<const wchar_t *>(setup.utf16()),
+        reinterpret_cast<const wchar_t *>(params.utf16()),
+        nullptr, SW_SHOWNORMAL);
+
+    // ShellExecuteW returns >32 on success.
+    if (reinterpret_cast<INT_PTR>(rc) <= 32) {
+        fail(QStringLiteral("ShellExecuteW failed (rc=%1) for %2")
+                 .arg(reinterpret_cast<INT_PTR>(rc)).arg(setup),
+             tr("Install failed — could not start installer"));
+        return;
+    }
+
+    setStatusText(tr("Installing update %1…").arg(m_latestVersion));
+    setState(State::Applying);
+
+    // Quit so the installer can replace our files. /CLOSEAPPLICATIONS would
+    // also close us, but quitting first is cleaner and faster.
+    QCoreApplication::quit();
+}
+#endif  // Q_OS_WIN
 
 // ── First-run sentinel (post-update success signal to the helper) ──────────
 
@@ -613,6 +835,90 @@ QString UpdateChecker::stagingDir() {
     if (!QDir().mkpath(dir))
         return {};
     return dir;
+}
+
+QString UpdateChecker::stagedArtifactName() const {
+#if defined(Q_OS_WIN)
+    // The artifact is the installer; give it a real .exe so ShellExecuteW treats
+    // it as runnable rather than an unknown blob.
+    return m_latestVersion + QStringLiteral(".exe");
+#else
+    return m_latestVersion;
+#endif
+}
+
+// ── Retry/backoff classification ───────────────────────────────────────────
+
+bool UpdateChecker::isTransient(QNetworkReply *reply) {
+    if (!reply) return false;
+
+    // An HTTP response with a 4xx status is a permanent error (bad URL, gone,
+    // forbidden) — never retry. 5xx and "no response at all" are transient.
+    const QVariant statusVar =
+        reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    if (statusVar.isValid()) {
+        const int status = statusVar.toInt();
+        if (status >= 400 && status < 500)
+            return false;
+        if (status >= 200 && status < 400)
+            return false;  // shouldn't reach here with an error, but be safe
+        // 5xx → transient (fall through to true).
+    }
+
+    switch (reply->error()) {
+        // Network-layer transients worth retrying.
+        case QNetworkReply::TimeoutError:
+        case QNetworkReply::TemporaryNetworkFailureError:
+        case QNetworkReply::NetworkSessionFailedError:
+        case QNetworkReply::ConnectionRefusedError:
+        case QNetworkReply::RemoteHostClosedError:
+        case QNetworkReply::HostNotFoundError:
+        case QNetworkReply::ProxyConnectionRefusedError:
+        case QNetworkReply::ProxyConnectionClosedError:
+        case QNetworkReply::ProxyTimeoutError:
+        case QNetworkReply::InternalServerError:
+        case QNetworkReply::ServiceUnavailableError:
+        case QNetworkReply::UnknownServerError:
+        case QNetworkReply::UnknownNetworkError:
+            return true;
+        default:
+            return false;
+    }
+}
+
+int UpdateChecker::backoffMs(int attempt) {
+    // Exponential: BASE * 2^attempt, capped. attempt is 0-based.
+    long long ms = static_cast<long long>(BACKOFF_BASE_MS) << attempt;
+    if (ms > BACKOFF_CAP_MS) ms = BACKOFF_CAP_MS;
+    return static_cast<int>(ms);
+}
+
+// ── Staged rollout: sticky per-install fraction ────────────────────────────
+
+QString UpdateChecker::installId() {
+    QSettings s;
+    QString id = s.value(QLatin1String(INSTALL_ID_KEY)).toString();
+    if (id.isEmpty()) {
+        // Generate once and persist; never changes for this install thereafter.
+        id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        s.setValue(QLatin1String(INSTALL_ID_KEY), id);
+        s.sync();
+        VC_INFO("Generated sticky update install id");
+    }
+    return id;
+}
+
+double UpdateChecker::rolloutFraction() {
+    // Hash the sticky install id to a stable, uniform-ish fraction in [0,1).
+    // SHA-256 → take the top 8 bytes → divide by 2^64. Same id → same fraction
+    // forever, so a device's rollout verdict never flip-flops between checks.
+    const QByteArray digest = QCryptographicHash::hash(
+        installId().toUtf8(), QCryptographicHash::Sha256);
+    quint64 v = 0;
+    for (int i = 0; i < 8; ++i)
+        v = (v << 8) | static_cast<quint8>(digest.at(i));
+    // 2^64 as a double; v / 2^64 ∈ [0,1).
+    return static_cast<double>(v) / 18446744073709551616.0;
 }
 
 // ── State plumbing ─────────────────────────────────────────────────────────

@@ -132,10 +132,25 @@ private:
     static QString settingsChannel();
     static void    saveChannel(const QString &c);
 
+    // ── Network with bounded exponential backoff ───────────────────────────
+    // Both the manifest fetch and the archive download retry on TRANSIENT
+    // network errors only (timeouts, connection drops). HTTP 4xx and any
+    // verify failure are permanent → no retry.
+    void startManifestFetch();    // (re)issue the manifest GET
     void onManifestReply(QNetworkReply *reply);
+    void startDownload();         // (re)issue the archive GET (resume-aware)
     void onDownloadFinished(QNetworkReply *reply);
     void verifyStaged();          // size + SHA-256 + Ed25519
-    void applyStaged();           // Phase 2 seam (no-op stub for now)
+    void applyStaged();           // platform-split apply (Linux swap / Win installer)
+#if defined(Q_OS_WIN)
+    // Windows apply: launch the verified Setup.exe (it self-elevates) and quit.
+    void applyWindowsInstaller();
+#endif
+
+    // True if `err` is a transient network failure worth retrying.
+    static bool isTransient(QNetworkReply *reply);
+    // Backoff delay for attempt n (0-based): 1s, 2s, 4s … capped.
+    static int  backoffMs(int attempt);
 
     // Fail helper: log, set Error + user message, optionally remove the staged
     // file. Returns nothing; callers should `return` after invoking.
@@ -149,6 +164,16 @@ private:
                               const QByteArray &rawPubKey);
     static QString osArchKey();        // "linux-x86_64" / "windows-x86_64" / {}
     static QString stagingDir();       // …/ViewCam/staging  (created on demand)
+
+    // Staged rollout: a STICKY per-install random id (persisted via QSettings)
+    // hashed to a stable fraction in [0,1). An update is only surfaced when that
+    // fraction < manifest "rollout". The same device never flip-flops.
+    static QString installId();        // persisted; generated once on first read
+    static double  rolloutFraction();  // hash(installId) → [0,1)
+
+    // The basename the staged artifact is written as. Linux: the version string
+    // (a .zip). Windows: "<version>.exe" so ShellExecute treats it as runnable.
+    QString stagedArtifactName() const;
 
     State   m_state    = State::Idle;
     int     m_progress = 0;
@@ -166,7 +191,11 @@ private:
     QByteArray m_expectedSignature;   // raw bytes (decoded from base64)
     qint64     m_expectedSize = -1;
 
-    QString    m_stagedPath;          // …/staging/<version> (final, post-rename)
+    QString    m_stagedPath;          // …/staging/<artifact> (final, post-rename)
+
+    // Bounded-retry bookkeeping (reset at the start of each check/download).
+    int m_manifestAttempt = 0;        // 0-based attempt counter for the manifest
+    int m_downloadAttempt = 0;        // 0-based attempt counter for the download
 
     QNetworkAccessManager *m_nam = nullptr;
     static UpdateChecker  *s_instance;

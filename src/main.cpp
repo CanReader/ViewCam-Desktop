@@ -5,6 +5,7 @@
 #include "ViewCamConfig.h"
 #include "core/Logger.h"
 #include "core/QmlDevMode.h"
+#include "updater/InstallLayout.h"
 #include "updater/UpdateChecker.h"
 #include "viewmodels/AppController.h"
 #include "viewmodels/SettingsViewModel.h"
@@ -75,6 +76,21 @@ void installTranslations(QGuiApplication &app, QTranslator &translator) {
     loadTranslation(app, translator, saved);
 }
 
+#ifdef _WIN32
+// Named mutex matching the Inno Setup [Setup] AppMutex. Inno's installer opens a
+// mutex of this exact name to detect the running app and (with
+// /CLOSEAPPLICATIONS) close it before swapping files. The name MUST stay in sync
+// with AppMutex in installer/viewcam_setup.iss. The handle is intentionally
+// leaked for process lifetime (Windows frees it on exit) so the mutex exists the
+// entire time the app runs. Global\ scope so an elevated installer in another
+// session can see it.
+void createWindowsAppMutex() {
+  HANDLE h = CreateMutexW(nullptr, FALSE, L"Global\\ViewCamStudioRunning");
+  if (h == nullptr)
+    VC_WARN("Could not create app mutex (installer may not detect us)");
+}
+#endif
+
 } // namespace
 
 int main(int argc, char *argv[]) {
@@ -102,10 +118,25 @@ int main(int argc, char *argv[]) {
     app.setOrganizationName(QStringLiteral(VIEWCAM_ORG_NAME));
     app.setOrganizationDomain(QStringLiteral(VIEWCAM_ORG_DOMAIN));
 
+#ifdef _WIN32
+    // Hold a named mutex so the Inno Setup installer can detect + close this
+    // running instance during an in-place upgrade (AppMutex / /CLOSEAPPLICATIONS).
+    createWindowsAppMutex();
+#endif
+
     // Post-update first-run: if relaunched by vc-updater with --just-updated,
     // clear the .pending-verify sentinel so the helper/launcher knows this
     // version booted successfully (no rollback needed).
     UpdateChecker::clearPendingVerifyIfJustUpdated(app.arguments());
+
+    // Linux self-heal: if <root>/current is a dangling symlink (e.g. a pruned
+    // target, an interrupted swap), repair it to point at the version dir this
+    // binary is actually running from, so the stable launcher keeps working.
+    // No-op on Windows (uses current.txt + the installer, not a POSIX symlink).
+    if (vcam::repairCurrentSymlinkIfDangling(
+            vcam::installRoot(), app.applicationFilePath())) {
+        VC_INFO("Repaired dangling 'current' symlink to the running version");
+    }
 
     if (!registerResourceBundle())
       return 2;
