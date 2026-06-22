@@ -27,6 +27,19 @@ inline QString appExeName() {
 #endif
 }
 
+// Name of the launcher script that sets LD_LIBRARY_PATH / QT_PLUGIN_PATH /
+// QML_IMPORT_PATH for the bundled Qt and then exec's ViewCam. The shipped
+// ViewCam binary has NO $ORIGIN/lib RPATH, so on Linux the app MUST be started
+// through this script (raw-exe launch can't find the bundled Qt on a machine
+// without a matching system Qt). Empty on Windows (libs sit beside the exe).
+inline QString appLauncherName() {
+#if defined(Q_OS_WIN)
+    return {};
+#else
+    return QStringLiteral("viewcam.sh");
+#endif
+}
+
 // Name of the updater helper at the install root.
 inline QString helperExeName() {
 #if defined(Q_OS_WIN)

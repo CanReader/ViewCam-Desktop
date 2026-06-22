@@ -123,20 +123,37 @@ void writeSentinel(const QString &dir) {
     }
 }
 
-// Launch versions/<v>/ViewCam --just-updated <ver>, detached. Returns the pid.
+// Launch the new version with --just-updated <ver>, detached. Returns true on
+// a successful spawn.
+//
+// On Linux we MUST go through versions/<v>/viewcam.sh: the ViewCam binary has
+// no $ORIGIN/lib RPATH, so a raw exec can't find the bundled Qt on a machine
+// without a matching system Qt — exactly the post-update relaunch that used to
+// silently fail. viewcam.sh sets LD_LIBRARY_PATH/QT_PLUGIN_PATH/QML_IMPORT_PATH
+// and forwards "$@", so the --just-updated sentinel still reaches the app. We
+// fall back to the raw exe only if the script is missing (older package).
 bool launchApp(const QString &versionDir, const QString &ver) {
-    const QString exe = QDir(versionDir).absoluteFilePath(vcam::appExeName());
-    if (!QFileInfo::exists(exe)) {
-        logLine(QStringLiteral("relaunch target missing: %1").arg(exe));
+    QString target;
+    const QString launcher = vcam::appLauncherName();
+    if (!launcher.isEmpty()) {
+        const QString script = QDir(versionDir).absoluteFilePath(launcher);
+        if (QFileInfo::exists(script))
+            target = script;
+    }
+    if (target.isEmpty())
+        target = QDir(versionDir).absoluteFilePath(vcam::appExeName());
+
+    if (!QFileInfo::exists(target)) {
+        logLine(QStringLiteral("relaunch target missing: %1").arg(target));
         return false;
     }
     qint64 pid = 0;
     const bool ok = QProcess::startDetached(
-        exe, {QStringLiteral("--just-updated"), ver}, versionDir, &pid);
+        target, {QStringLiteral("--just-updated"), ver}, versionDir, &pid);
     if (ok)
-        logLine(QStringLiteral("relaunched %1 (pid %2)").arg(exe).arg(pid));
+        logLine(QStringLiteral("relaunched %1 (pid %2)").arg(target).arg(pid));
     else
-        logLine(QStringLiteral("startDetached failed for %1").arg(exe));
+        logLine(QStringLiteral("startDetached failed for %1").arg(target));
     return ok;
 }
 
