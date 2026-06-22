@@ -58,14 +58,23 @@ QString updateLogPath(const QString &root);                     // <root>/update
 // Linux symlink or reading the Windows current.txt / junction. Empty if unset.
 QString resolveCurrent(const QString &root);
 
-// True when self-update is allowed: the running binary lives under `root` AND
-// `root` is writable. False for system/packaged installs (/opt, /usr, Program
-// Files, Flatpak, read-only dir) — caller must fall back to "update via
-// installer". `reason` (optional) is filled with a human-readable cause.
+// True when self-update is allowed.
+//
+//   Windows: ALWAYS true. The update mechanism is the signed Setup.exe, which
+//            self-elevates (UAC) and upgrades the Program Files install in
+//            place + re-registers the system virtual camera. Writability of the
+//            per-user root is irrelevant on Windows — the installer owns the
+//            apply step. `root`/`runningExePath` are ignored here.
+//
+//   Linux:   true only when the running binary lives under `root` AND `root` is
+//            writable (the per-user versioned-swap model). False for
+//            system/packaged installs (/opt, /usr, Flatpak, read-only dir) —
+//            caller falls back to "update via your package manager / the site".
+//            `reason` (optional) is filled with a human-readable cause.
 //
 // `runningExePath` is the absolute path of the currently-running executable
-// (QCoreApplication::applicationFilePath()); pass {} in the helper, which is
-// always at the root and only needs the writability check.
+// (QCoreApplication::applicationFilePath()); pass {} in the Linux helper, which
+// is always at the root and only needs the writability check.
 bool isSelfUpdatable(const QString &root, const QString &runningExePath,
                      QString *reason = nullptr);
 
@@ -79,5 +88,15 @@ bool activateVersion(const QString &root, const QString &ver, QString *err = nul
 // 'ViewCam' (and 'vc-updater') get +x. Returns false + fills err on any failure.
 // Zip-slip safe: refuses entries that escape destDir.
 bool extractZip(const QString &zipPath, const QString &destDir, QString *err = nullptr);
+
+// Linux self-heal (no-op on Windows): if <root>/current is a dangling/broken
+// symlink (target gone), repoint it at the version dir the running binary lives
+// in, so a stable launcher invoking current/ViewCam keeps working.
+//   `root`           install root.
+//   `runningExePath` QCoreApplication::applicationFilePath() of the live app.
+// Returns true if a repair was performed, false if nothing needed doing (or the
+// running binary isn't under <root>/versions so we can't infer a target).
+bool repairCurrentSymlinkIfDangling(const QString &root,
+                                    const QString &runningExePath);
 
 }  // namespace vcam

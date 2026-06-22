@@ -86,6 +86,17 @@ bool isSelfUpdatable(const QString &root, const QString &runningExePath,
         return false;
     };
 
+#if defined(Q_OS_WIN)
+    // Windows ships a SYSTEM virtual camera (registered DLLs in Program Files,
+    // needs admin). The update unit is the signed Setup.exe, which self-elevates
+    // and upgrades in place. So Windows is ALWAYS self-updatable regardless of
+    // where the binary lives or whether the per-user root is writable — the
+    // installer, not us, owns the apply step.
+    Q_UNUSED(root);
+    Q_UNUSED(runningExePath);
+    return true;
+#else
+
     if (root.isEmpty())
         return deny(QStringLiteral("install root could not be resolved"));
 
@@ -116,6 +127,7 @@ bool isSelfUpdatable(const QString &root, const QString &runningExePath,
     pf.close();
     QFile::remove(probe);
     return true;
+#endif  // Q_OS_WIN
 }
 
 bool activateVersion(const QString &root, const QString &ver, QString *err) {
@@ -239,6 +251,47 @@ bool extractZip(const QString &zipPath, const QString &destDir, QString *err) {
 
     mz_zip_reader_end(&zip);
     return ok;
+}
+
+bool repairCurrentSymlinkIfDangling(const QString &root,
+                                    const QString &runningExePath) {
+#if defined(Q_OS_WIN)
+    // Windows uses current.txt + a best-effort junction, not a POSIX symlink,
+    // and the activation path is the installer — nothing to self-heal here.
+    Q_UNUSED(root);
+    Q_UNUSED(runningExePath);
+    return false;
+#else
+    if (root.isEmpty() || runningExePath.isEmpty())
+        return false;
+
+    const QString link = currentLink(root);
+    const QFileInfo linkFi(link);
+
+    // Only act on a symlink that is broken (target gone). A healthy symlink, a
+    // real dir, or an absent link are all left alone.
+    if (!linkFi.isSymLink())
+        return false;
+    if (QFileInfo::exists(linkFi.symLinkTarget()))
+        return false;  // points somewhere valid — nothing to heal
+
+    // Infer the version this binary is running from: <root>/versions/<ver>/ViewCam.
+    const QString exe   = QDir::cleanPath(runningExePath);
+    const QString vBase = QDir::cleanPath(versionsDir(root)) + QLatin1Char('/');
+    if (!exe.startsWith(vBase))
+        return false;  // not a versioned per-user install; can't infer a target
+
+    const QString rest = exe.mid(vBase.size());  // "<ver>/ViewCam"
+    const QString ver  = rest.section(QLatin1Char('/'), 0, 0);
+    if (ver.isEmpty())
+        return false;
+    if (!QFileInfo(versionDir(root, ver)).isDir())
+        return false;
+
+    QString err;
+    // activateVersion() rewrites current atomically (temp symlink + rename).
+    return activateVersion(root, ver, &err);
+#endif
 }
 
 }  // namespace vcam

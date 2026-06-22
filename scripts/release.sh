@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
-# release.sh — sign ViewCam release archive(s) + emit/merge dist/manifest.json.
+# release.sh — sign ViewCam release artifact(s) + emit/merge dist/manifest.json.
 #
-# Pairs with the `viewcam_package` CMake target. Run it AFTER packaging, once per
-# platform you have a zip for. Because the Windows zip is produced on a Windows
-# build host, this script MERGES into an existing manifest.json: run on Linux,
-# then run on Windows pointing at the same dist/manifest.json (or copy the
-# Windows zip next to the Linux one and re-run) — each run fills only the
-# platform entries for the zips it finds, preserving the others.
+# Pairs with the `viewcam_package` CMake target (Linux .zip) and the Inno Setup
+# build (Windows Setup.exe). Run it AFTER building the artifact, once per
+# platform you have an artifact for. It MERGES into an existing manifest.json so
+# you can run it on Linux (for the .zip) and on a Windows host (for the .exe)
+# against the same manifest — each run fills only the platform entries for the
+# artifacts it finds, preserving the others.
 #
-# WHAT IT SIGNS: the raw archive BYTES (sign the file, not the manifest), with
-# Ed25519, matching the verify-only client:
-#     openssl pkeyutl -sign -inkey <priv> -rawin -in <zip> -out <sig.bin>
+# PER-PLATFORM ARTIFACT (the "apply" unit differs by OS, the verify is identical):
+#   linux-x86_64    ViewCam-<ver>-linux-x86_64.zip   (versioned-swap package)
+#   windows-x86_64  ViewCam-<ver>-win-x64-Setup.exe  (Inno Setup installer)
+#
+# WHAT IT SIGNS: the raw artifact BYTES (sign the file, not the manifest), with
+# Ed25519, matching the verify-only client — SAME scheme for .zip and .exe:
+#     openssl pkeyutl -sign -inkey <priv> -rawin -in <artifact> -out <sig.bin>
 #   then base64(sig.bin) -> manifest "signature".
 # Client recomputes SHA-256 (integrity) + verifies Ed25519 (authenticity) over
-# the downloaded archive against the embedded public key before extracting.
+# the downloaded artifact against the embedded public key before using it
+# (Linux: extract the zip; Windows: launch the verified Setup.exe).
 #
 # USAGE:
 #   scripts/release.sh [VERSION] [CHANNEL]
@@ -29,8 +34,12 @@
 #   VIEWCAM_ROLLOUT    0..1 staged ratio  (default: 1.0)
 #   VIEWCAM_PUB_DATE   ISO-8601 UTC       (default: now)
 #
-# WINDOWS: run under Git Bash / MSYS2 (provides bash + openssl + base64 +
-# sha256sum). The logic is identical; only the zip it finds differs.
+# WINDOWS: build the Setup.exe first on a Windows host with Inno Setup 6:
+#     iscc installer\viewcam_setup.iss
+#   then copy the produced ViewCamStudio-<ver>-Setup.exe to
+#   dist/ViewCam-<ver>-win-x64-Setup.exe and run this script under Git Bash /
+#   MSYS2 (provides bash + openssl + base64 + sha256sum). The signing logic is
+#   identical to the .zip; only the artifact it finds differs.
 #
 # Never prints the private key. Fails loudly if the key is missing.
 
@@ -82,39 +91,44 @@ file_size() { # portable byte size
 }
 b64() { base64 "$1" | tr -d '\n'; }   # base64 without line wraps (GNU+BSD)
 
-# Map a release zip filename to its manifest platform KEY (brief §2 schema).
+# Map a release artifact filename to its manifest platform KEY (brief §2 schema).
+# Linux ships a .zip (versioned-swap); Windows ships a signed Setup.exe.
 manifest_key_for() {
     case "$1" in
-        *-linux-x86_64.zip) echo "linux-x86_64" ;;
-        *-win-x64.zip)      echo "windows-x86_64" ;;
+        *-linux-x86_64.zip)   echo "linux-x86_64" ;;
+        *-win-x64-Setup.exe)  echo "windows-x86_64" ;;
+        *-win-x64.exe)        echo "windows-x86_64" ;;  # alt naming, tolerated
         *) echo "" ;;
     esac
 }
 
-# ── Collect zips for this version ─────────────────────────────────────────────
+# ── Collect artifacts for this version (Linux .zip + Windows Setup.exe) ───────
 shopt -s nullglob
-ZIPS=( "${DIST_DIR}/ViewCam-${VERSION}-linux-x86_64.zip" \
-       "${DIST_DIR}/ViewCam-${VERSION}-win-x64.zip" )
+ARTIFACTS=( "${DIST_DIR}/ViewCam-${VERSION}-linux-x86_64.zip" \
+            "${DIST_DIR}/ViewCam-${VERSION}-win-x64-Setup.exe" )
 FOUND=()
-for z in "${ZIPS[@]}"; do [ -f "$z" ] && FOUND+=( "$z" ); done
-[ "${#FOUND[@]}" -gt 0 ] || die "no ViewCam-${VERSION}-*.zip in ${DIST_DIR}; run the viewcam_package target"
+for a in "${ARTIFACTS[@]}"; do [ -f "$a" ] && FOUND+=( "$a" ); done
+[ "${#FOUND[@]}" -gt 0 ] || \
+    die "no ViewCam-${VERSION} artifact in ${DIST_DIR}
+  (expected the Linux .zip from viewcam_package and/or the Windows Setup.exe from iscc)"
 
 info "version=${VERSION} channel=${CHANNEL} dist=${DIST_DIR}"
 info "signing with key: ${SIGN_KEY}  (contents never printed)"
 
-# ── Sign each present platform zip; build python kwargs for the merge ─────────
+# ── Sign each present platform artifact; build python kwargs for the merge ────
 PLAT_ARGS=()
-for zip in "${FOUND[@]}"; do
-    fname="$(basename "$zip")"
+for artifact in "${FOUND[@]}"; do
+    fname="$(basename "$artifact")"
     key="$(manifest_key_for "$fname")"
     [ -n "$key" ] || die "cannot map platform for ${fname}"
 
-    sha="$(sha256_hex "$zip")"
-    size="$(file_size "$zip")"
+    sha="$(sha256_hex "$artifact")"
+    size="$(file_size "$artifact")"
 
     sigbin="$(mktemp)"
-    # Ed25519 detached signature over the RAW archive bytes (rawin = no prehash).
-    openssl pkeyutl -sign -inkey "${SIGN_KEY}" -rawin -in "$zip" -out "$sigbin" \
+    # Ed25519 detached signature over the RAW artifact bytes (rawin = no prehash).
+    # Identical for a .zip and a Setup.exe — the client verifies the same way.
+    openssl pkeyutl -sign -inkey "${SIGN_KEY}" -rawin -in "$artifact" -out "$sigbin" \
         || { rm -f "$sigbin"; die "openssl signing failed for ${fname}"; }
     sig="$(b64 "$sigbin")"
     rm -f "$sigbin"

@@ -9,6 +9,10 @@
 #define AppId          "tech.viewcam.studio"
 #define SourceDir      "..\bin"
 #define OutputDir      "..\installer\output"
+; Must match the Global\ named mutex the app creates in main.cpp
+; (createWindowsAppMutex). Lets the installer detect + close a running instance
+; during an in-place self-update before swapping files.
+#define AppMutexName   "Global\ViewCamStudioRunning"
 
 [Setup]
 AppId={{{#AppId}}
@@ -36,6 +40,21 @@ VersionInfoVersion={#AppVersion}
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Installer
 
+; ── In-place upgrade / self-update support ───────────────────────────────────
+; Same AppId across releases → Inno upgrades the existing install in place
+; (installs into the same {app} dir, replaces files, re-runs [Run] regsvr32).
+; AppMutex lets the installer detect a running ViewCam (matches the Global\
+; mutex created in main.cpp) and, with CloseApplications=yes, close it before
+; replacing files — needed because the system cam DLLs may be loaded and the
+; exe is in use. RestartApplications=yes relaunches ViewCam afterwards. These
+; are honored by the in-app self-update (/SILENT /CLOSEAPPLICATIONS
+; /RESTARTAPPLICATIONS /NORESTART) AND a manual double-click of Setup.exe.
+AppMutex={#AppMutexName}
+CloseApplications=yes
+RestartApplications=yes
+; Only close apps that actually hold files we're replacing (the cam DLLs + exe).
+CloseApplicationsFilter=*.exe,*.dll
+
 [Languages]
 Name: "english";   MessagesFile: "compiler:Default.isl"
 
@@ -43,7 +62,10 @@ Name: "english";   MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-; All application files from dist\ (exe, DLLs, Qt runtime, plugins, rcc bundle)
+; All application files from bin\ (exe, DLLs, Qt runtime, plugins, rcc bundle).
+; This also includes vc-updater.exe — harmless on Windows: it's never invoked,
+; because the Windows self-update path launches Setup.exe instead of the
+; versioned-swap helper. It is the Linux helper that ships in the same bundle.
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
