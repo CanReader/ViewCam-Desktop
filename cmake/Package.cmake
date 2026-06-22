@@ -34,6 +34,45 @@ file(COPY "${DEPLOY_DIR}/" DESTINATION "${_stage}")
 # Drop dev-only / non-shippable entries from the archive root.
 file(REMOVE_RECURSE "${_stage}/dev-imports")
 
+# ── Linux first-run install tooling ────────────────────────────────────────
+# Make a downloaded Linux .zip self-installing: ship the installer scripts, a
+# VERSION file (the installer's primary version source — see scripts/install.sh),
+# and the app icon (scalable SVG + 512px PNG) used by the .desktop launcher.
+# These extra files are harmless if the SAME zip is later extracted straight
+# into versions/<ver>/ by the self-updater — it ignores them.
+#
+# CMAKE_CURRENT_LIST_DIR here is Desktop/cmake (this script's dir), so the repo
+# source root is its parent.
+if(PLATFORM MATCHES "linux")
+    get_filename_component(_src_root "${CMAKE_CURRENT_LIST_DIR}" DIRECTORY)
+
+    # VERSION file — the installer reads this to name versions/<ver>/.
+    file(WRITE "${_stage}/VERSION" "${VERSION}\n")
+
+    # Installer + uninstaller (preserve +x).
+    foreach(_s install.sh uninstall.sh)
+        if(EXISTS "${_src_root}/scripts/${_s}")
+            file(COPY "${_src_root}/scripts/${_s}" DESTINATION "${_stage}"
+                 FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                                  GROUP_READ GROUP_EXECUTE
+                                  WORLD_READ WORLD_EXECUTE)
+        else()
+            message(WARNING "Package.cmake: missing scripts/${_s} — Linux zip won't self-install")
+        endif()
+    endforeach()
+
+    # App icon: scalable SVG (preferred) + a 512px PNG fallback. install.sh drops
+    # these into ~/.local/share/icons/hicolor/{scalable,512x512}/apps/.
+    if(EXISTS "${_src_root}/resources/images/Logo.svg")
+        file(COPY "${_src_root}/resources/images/Logo.svg" DESTINATION "${_stage}")
+        file(RENAME "${_stage}/Logo.svg" "${_stage}/viewcam.svg")
+    endif()
+    if(EXISTS "${_src_root}/resources/images/Logo.png")
+        file(COPY "${_src_root}/resources/images/Logo.png" DESTINATION "${_stage}")
+        file(RENAME "${_stage}/Logo.png" "${_stage}/viewcam.png")
+    endif()
+endif()
+
 file(MAKE_DIRECTORY "${DIST_DIR}")
 file(REMOVE "${_out_zip}")
 
