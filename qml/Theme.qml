@@ -39,6 +39,9 @@ QtObject {
     readonly property color irisSoft: Qt.rgba(iris.r, iris.g, iris.b, dark ? 0.16 : 0.10)
     readonly property color irisGlow: Qt.rgba(iris.r, iris.g, iris.b, dark ? 0.40 : 0.28)
     readonly property color irisMesh: Qt.rgba(iris.r, iris.g, iris.b, dark ? 0.06 : 0.05)
+    // Hover shade for the primary (iris) button. Hover lifts slightly brighter in
+    // dark mode, slightly deeper on the light canvas. (VcButton references this.)
+    readonly property color irisHover: dark ? Qt.lighter(iris, 1.12) : Qt.darker(iris, 1.06)
 
     // ---------- Signal (rationed, destructive/REC only) ----------
     readonly property color signal: dark ? "#FF6B6B" : "#D94F4F"
