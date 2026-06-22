@@ -17,20 +17,26 @@ namespace vcam {
 
 QString installRoot() {
     // Brief §1: Linux ~/.local/share/ViewCam, Windows %LOCALAPPDATA%\ViewCam.
-    // QStandardPaths::AppDataLocation already resolves to exactly these per the
-    // app identity (org "ViewCam"/app "ViewCam"). We strip any extra trailing
-    // segment so app and helper agree on ONE root even if identity differs.
-    QString base = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    if (base.isEmpty()) {
+    // MUST be deterministic and identical to where install.sh lays the layout
+    // down. Do NOT use QStandardPaths::AppDataLocation — it appends the app
+    // identity (org "Sleak Software" / app "ViewCam") → ~/.local/share/Sleak
+    // Software/ViewCam, which does NOT match install.sh's ~/.local/share/ViewCam,
+    // so isSelfUpdatable() would deny and the helper would target the wrong root.
+    // GenericDataLocation is the org/app-free base ($XDG_DATA_HOME, default
+    // ~/.local/share) — append a fixed "ViewCam".
+    QString base;
 #if defined(Q_OS_WIN)
-        const QByteArray local = qgetenv("LOCALAPPDATA");
-        if (!local.isEmpty())
-            base = QDir(QString::fromLocal8Bit(local)).absoluteFilePath(QStringLiteral("ViewCam"));
-#else
-        const QString home = QDir::homePath();
-        if (!home.isEmpty())
-            base = QDir(home).absoluteFilePath(QStringLiteral(".local/share/ViewCam"));
+    const QByteArray local = qgetenv("LOCALAPPDATA");
+    if (!local.isEmpty())
+        base = QDir(QString::fromLocal8Bit(local)).absoluteFilePath(QStringLiteral("ViewCam"));
 #endif
+    if (base.isEmpty()) {
+        const QString generic =
+            QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+        if (!generic.isEmpty())
+            base = QDir(generic).absoluteFilePath(QStringLiteral("ViewCam"));
+        else
+            base = QDir(QDir::homePath()).absoluteFilePath(QStringLiteral(".local/share/ViewCam"));
     }
     return QDir::cleanPath(base);
 }
