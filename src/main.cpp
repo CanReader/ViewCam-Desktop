@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
       return 2;
 
     app.setWindowIcon(
-        QIcon(":/qt/qml/ViewCam/Studio/resources/images/monogram.svg"));
+        QIcon(":/qt/qml/ViewCam/Studio/resources/images/Logo.svg"));
 
     loadFonts();
     QFont appFont(QStringLiteral("Geist"));

@@ -1,0 +1,74 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ViewCam">
+  <defs>
+    
+    <linearGradient id="vc-rim" x1="0" y1="0.1" x2="0.7" y2="1">
+      <stop offset="0%" stop-color="#F5C56B"></stop>
+      <stop offset="42%" stop-color="#8B7CFF"></stop>
+      <stop offset="100%" stop-color="#3F2DC2"></stop>
+    </linearGradient>
+
+    
+    <radialGradient id="vc-iris" cx="0.40" cy="0.36" r="0.65">
+      <stop offset="0%" stop-color="#B7A7FF"></stop>
+      <stop offset="36%" stop-color="#8B7CFF"></stop>
+      <stop offset="78%" stop-color="#3D2E8C"></stop>
+      <stop offset="100%" stop-color="#0F0A24"></stop>
+    </radialGradient>
+
+    
+    <radialGradient id="vc-glass" cx="0.42" cy="0.34" r="0.65">
+      <stop offset="0%" stop-color="#2A2350" stop-opacity="0.95"></stop>
+      <stop offset="100%" stop-color="#06040E" stop-opacity="1"></stop>
+    </radialGradient>
+
+    
+    <radialGradient id="vc-shine" cx="0.34" cy="0.28" r="0.42">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.16"></stop>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"></stop>
+    </radialGradient>
+
+    
+    <radialGradient id="vc-field" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#1A1632"></stop>
+      <stop offset="100%" stop-color="#0B0B0E"></stop>
+    </radialGradient>
+  </defs>
+
+  
+  <path d="M256 128&#xA;           C150 128 64 196 32 256&#xA;           C 64 316 150 384 256 384&#xA;           C362 384 448 316 480 256&#xA;           C448 196 362 128 256 128Z" fill="url(#vc-field)" stroke="url(#vc-rim)" stroke-width="9" stroke-linejoin="round"></path>
+
+  
+  <circle cx="256" cy="256" r="108" fill="url(#vc-iris)"></circle>
+
+  
+  <g opacity="0.22" fill="#B7A7FF">
+    <polygon points="256,168 274,212 238,212"></polygon>
+    <polygon points="316,202 290,238 280,212"></polygon>
+    <polygon points="316,310 280,300 290,274"></polygon>
+    <polygon points="256,344 238,300 274,300"></polygon>
+    <polygon points="196,310 232,300 222,274"></polygon>
+    <polygon points="196,202 222,238 232,212"></polygon>
+  </g>
+
+  
+  <circle cx="256" cy="256" r="92" fill="none" stroke="#B7A7FF" stroke-width="1" opacity="0.30"></circle>
+  <circle cx="256" cy="256" r="78" fill="none" stroke="#B7A7FF" stroke-width="1" opacity="0.20"></circle>
+
+  
+  <circle cx="256" cy="256" r="64" fill="url(#vc-glass)" stroke="#8B7CFF" stroke-width="2.5" opacity="0.92"></circle>
+
+  
+  <circle cx="256" cy="256" r="28" fill="#040312"></circle>
+
+  
+  <ellipse cx="240" cy="220" rx="42" ry="20" fill="#FFFFFF" opacity="0.10" transform="rotate(-22 240 220)"></ellipse>
+
+  
+  <circle cx="234" cy="230" r="13" fill="#FFFFFF" opacity="0.88"></circle>
+  <circle cx="278" cy="278" r="5" fill="#FFFFFF" opacity="0.30"></circle>
+
+  
+  <circle cx="376" cy="160" r="20" fill="#FF6B6B" opacity="0.18"></circle>
+  <circle cx="376" cy="160" r="11" fill="#FF6B6B"></circle>
+  <circle cx="372" cy="156" r="3" fill="#FFD7D2" opacity="0.85"></circle>
+</svg>
