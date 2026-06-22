@@ -180,12 +180,12 @@ int main(int argc, char *argv[]) {
     if (QmlDevMode::active())
       devMode.install(&engine);
 
-    // Self-update (Phase 5 UX): the CHECK no longer blocks the splash. Run a
-    // background check shortly after the app is interactive (the periodic timer
-    // and manual "Check for updates" live in QML / Settings). The splash only
-    // takes over for an actual apply-at-launch moment.
+    // Self-update: check immediately on launch (no artificial delay). A 0ms
+    // singleShot defers to the first event-loop iteration — i.e. right after the
+    // window is up — so it never blocks startup but fires with no wait. (Periodic
+    // re-check + manual "Check for updates" live in QML / Settings.)
     UpdateChecker *updater = UpdateChecker::instance();
-    QTimer::singleShot(3000, updater, [updater]() { updater->start(); });
+    QTimer::singleShot(0, updater, [updater]() { updater->start(); });
 
     // Shutdown hook: if the user chose "Install on quit" and the download
     // verified, apply the staged update on exit (helper swaps + relaunches).
