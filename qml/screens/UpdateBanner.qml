@@ -23,9 +23,10 @@ Item {
          || UpdateChecker.state === UpdateChecker.Verifying
          || UpdateChecker.state === UpdateChecker.ReadyToApply)
 
-    readonly property bool show:
-        !dismissed && UpdateChecker.installable
-        && (UpdateChecker.state === UpdateChecker.UpdateAvailable || quitFlow)
+    // Banner intentionally disabled: updates apply SILENTLY (auto-update) with the
+    // progress overlay, no prompt card. This Item still hosts the periodic re-check
+    // timer + auto-download sync below. (Was: visible on UpdateAvailable.)
+    readonly property bool show: false
 
     // Re-surface on every fresh check result.
     Connections {
