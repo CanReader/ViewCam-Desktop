@@ -1,53 +1,29 @@
 import QtQuick
 import ViewCam.Studio
 
-// Startup overlay shown while the update check runs. Fades out once the
-// checker reaches UpToDate or Error so the normal Launcher slides in.
+// Apply-moment overlay. Phase 5: the background CHECK no longer blocks the
+// splash — this screen only takes over while an update is actually being
+// installed (Downloading / Verifying / Applying), e.g. an "Install now" that
+// the user triggered, or a resumed apply at launch. The rest of the time it
+// is fully transparent and lets the normal app through.
 Item {
     id: root
 
-    readonly property bool checkDone: UpdateChecker.state === UpdateChecker.UpToDate
-                                   || UpdateChecker.state === UpdateChecker.Error
-    property bool timerDone: false
-    readonly property bool done: checkDone && timerDone
+    readonly property bool installing:
+           UpdateChecker.state === UpdateChecker.Downloading
+        || UpdateChecker.state === UpdateChecker.Verifying
+        || UpdateChecker.state === UpdateChecker.Applying
 
-    // Base 2s minimum so the splash is never just a flash.
-    Timer {
-        id: baseTimer
-        interval: 2000
-        running: true
-        repeat: false
-        onTriggered: {
-            if (!root.checkDone) return          // still waiting for network — onCheckDoneChanged will finish
-            if (UpdateChecker.statusText !== "")
-                msgTimer.restart()               // extra time to read the message
-            else
-                root.timerDone = true
-        }
-    }
-
-    // 1.5 s extra when there is a message to read (total ≥ 3.5 s from launch).
-    Timer {
-        id: msgTimer
-        interval: 1500
-        running: false
-        repeat: false
-        onTriggered: root.timerDone = true
-    }
-
-    // If the network reply arrives after the base timer already fired,
-    // give 1.5 s from that point so the message is still readable.
-    onCheckDoneChanged: {
-        if (checkDone && !baseTimer.running) {
-            if (UpdateChecker.statusText !== "")
-                msgTimer.restart()
-            else
-                timerDone = true
-        }
-    }
-
-    opacity: done ? 0 : 1
+    opacity: installing ? 1 : 0
     visible: opacity > 0
+    // Soak input while the apply overlay is up so the app underneath is inert.
+    enabled: installing
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.installing
+        hoverEnabled: root.installing
+    }
 
     Behavior on opacity {
         NumberAnimation {
@@ -92,7 +68,7 @@ Item {
             font.family: Theme.fontMono
             font.pixelSize: 12
             font.letterSpacing: 0.04 * 12
-            color: root.checkDone ? Theme.fg1 : Theme.fg3
+            color: Theme.fg1
             visible: UpdateChecker.statusText !== ""
         }
 
@@ -119,12 +95,12 @@ Item {
             }
         }
 
-        // Pulsing dot — visible while checking or applying
+        // Pulsing dot — visible while verifying or applying (no progress %)
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 6; height: 6; radius: 3
             color: Theme.iris
-            visible: UpdateChecker.state === UpdateChecker.Checking
+            visible: UpdateChecker.state === UpdateChecker.Verifying
                   || UpdateChecker.state === UpdateChecker.Applying
 
             SequentialAnimation on opacity {

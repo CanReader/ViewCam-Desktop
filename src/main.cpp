@@ -17,6 +17,7 @@
 #include <QQmlApplicationEngine>
 #include <QResource>
 #include <QSettings>
+#include <QTimer>
 #include <QTranslator>
 
 namespace {
@@ -101,6 +102,11 @@ int main(int argc, char *argv[]) {
     app.setOrganizationName(QStringLiteral(VIEWCAM_ORG_NAME));
     app.setOrganizationDomain(QStringLiteral(VIEWCAM_ORG_DOMAIN));
 
+    // Post-update first-run: if relaunched by vc-updater with --just-updated,
+    // clear the .pending-verify sentinel so the helper/launcher knows this
+    // version booted successfully (no rollback needed).
+    UpdateChecker::clearPendingVerifyIfJustUpdated(app.arguments());
+
     if (!registerResourceBundle())
       return 2;
 
@@ -143,9 +149,17 @@ int main(int argc, char *argv[]) {
     if (QmlDevMode::active())
       devMode.install(&engine);
 
-    // Kick off the update check before the first frame renders so the network
-    // request is already in-flight when UpdateScreen appears.
-    UpdateChecker::instance()->start();
+    // Self-update (Phase 5 UX): the CHECK no longer blocks the splash. Run a
+    // background check shortly after the app is interactive (the periodic timer
+    // and manual "Check for updates" live in QML / Settings). The splash only
+    // takes over for an actual apply-at-launch moment.
+    UpdateChecker *updater = UpdateChecker::instance();
+    QTimer::singleShot(3000, updater, [updater]() { updater->start(); });
+
+    // Shutdown hook: if the user chose "Install on quit" and the download
+    // verified, apply the staged update on exit (helper swaps + relaunches).
+    QObject::connect(&app, &QGuiApplication::aboutToQuit, updater,
+                     [updater]() { updater->applyPendingOnQuit(); });
 
     engine.loadFromModule("ViewCam.Studio", "Main");
 

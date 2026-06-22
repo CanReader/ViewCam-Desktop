@@ -234,6 +234,67 @@ Flickable {
 
         VcCard {
             width: parent.width
+            header: qsTr("Updates")
+
+            // Channel — Stable / Beta. Persisted in UpdateChecker (rebuilds the
+            // manifest URL); changing it triggers a re-check.
+            VcSettingRow {
+                showDivider: false
+                icon: "protocol"; accent: true
+                title: qsTr("Update channel")
+                description: qsTr("Stable ships tested builds · Beta gets them early")
+                VcSeg {
+                    model: [qsTr("Stable"), qsTr("Beta")]
+                    currentIndex: UpdateChecker.channel === "beta" ? 1 : 0
+                    onActivated: (i) => UpdateChecker.channel = (i === 1 ? "beta" : "stable")
+                }
+            }
+
+            // Automatic updates → setAutoDownload(). When on, an available
+            // update downloads in the background without a prompt.
+            VcSettingRow {
+                icon: "reconnect"
+                title: qsTr("Automatic updates")
+                description: qsTr("Download new versions in the background")
+                VcToggle {
+                    checked: root.s.autoUpdate
+                    onToggled: (c) => root.s.autoUpdate = c
+                }
+            }
+
+            // Check frequency — drives the periodic timer in UpdateBanner.
+            VcSettingRow {
+                icon: "clock"
+                title: qsTr("Check frequency")
+                description: qsTr("How often %1 looks for updates").arg(AppInfo.displayName)
+                VcSeg {
+                    model: [qsTr("On launch"), qsTr("Daily"), qsTr("Weekly")]
+                    currentIndex: root.s.updateFrequency
+                    onActivated: (i) => root.s.updateFrequency = i
+                }
+            }
+
+            // Status line + manual check.
+            VcSettingRow {
+                icon: "info"
+                title: qsTr("Version %1").arg(UpdateChecker.currentVersion)
+                description: UpdateChecker.statusText !== ""
+                             ? UpdateChecker.statusText
+                             : (UpdateChecker.installable
+                                ? qsTr("Up to date")
+                                : qsTr("Managed install — update from viewcam.tech"))
+                VcButton {
+                    kind: "soft"
+                    text: UpdateChecker.state === UpdateChecker.Checking
+                          ? qsTr("Checking…") : qsTr("Check now")
+                    onClicked: UpdateChecker.checkNow()
+                }
+            }
+        }
+        Item { width: 1; height: 24 }
+
+        VcCard {
+            width: parent.width
             header: qsTr("Appearance")
 
             VcSettingRow {

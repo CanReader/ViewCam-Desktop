@@ -3,7 +3,7 @@ project(ViewCam
     VERSION 1.0.0
     DESCRIPTION "Turn your phone into a virtual webcam"
     HOMEPAGE_URL "https://viewcam.tech"
-    LANGUAGES CXX)
+    LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,6 +21,17 @@ set(VIEWCAM_BUILD_NUMBER 1                     CACHE STRING "Monotonic build num
 set(VIEWCAM_COPYRIGHT    "(c) 2026 Sleak Software" CACHE STRING "Copyright line")
 set(VIEWCAM_STREAM_PORT  8080                  CACHE STRING "Default TCP stream port")
 set(VIEWCAM_BEACON_PORT  8081                  CACHE STRING "UDP discovery beacon port")
+
+# ── Self-update: signing key + endpoints (embedded, overridable) ──
+# Ed25519 public key (raw 32-byte key, hex). The matching private key is held
+# only by the maintainer (never in the repo). Used verify-only on the client.
+set(VIEWCAM_UPDATE_PUBKEY
+    "6f121a3aa0cc8795fc33b019de087d8d424d6fc7aa4ea2dc301819d2cf32bb00"
+    CACHE STRING "Ed25519 update-signing public key (32-byte raw, hex)")
+set(VIEWCAM_UPDATE_CHANNEL "stable"
+    CACHE STRING "Update channel (stable | beta)")
+set(VIEWCAM_UPDATE_MANIFEST_BASE "https://updates.viewcam.tech"
+    CACHE STRING "Base URL for update manifests")
 
 # ── Gather Metadata ──────────────────────────────────
 
@@ -70,6 +81,12 @@ endif()
 
 # ── Find Dependencies ──────────────────────────────────────────
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick Network Svg LinguistTools)
+
+# OpenSSL — Ed25519 detached-signature verification for the self-updater.
+# Requires >= 1.1.1 (EVP_PKEY_ED25519 / one-shot EVP_DigestVerify). Already
+# present on this system (3.x) and pulled in transitively by FFmpeg on most
+# platforms; we link it explicitly so the dependency is not implicit.
+find_package(OpenSSL 1.1.1 REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -131,6 +148,23 @@ if(VIEWCAM_ENABLE_VULKAN_COMPUTE AND Vulkan_FOUND)
 else()
     message(STATUS "Vulkan compute disabled (option OFF or Vulkan not found)")
 endif()
+
+# ── Vendored miniz (zip read) for the self-updater ────────────
+# Single-file public-domain/MIT unzip (third_party/miniz/LICENSE). Used by the
+# shared InstallLayout to extract the .zip update package on BOTH platforms, so
+# the app and the vc-updater helper share one dependency-free extraction path.
+add_library(vc_miniz STATIC third_party/miniz/miniz.c)
+target_include_directories(vc_miniz PUBLIC ${CMAKE_SOURCE_DIR}/third_party/miniz)
+set_target_properties(vc_miniz PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# ── Shared install-layout helper (app + vc-updater) ───────────
+# QtCore + miniz only; no Gui/Qml so the standalone helper can reuse it.
+add_library(vc_updater_core STATIC
+    src/updater/InstallLayout.cpp
+    include/updater/InstallLayout.h)
+target_include_directories(vc_updater_core PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(vc_updater_core PUBLIC Qt6::Core vc_miniz)
+set_target_properties(vc_updater_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # ── Sources (backend + viewmodels, no widget UI) ──────────────
 set(SOURCES
@@ -227,6 +261,7 @@ set(VIEWCAM_QML_FILES
     qml/screens/SourcesPage.qml
     qml/screens/SettingsPage.qml
     qml/screens/UpdateScreen.qml
+    qml/screens/UpdateBanner.qml
 )
 
 file(GLOB VIEWCAM_ICON_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/icons/*.svg)
@@ -301,6 +336,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Quick
     Qt6::Network
     Qt6::Svg
+    OpenSSL::Crypto
+    vc_updater_core
 )
 
 if(UNIX AND SPDLOG_FOUND)
@@ -602,5 +639,51 @@ if(LINUX)
     endif()
 endif()
 
+# ── vc-updater helper (standalone, QtCore only) ───────────────
+# Lives at the install ROOT (bin/ in the dev deploy), NOT inside a version dir,
+# so it can atomically swap current/ and roll back. No Gui/Qml linkage.
+add_executable(vc-updater src/updater/helper/vc_updater_main.cpp)
+target_link_libraries(vc-updater PRIVATE Qt6::Core vc_updater_core)
+set_target_properties(vc-updater PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${DEPLOY_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${DEPLOY_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${DEPLOY_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${DEPLOY_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${DEPLOY_DIR}"
+)
+
 # ── Install ────────────────────────────────────────────────────
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+install(TARGETS vc-updater DESTINATION .)
+
+# ── Release packaging (full-folder update archive) ─────────────
+# Produces dist/ViewCam-<VERSION>-<platform>.zip whose ROOT entries are the
+# deployed bin/ contents (exe + viewcam.rcc + vc-updater + lib/plugins/qml) —
+# exactly what the client extracts into versions/<ver>/. Standardized on .zip
+# for BOTH platforms (client extracts via vendored miniz). Sign it + emit the
+# manifest with scripts/release.sh afterwards.
+#
+#   cmake --build <build> --target ViewCam vc-updater   # deploy bin/ first
+#   cmake --build <build> --target viewcam_package       # -> dist/<zip>
+#
+# Platform tag derives from the build HOST: linux-x86_64 / win-x64.
+set(VIEWCAM_DIST_DIR "${CMAKE_SOURCE_DIR}/dist")
+if(WIN32)
+    set(VIEWCAM_PKG_PLATFORM "win-x64")
+else()
+    set(VIEWCAM_PKG_PLATFORM "linux-x86_64")
+endif()
+
+add_custom_target(viewcam_package
+    COMMAND ${CMAKE_COMMAND}
+        -DDEPLOY_DIR=${DEPLOY_DIR}
+        -DDIST_DIR=${VIEWCAM_DIST_DIR}
+        -DVERSION=${PROJECT_VERSION}
+        -DPLATFORM=${VIEWCAM_PKG_PLATFORM}
+        -P ${CMAKE_SOURCE_DIR}/cmake/Package.cmake
+    DEPENDS ${PROJECT_NAME} vc-updater
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Packaging ViewCam-${PROJECT_VERSION}-${VIEWCAM_PKG_PLATFORM}.zip into dist/"
+    VERBATIM
+    USES_TERMINAL
+)

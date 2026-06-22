@@ -118,6 +118,11 @@ VC_IMPL(int, maxResolution, setMaxResolution, maxResolutionChanged, "engine/maxR
 VC_IMPL(int, keyframeInterval, setKeyframeInterval, keyframeIntervalChanged, "engine/keyframeInterval", 2)
 VC_IMPL(int, bufferedFrames, setBufferedFrames, bufferedFramesChanged, "engine/bufferedFrames", 2)
 
+// Updates: auto-download toggle + periodic check frequency.
+// updateFrequency: 0 = On launch, 1 = Daily, 2 = Weekly. Default Daily.
+VC_IMPL(bool, autoUpdate, setAutoUpdate, autoUpdateChanged, "updates/autoDownload", false)
+VC_IMPL(int, updateFrequency, setUpdateFrequency, updateFrequencyChanged, "updates/frequency", 1)
+
 VC_IMPL(bool, autoDiscovery, setAutoDiscovery, autoDiscoveryChanged, "network/autoDiscovery", true)
 VC_IMPL(int, listenPort, setListenPort, listenPortChanged, "connection/port", vc::kStreamPort)
 VC_IMPL(bool, autoReconnect, setAutoReconnect, autoReconnectChanged, "network/autoReconnect", true)

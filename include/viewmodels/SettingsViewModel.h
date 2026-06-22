@@ -33,6 +33,12 @@ class SettingsViewModel : public QObject {
     Q_PROPERTY(int keyframeInterval READ keyframeInterval WRITE setKeyframeInterval NOTIFY keyframeIntervalChanged)
     Q_PROPERTY(int bufferedFrames READ bufferedFrames WRITE setBufferedFrames NOTIFY bufferedFramesChanged)
 
+    // Updates (Phase 5). Channel lives in UpdateChecker (it rebuilds the
+    // manifest URL); here we persist the auto-download toggle and the periodic
+    // check frequency (0 = On launch only, 1 = Daily, 2 = Weekly).
+    Q_PROPERTY(bool autoUpdate READ autoUpdate WRITE setAutoUpdate NOTIFY autoUpdateChanged)
+    Q_PROPERTY(int updateFrequency READ updateFrequency WRITE setUpdateFrequency NOTIFY updateFrequencyChanged)
+
     // Network
     Q_PROPERTY(bool autoDiscovery READ autoDiscovery WRITE setAutoDiscovery NOTIFY autoDiscoveryChanged)
     Q_PROPERTY(int listenPort READ listenPort WRITE setListenPort NOTIFY listenPortChanged)
@@ -89,6 +95,11 @@ public:
     int bufferedFrames() const;
     void setBufferedFrames(int v);
 
+    bool autoUpdate() const;
+    void setAutoUpdate(bool v);
+    int updateFrequency() const;
+    void setUpdateFrequency(int v);
+
     bool autoDiscovery() const;
     void setAutoDiscovery(bool v);
     int listenPort() const;
@@ -142,6 +153,8 @@ signals:
     void maxResolutionChanged();
     void keyframeIntervalChanged();
     void bufferedFramesChanged();
+    void autoUpdateChanged();
+    void updateFrequencyChanged();
     void autoDiscoveryChanged();
     void listenPortChanged();
     void autoReconnectChanged();

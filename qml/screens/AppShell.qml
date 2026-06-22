@@ -93,4 +93,10 @@ Item {
         // so the empty viewfinder goes full-bleed instead of showing dead "—" rows.
         visible: root.page === "liveview" && AppController.connection.connected
     }
+
+    // Non-blocking "update available" prompt — floats over every page,
+    // bottom-right, and never steals focus from the app.
+    UpdateBanner {
+        anchors.fill: parent
+    }
 }
