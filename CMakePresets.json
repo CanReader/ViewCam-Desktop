@@ -32,6 +32,23 @@
         "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG",
         "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
       }
+    },
+    {
+      "name": "release-msvc",
+      "displayName": "Release (MSVC 2022 x64)",
+      "description": "Release build using MSVC 2022 — deploys to bin/",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/release-msvc",
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "17",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL",
+        "Qt6_DIR": "C:/Qt/6.8.2/msvc2022_64/lib/cmake/Qt6"
+      }
     }
   ],
 
@@ -46,6 +63,12 @@
       "name": "release",
       "displayName": "Build Release",
       "configurePreset": "release",
+      "configuration": "Release"
+    },
+    {
+      "name": "release-msvc",
+      "displayName": "Build Release (MSVC)",
+      "configurePreset": "release-msvc",
       "configuration": "Release"
     }
   ]
