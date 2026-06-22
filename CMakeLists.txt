@@ -236,7 +236,7 @@ set(VIEWCAM_QML_SINGLETONS Theme)
 
 # Fonts/images bundled next to the qml inside the external blob
 set(VIEWCAM_ASSET_FILES
-    resources/images/monogram.svg
+    resources/images/Logo.svg
     resources/fonts/Geist-Regular.ttf
     resources/fonts/Geist-Medium.ttf
     resources/fonts/Geist-SemiBold.ttf
@@ -315,7 +315,18 @@ endif()
 # qml/ directory is baked in as an absolute path at configure time so no
 # env var is needed — just build Debug and live edits reload instantly.
 # To use a different source dir at runtime, set VIEWCAM_QML_DIR env.
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+get_property(_vc_multiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(_vc_multiConfig)
+    # Multi-config generators (VS, Xcode): CMAKE_BUILD_TYPE is meaningless here.
+    # Bake the path unconditionally (used only inside #ifdef VIEWCAM_HOT_RELOAD in
+    # QmlDevMode.cpp, so it has zero overhead in Release). Gate the reload flag itself
+    # per-config via a generator expression.
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        VIEWCAM_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
+    set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS
+        $<$<CONFIG:Debug>:VIEWCAM_HOT_RELOAD>)
+    message(STATUS "QML hot-reload: per-config (Debug=ENABLED, Release=disabled)")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE
         VIEWCAM_HOT_RELOAD
         VIEWCAM_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
@@ -343,7 +354,7 @@ endif()
 # ── Deploy (portable bin/ directory) ──────────────────────────
 # Shipped layout: bin/ViewCam (exe) + bin/viewcam.rcc (opaque UI+i18n blob)
 # + Qt runtime (lib/, plugins/, qml/ for the Qt-provided imports only).
-set(DEPLOY_DIR "${CMAKE_SOURCE_DIR}/bin")
+set(DEPLOY_DIR "${CMAKE_SOURCE_DIR}/bin" CACHE PATH "Deployment output directory (overridable via -DDEPLOY_DIR=...)")
 
 # Copy the external resource bundle next to the executable.
 # Attached to BOTH the rcc target and the binary so it runs whenever the rcc
@@ -550,7 +561,10 @@ if(WIN32)
     # Static-link libgcc and libstdc++ so the DLL has no MSYS2 runtime
     # dependencies — the Windows Frame Server broker loads this DLL in a
     # separate process and won't find MSYS2 DLLs in its search path.
-    target_link_options(ViewCamMFSource PRIVATE -static-libgcc -static-libstdc++)
+    # GCC only — MSVC uses /MT[d] via CMAKE_MSVC_RUNTIME_LIBRARY.
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        target_link_options(ViewCamMFSource PRIVATE -static-libgcc -static-libstdc++)
+    endif()
 
     set_target_properties(ViewCamMFSource PROPERTIES
         PREFIX ""
