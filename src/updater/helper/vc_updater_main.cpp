@@ -278,6 +278,13 @@ int main(int argc, char *argv[]) {
                 logLine(QStringLiteral("ROLLED BACK current -> %1").arg(oldVer));
                 writeAttempts(newVersionDir, 0);  // reset so a manual retry is possible
                 QFile::remove(QDir(newVersionDir).absoluteFilePath(vcam::pendingVerifyName()));
+                // Loop guard: mark this version as launch-failed so the app won't
+                // auto-apply it again (which would roll back → re-check → loop).
+                QFile ff(QDir(root).absoluteFilePath(vcam::failedVersionName()));
+                if (ff.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                    ff.write(newVer.toUtf8());
+                    ff.close();
+                }
                 launchApp(oldVersionDir, oldVer);  // bring the working version back up
             } else {
                 logLine(QStringLiteral("rollback activation FAILED: %1").arg(rbErr));

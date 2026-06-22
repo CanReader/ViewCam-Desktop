@@ -243,9 +243,11 @@ bool extractZip(const QString &zipPath, const QString &destDir, QString *err) {
 
 #if defined(Q_OS_UNIX)
         // .zip stores no reliable Unix mode for our toolchain; force +x on the
-        // executables so the relaunched app / helper are runnable.
+        // executables AND the launcher script so the relaunched app/helper run.
+        // (Missing +x on viewcam.sh made vc-updater's relaunch fail → rollback loop.)
         const QString base = QFileInfo(outPath).fileName();
-        if (base == QStringLiteral("ViewCam") || base == QStringLiteral("vc-updater")) {
+        if (base == QStringLiteral("ViewCam") || base == QStringLiteral("vc-updater")
+            || base.endsWith(QStringLiteral(".sh"))) {
             QFile::setPermissions(
                 outPath, QFileDevice::ReadOwner | QFileDevice::WriteOwner |
                              QFileDevice::ExeOwner | QFileDevice::ReadGroup |
