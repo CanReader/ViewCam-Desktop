@@ -300,6 +300,27 @@ void UpdateChecker::onManifestReply(QNetworkReply *reply) {
     setStatusText(tr("Update %1 is available").arg(remoteStr));
     setState(State::UpdateAvailable);
 
+    // Loop guard: if vc-updater rolled this EXACT version back because it failed to
+    // relaunch, do not auto-apply it again (would roll back → re-check → loop). A
+    // different/newer version clears the stale marker and is allowed through.
+    {
+        const QString marker =
+            QDir(vcam::installRoot()).absoluteFilePath(vcam::failedVersionName());
+        QFile mf(marker);
+        if (mf.exists() && mf.open(QIODevice::ReadOnly)) {
+            const QString failed = QString::fromUtf8(mf.readAll()).trimmed();
+            mf.close();
+            if (failed == remoteStr) {
+                VC_WARN("Skipping auto-update to {} — it failed to relaunch on a prior "
+                        "attempt (loop guard); install manually from viewcam.tech",
+                        remoteStr.toStdString());
+                setStatusText(tr("Update %1 needs a manual install").arg(remoteStr));
+                return;
+            }
+            QFile::remove(marker);  // newer version → stale marker, retry allowed
+        }
+    }
+
     // Silent auto-update: download → verify → apply → relaunch, no banner. The
     // progress overlay (UpdateScreen) shows during it. installable() must be true
     // to actually apply (logged here so a denied install is obvious).
@@ -838,8 +859,10 @@ QString UpdateChecker::osArchKey() {
 }
 
 QString UpdateChecker::stagingDir() {
-    const QString base =
-        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    // Under the SAME install root as everything else (vcam::installRoot()), NOT
+    // QStandardPaths::AppDataLocation — that resolves to ~/.local/share/Sleak
+    // Software/ViewCam and would scatter staging into a second tree.
+    const QString base = vcam::installRoot();
     if (base.isEmpty())
         return {};
     const QString dir = QDir(base).absoluteFilePath(QStringLiteral("staging"));

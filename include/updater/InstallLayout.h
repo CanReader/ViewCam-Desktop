@@ -54,6 +54,10 @@ inline QString helperExeName() {
 inline QString pendingVerifyName()  { return QStringLiteral(".pending-verify"); }
 inline QString attemptsName()       { return QStringLiteral(".launch-attempts"); }
 inline QString previousLinkName()   { return QStringLiteral(".previous"); }
+// Written at install ROOT by vc-updater when a version was rolled back because it
+// failed to relaunch. The app refuses to auto-apply this exact version again (loop
+// guard); a different/newer version clears it.
+inline QString failedVersionName()  { return QStringLiteral(".failed-launch"); }
 
 // Per-user install root (does NOT create it):
 //   Linux:   ~/.local/share/ViewCam
