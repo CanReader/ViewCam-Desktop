@@ -28,3 +28,9 @@
 // Network defaults (single source for ports — also see core/Constants.h)
 #define VIEWCAM_STREAM_PORT     @VIEWCAM_STREAM_PORT@
 #define VIEWCAM_BEACON_PORT     @VIEWCAM_BEACON_PORT@
+
+// Self-update: embedded Ed25519 public key (raw 32-byte, hex) + endpoints.
+// Private key is the maintainer's; client is verify-only.
+#define VIEWCAM_UPDATE_PUBKEY         "@VIEWCAM_UPDATE_PUBKEY@"
+#define VIEWCAM_UPDATE_CHANNEL        "@VIEWCAM_UPDATE_CHANNEL@"
+#define VIEWCAM_UPDATE_MANIFEST_BASE  "@VIEWCAM_UPDATE_MANIFEST_BASE@"
