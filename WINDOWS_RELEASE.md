@@ -35,10 +35,17 @@ versioned-swap. Instead:
 
 ## Status
 - ✅ **Linux 1.0.1** live: `dl.viewcam.tech/1.0.1/ViewCam-1.0.1-linux-x86_64.zip` +
-  signed `updates.viewcam.tech/stable/manifest.json` (the manifest's `linux-x86_64`
-  entry is filled; `windows-x86_64` is an empty placeholder).
-- ⏳ **Windows**: code is written but **UNTESTED on a real Windows machine**, and the
-  `Setup.exe` + the manifest `windows-x86_64` entry are **not published yet**.
+  signed manifest. End-to-end self-update verified on a real machine.
+- ✅ **Windows 1.0.1 PUBLISHED (2026-06-25):**
+  `dl.viewcam.tech/1.0.1/ViewCam-1.0.1-win-x64-Setup.exe` (30,382,038 B, sha
+  `14bac0cb…`) is live and **signed** into the manifest's `windows-x86_64` entry;
+  both platforms in `updates.viewcam.tech/stable/manifest.json` verified
+  (sha + Ed25519). Built on a Windows host, installer via `iscc`, exe pulled to the
+  Linux machine and signed there (key never left Linux), manifest deployed last.
+- ⏳ **Remaining**: confirm the actual Windows SELF-UPDATE flow on a Windows machine
+  (install 1.0.0 → it downloads the Setup.exe → verifies → UAC-elevates → in-place
+  upgrade + cam re-register → relaunch as 1.0.1). The artifact is live; this is the
+  runtime path (`Q_OS_WIN` / `applyWindowsInstaller`) that still needs a real run.
 
 ## Prereqs (Windows)
 MSVC build tools, Qt 6 (matching the project), CMake + Ninja, **Inno Setup 6**
