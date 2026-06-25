@@ -11,6 +11,16 @@ Windows-specific to-do.
 > `dl.viewcam.tech/1.0.1/` + a manifest with BOTH platforms filled to
 > `updates.viewcam.tech/stable/`.
 
+> 🛑 **DO NOT PUBLISH / DEPLOY FROM WINDOWS.** `hosting_deployStaticWebsite`
+> **REPLACES the ENTIRE subdomain tree** — it does NOT merge. The live **Linux**
+> `.zip` artifacts and the signed `manifest.json` exist ONLY on the Linux machine.
+> If you deploy to `dl.viewcam.tech` or `updates.viewcam.tech` from Windows, you
+> will **WIPE the live Linux release** (this already happened once). Your job ends
+> at producing a tested `Setup.exe`; hand it to the Linux machine, where ALL
+> publishing happens with the full tree (Linux zips + Windows exe + merged manifest).
+> (The tool does NOT filter binaries — that was a misdiagnosis; the wipe is the
+> tree-replace behavior. FYI the manifest is unaffected by a `dl` deploy.)
+
 ## Why Windows differs from Linux
 ViewCam ships a **system virtual camera** (DirectShow `ViewCamFilter.dll` + Media
 Foundation `ViewCamMFSource.dll`, `regsvr32`-registered, admin). A system camera
