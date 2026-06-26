@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(ViewCam
-    VERSION 1.0.1
+    VERSION 1.0.3
     DESCRIPTION "Turn your phone into a virtual webcam"
     HOMEPAGE_URL "https://viewcam.tech"
     LANGUAGES C CXX)
@@ -531,16 +531,20 @@ else()
         endif()
     endforeach()
 
-    # Copy SVG icon plugin (needed for QIcon/Image to render SVG)
+    # Copy the Qt image-format plugins. These are runtime-loaded by QImage /
+    # QImageReader; the deployed app sees ONLY what's bundled here. SVG is needed
+    # for icons, and JPEG (libqjpeg.so) is REQUIRED to decode the phone's incoming
+    # MJPEG video frames — without it QImage::loadFromData(...,"JPEG") fails on
+    # every frame and the live preview stays blank. Copy the whole directory so we
+    # don't have to enumerate (and silently miss) individual format plugins.
     set(DEPLOY_IMAGEFORMATS_DIR "${DEPLOY_DIR}/plugins/imageformats")
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_IMAGEFORMATS_DIR}"
-        COMMAND ${CMAKE_COMMAND}
-            -Dsrc=${QT_PLUGINS_DIR}/imageformats/libqsvg.so
-            -Ddst=${DEPLOY_IMAGEFORMATS_DIR}
-            -P ${CMAKE_SOURCE_DIR}/cmake/copy_if_exists.cmake
-        COMMENT "Copying SVG icon plugin (if present)"
-    )
+    if(EXISTS "${QT_PLUGINS_DIR}/imageformats")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${QT_PLUGINS_DIR}/imageformats" "${DEPLOY_IMAGEFORMATS_DIR}"
+            COMMENT "Copying Qt image-format plugins (SVG icons + JPEG video decode)"
+        )
+    endif()
 
     # Generate launcher script at configure time
     file(WRITE "${DEPLOY_DIR}/viewcam.sh"
