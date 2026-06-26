@@ -63,9 +63,29 @@ QSGNode *FrameView::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
   }
 
   if (m_imageDirty) {
-    node->setTexture(window()->createTextureFromImage(
-        m_image, QQuickWindow::TextureIsOpaque));
-    m_imageDirty = false;
+    // createTextureFromImage needs the item to be in a window with a live scene
+    // graph and a ready GPU context. If that isn't true yet (or the upload
+    // fails), DON'T install a null texture — that paints nothing and looks like
+    // "connected but blank". Leave the frame dirty so the next delivered frame
+    // retries (frames arrive continuously while streaming).
+    auto *tex = window() ? window()->createTextureFromImage(
+                               m_image, QQuickWindow::TextureIsOpaque)
+                         : nullptr;
+    if (tex) {
+      node->setTexture(tex);
+      m_imageDirty = false;
+    } else {
+      qWarning("FrameView: texture upload unavailable (scene graph not ready); "
+               "retrying on next frame");
+    }
+  }
+
+  // First frame can arrive before the scene graph is ready: rather than emit a
+  // node with no texture (blank preview / possible assert), drop this pass and
+  // let the next frame's update retry the upload.
+  if (!node->texture()) {
+    delete node;
+    return nullptr;
   }
 
   // Letterbox: preserve aspect ratio, centered
