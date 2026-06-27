@@ -34,7 +34,10 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    # Pinned to windows-2022 (ships Visual Studio 2022 = generator "Visual Studio
+    # 17 2022"). `windows-latest` rolled forward to a newer VS, which breaks the
+    # generator AND mismatches Qt's msvc2022 build. Keep this on 2022 to match Qt.
+    runs-on: windows-2022
 
     steps:
       - name: Checkout
