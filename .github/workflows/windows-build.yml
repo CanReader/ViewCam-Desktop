@@ -1,0 +1,140 @@
+# Windows release build on a real Windows runner (MSVC + Qt + CUDA + Inno Setup).
+#
+# Produces the SAME thing as building on your Windows machine with
+# scripts/build_msvc_release.ps1 — a CUDA-enabled MSVC build + signed-later
+# installer. Artifacts:
+#   - ViewCamStudio-*-Setup.exe   (the installer — your release deliverable)
+#   - bin/**                      (raw deployed bundle incl. cudart + cam DLLs)
+#
+# CUDA: nvcc does NOT need a GPU to COMPILE — it cross-compiles for the arches
+# the project sets (sm_75/86/89; 89 = Ada = RTX 4050). The runner installs the
+# CUDA Toolkit, builds with VIEWCAM_ENABLE_CUDA=ON, and we bundle cudart64_*.dll
+# so the app starts on any machine. On a non-NVIDIA PC the app loads cudart,
+# finds no device, and falls back to Vulkan/CPU (the GpuBackend runtime policy).
+#
+# Trigger from Linux: push a tag (v1.0.2) or Actions tab -> "Windows Build" ->
+# Run workflow. Download the Setup.exe artifact, then sign + publish on Linux
+# per WINDOWS_RELEASE.md (the Ed25519 key never leaves Linux).
+#
+# First-run tweaks you might hit (normal CI bring-up):
+#   - OpenSSL: handled by the OPENSSL_ROOT_DIR discovery step below.
+#   - Qt add-on modules: default desktop install covers what we use; add to
+#     `modules:` only if a link error names one.
+#   - CUDA<->MSVC version: if nvcc rejects the runner's cl.exe, bump `cuda:`
+#     below (newer = wider MSVC support). -allow-unsupported-compiler is set as
+#     a safety net.
+
+name: Windows Build
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.21
+        id: cuda-toolkit
+        with:
+          cuda: "12.5.0"
+          method: "network"
+          # nvcc to compile .cu, cudart to link against, VS integration so the
+          # Visual Studio generator can drive nvcc.
+          sub-packages: '["nvcc", "cudart", "visual_studio_integration"]'
+
+      - name: Install Qt 6.8.2 (MSVC 2022 x64)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.2"
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          cache: true
+          # Add-on modules go here if a build error references one, e.g. qtimageformats.
+
+      - name: Install Inno Setup 6
+        run: choco install innosetup --no-progress -y
+
+      - name: Locate OpenSSL on the runner
+        shell: pwsh
+        run: |
+          $candidates = @("C:\Program Files\OpenSSL", "C:\Program Files\OpenSSL-Win64", "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows")
+          foreach ($c in $candidates) {
+            if (Test-Path "$c\include\openssl\opensslv.h") {
+              "OPENSSL_ROOT_DIR=$c" | Out-File -FilePath $env:GITHUB_ENV -Append
+              Write-Host "OpenSSL root: $c"
+              break
+            }
+          }
+
+      - name: Show toolchain versions
+        shell: pwsh
+        run: |
+          Write-Host "CUDA_PATH = $env:CUDA_PATH"
+          & "$env:CUDA_PATH\bin\nvcc.exe" --version
+
+      - name: Configure (CMake, CUDA-enabled MSVC)
+        shell: pwsh
+        run: |
+          cmake -S . -B build/release-msvc `
+            -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL `
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON `
+            -DVIEWCAM_ENABLE_CUDA=ON `
+            -DCMAKE_CUDA_FLAGS="-allow-unsupported-compiler"
+
+      - name: Build (Release)
+        run: cmake --build build/release-msvc --config Release --parallel
+
+      - name: Bundle CUDA runtime into bin\
+        shell: pwsh
+        run: |
+          # CUDA::cudart links dynamically -> cudart64_*.dll must ship next to the
+          # exe (windeployqt does not copy it). Without this the app won't start.
+          $dlls = Get-ChildItem "$env:CUDA_PATH\bin\cudart64_*.dll" -ErrorAction Stop
+          foreach ($d in $dlls) { Copy-Item $d.FullName -Destination "bin\" -Force; Write-Host "Bundled $($d.Name)" }
+
+      - name: Sanity-check the deployed bundle
+        shell: pwsh
+        run: |
+          $need = @(
+            "bin\ViewCam.exe",
+            "bin\ViewCamFilter.dll",
+            "bin\ViewCamMFSource.dll",
+            "bin\platforms\qwindows.dll"
+          )
+          $missing = $need | Where-Object { -not (Test-Path $_) }
+          if ($missing) { Write-Error "Missing from bin\: $($missing -join ', ')"; exit 1 }
+          if (-not (Get-ChildItem "bin\cudart64_*.dll" -ErrorAction SilentlyContinue)) {
+            Write-Error "cudart64_*.dll not bundled in bin\ — CUDA build would fail to start."; exit 1
+          }
+          Write-Host "bin\ looks complete (incl. CUDA runtime)."
+
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\viewcam_setup.iss
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ViewCam-Windows-Setup
+          path: installer/output/ViewCamStudio-*-Setup.exe
+          if-no-files-found: error
+
+      - name: Upload raw bundle (bin/)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ViewCam-Windows-bin
+          path: bin/**
+          if-no-files-found: error
