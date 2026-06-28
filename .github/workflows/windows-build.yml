@@ -119,6 +119,40 @@ jobs:
           $dlls = Get-ChildItem "$env:CUDA_PATH\bin\cudart64_*.dll" -ErrorAction Stop
           foreach ($d in $dlls) { Copy-Item $d.FullName -Destination "bin\" -Force; Write-Host "Bundled $($d.Name)" }
 
+      - name: Bundle OpenSSL runtime into bin\
+        shell: pwsh
+        run: |
+          # The app links OpenSSL directly (Ed25519 update verification). windeployqt
+          # ships only Qt's TLS *backend* plugin, NOT libcrypto/libssl themselves, so
+          # the exe fails at launch with "libcrypto-3-x64.dll was not found" unless we
+          # copy the actual runtime DLLs next to it.
+          $needed = @("libcrypto-3-x64.dll", "libssl-3-x64.dll")
+          foreach ($n in $needed) {
+            $f = Get-ChildItem -Path "$env:OPENSSL_ROOT_DIR" -Recurse -Filter $n -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $f) { Write-Error "OpenSSL runtime '$n' not found under $env:OPENSSL_ROOT_DIR"; exit 1 }
+            Copy-Item $f.FullName -Destination "bin\" -Force
+            Write-Host "Bundled $($f.Name) (from $($f.FullName))"
+          }
+
+      - name: Bundle MSVC runtime into bin\ (best-effort)
+        shell: pwsh
+        run: |
+          # vcvars sets VCToolsRedistDir; copy the dynamic CRT DLLs so the app runs
+          # on a clean Windows install that lacks the VC++ redistributable. Non-fatal:
+          # most machines already have these, so a miss shouldn't fail the build.
+          $names = @("vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll")
+          $redist = $env:VCToolsRedistDir
+          if ($redist -and (Test-Path $redist)) {
+            foreach ($n in $names) {
+              $f = Get-ChildItem -Path $redist -Recurse -Filter $n -ErrorAction SilentlyContinue |
+                   Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+              if ($f) { Copy-Item $f.FullName -Destination "bin\" -Force; Write-Host "Bundled $($f.Name)" }
+              else { Write-Host "::warning::MSVC runtime $n not found under $redist" }
+            }
+          } else {
+            Write-Host "::warning::VCToolsRedistDir not set — skipping MSVC runtime bundling"
+          }
+
       - name: Sanity-check the deployed bundle
         shell: pwsh
         run: |
@@ -126,14 +160,16 @@ jobs:
             "bin\ViewCam.exe",
             "bin\ViewCamFilter.dll",
             "bin\ViewCamMFSource.dll",
-            "bin\platforms\qwindows.dll"
+            "bin\platforms\qwindows.dll",
+            "bin\libcrypto-3-x64.dll",
+            "bin\libssl-3-x64.dll"
           )
           $missing = $need | Where-Object { -not (Test-Path $_) }
           if ($missing) { Write-Error "Missing from bin\: $($missing -join ', ')"; exit 1 }
           if (-not (Get-ChildItem "bin\cudart64_*.dll" -ErrorAction SilentlyContinue)) {
             Write-Error "cudart64_*.dll not bundled in bin\ — CUDA build would fail to start."; exit 1
           }
-          Write-Host "bin\ looks complete (incl. CUDA runtime)."
+          Write-Host "bin\ looks complete (incl. CUDA + OpenSSL runtime)."
 
       - name: Build installer (Inno Setup)
         shell: pwsh
