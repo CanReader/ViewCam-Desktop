@@ -66,6 +66,17 @@ jobs:
       - name: Install Inno Setup 6
         run: choco install innosetup --no-progress -y
 
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Set up MSVC environment (vcvars x64)
+        # Puts cl.exe/link.exe + INCLUDE/LIB on PATH for the Ninja generator, so
+        # CMake never has to "find a Visual Studio instance" (the step that kept
+        # failing with the VS generator). nvcc also picks up cl.exe from here.
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Locate OpenSSL on the runner
         shell: pwsh
         run: |
@@ -84,12 +95,13 @@ jobs:
           Write-Host "CUDA_PATH = $env:CUDA_PATH"
           & "$env:CUDA_PATH\bin\nvcc.exe" --version
 
-      - name: Configure (CMake, CUDA-enabled MSVC)
+      - name: Configure (CMake, Ninja + MSVC, CUDA-enabled)
         shell: pwsh
         run: |
           cmake -S . -B build/release-msvc `
-            -G "Visual Studio 17 2022" -A x64 `
+            -G Ninja `
             -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl `
             -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" `
             -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL `
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON `
@@ -97,7 +109,7 @@ jobs:
             -DCMAKE_CUDA_FLAGS="-allow-unsupported-compiler"
 
       - name: Build (Release)
-        run: cmake --build build/release-msvc --config Release --parallel
+        run: cmake --build build/release-msvc --parallel
 
       - name: Bundle CUDA runtime into bin\
         shell: pwsh
