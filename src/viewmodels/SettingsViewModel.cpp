@@ -42,6 +42,14 @@ VC_IMPL(bool, darkTheme, setDarkTheme, darkThemeChanged, "appearance/darkTheme",
 VC_IMPL_REF(QString, accentColor, setAccentColor, accentColorChanged, "appearance/accent", QStringLiteral("#8B7CFF"))
 VC_IMPL(bool, telemetryOverlay, setTelemetryOverlay, telemetryOverlayChanged, "appearance/telemetryOverlay", true)
 VC_IMPL(bool, compactSidebar, setCompactSidebar, compactSidebarChanged, "appearance/compactSidebar", false)
+bool SettingsViewModel::isPro() const {
+#ifdef VIEWCAM_DEBUG
+    return true;   // Debug builds unlock every Pro feature for testing.
+#else
+    return false;  // Release: gated until IAP/licensing lands.
+#endif
+}
+
 bool SettingsViewModel::launchAtLogin() const {
     return m_s->value(QStringLiteral("appearance/launchAtLogin"), false).value<bool>();
 }

@@ -22,6 +22,10 @@ class SettingsViewModel : public QObject {
     Q_PROPERTY(bool compactSidebar READ compactSidebar WRITE setCompactSidebar NOTIFY compactSidebarChanged)
     Q_PROPERTY(bool launchAtLogin READ launchAtLogin WRITE setLaunchAtLogin NOTIFY launchAtLoginChanged)
 
+    // Pro entitlement. Debug builds unlock everything for testing; release builds
+    // gate Pro features (until IAP/licensing wires a real entitlement here).
+    Q_PROPERTY(bool isPro READ isPro CONSTANT)
+
     // Stream engine
     Q_PROPERTY(bool hardwareAccel READ hardwareAccel WRITE setHardwareAccel NOTIFY hardwareAccelChanged)
     // GPU processing = the frame filter/compute path (CUDA/Vulkan); distinct
@@ -68,6 +72,8 @@ public:
 
     QString language() const;
     void setLanguage(const QString &v);
+
+    bool isPro() const;
 
     bool darkTheme() const;
     void setDarkTheme(bool v);
