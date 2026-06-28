@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(ViewCam
-    VERSION 1.0.3
+    VERSION 1.0.4
     DESCRIPTION "Turn your phone into a virtual webcam"
     HOMEPAGE_URL "https://viewcam.tech"
     LANGUAGES C CXX)
@@ -361,11 +361,13 @@ if(_vc_multiConfig)
     target_compile_definitions(${PROJECT_NAME} PRIVATE
         VIEWCAM_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
     set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS
-        $<$<CONFIG:Debug>:VIEWCAM_HOT_RELOAD>)
+        $<$<CONFIG:Debug>:VIEWCAM_HOT_RELOAD>
+        $<$<CONFIG:Debug>:VIEWCAM_DEBUG>)
     message(STATUS "QML hot-reload: per-config (Debug=ENABLED, Release=disabled)")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE
         VIEWCAM_HOT_RELOAD
+        VIEWCAM_DEBUG
         VIEWCAM_QML_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
     message(STATUS "QML hot-reload: ENABLED (Debug build, source: ${CMAKE_CURRENT_SOURCE_DIR}/qml)")
 else()

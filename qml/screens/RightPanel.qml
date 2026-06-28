@@ -12,7 +12,7 @@ Rectangle {
     readonly property var s: AppController.settings
     // camera controls — backed by the phone over the CONTROL channel
     readonly property var cc: AppController.cameraControl
-    readonly property bool isPro: false   // wire to AppController.settings.isPro when IAP lands
+    readonly property bool isPro: s.isPro   // Debug unlocks all; release gated until IAP lands
 
     property bool optimizationBlurred: true
 
@@ -231,10 +231,17 @@ Rectangle {
                 }
                 VcOptRow {
                     title: qsTr("Resolution")
+                    // 1080p (index 2) is a Pro feature; free users get 480p/720p
+                    // and tapping 1080p opens the upgrade gate instead of applying.
                     VcSeg {
                         model: ["480p", "720p", "1080p"]
                         currentIndex: root.cc.resolutionIndex
-                        onActivated: i => root.cc.setResolution(i)
+                        onActivated: i => {
+                            if (i === 2 && !root.isPro)
+                                proGate.open()
+                            else
+                                root.cc.setResolution(i)
+                        }
                     }
                 }
 
