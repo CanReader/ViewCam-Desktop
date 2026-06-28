@@ -324,6 +324,11 @@ void AppController::disconnectDevice() {
 void AppController::scheduleReconnect() {
   if (!m_settingsVm->autoReconnect() || m_connection->host().isEmpty())
     return;
+  // A single failed connection commonly fires BOTH disconnected and errorOccurred;
+  // if a reconnect is already pending, don't count the same failure twice (which
+  // would make us give up at half the intended attempts).
+  if (m_reconnectTimer.isActive())
+    return;
   if (++m_reconnectAttempts > RECONNECT_MAX_ATTEMPTS) {
     VC_WARN("Auto-reconnect gave up after {} attempts", RECONNECT_MAX_ATTEMPTS);
     m_reconnectAttempts = 0;
