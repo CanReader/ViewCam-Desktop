@@ -104,6 +104,10 @@ void AppController::init() {
   connect(m_receiver.get(), &StreamReceiver::connected, this, [this]() {
     VC_INFO("TCP socket up, awaiting HELLO");
     m_reconnectAttempts = 0;
+    // Arm the watchdog for the TCP-up → HELLO gap: a phone that accepts the
+    // socket but never sends HELLO would otherwise leave us in "Connecting"
+    // forever (the watchdog used to start only on HELLO/frame/heartbeat).
+    m_receiveWatchdog.start();
   });
   connect(m_receiver.get(), &StreamReceiver::helloReceived, this,
           [this](const QString &name, const QString &os, int, int, int battery,
@@ -136,6 +140,12 @@ void AppController::init() {
           [this](const QJsonObject &patch) { m_receiver->sendControl(patch); });
   connect(m_receiver.get(), &StreamReceiver::disconnected, this, [this]() {
     VC_INFO("Stream disconnected");
+    // Blank the preview NOW: the last decoded frame otherwise lingers in
+    // FrameView and flashes into the next connection (potentially another
+    // phone's image) until that session's first frame decodes. Also drop any
+    // queued frames so they can't replay into the new session.
+    m_frameBuffer.clear();
+    m_frameSource->publish(QImage());
     const bool wasConnected = m_connection->isConnected();
     m_connection->markDisconnected();
     if (!m_userDisconnect && wasConnected && !m_connection->sessionLimited())
@@ -194,7 +204,8 @@ void AppController::init() {
     VC_INFO("Auto-reconnect attempt {} to {}:{}", m_reconnectAttempts,
             m_connection->host().toStdString(), m_connection->port());
     m_connection->beginConnecting(m_connection->deviceName(),
-                                  m_connection->host(), m_connection->port());
+                                  m_connection->host(), m_connection->port(),
+                                  m_connection->deviceId());
     m_receiver->connectToHost(m_connection->host(), m_connection->port());
   });
 
@@ -215,18 +226,25 @@ void AppController::init() {
     m_mfVirtualCam->registerAndStart(L"ViewCam Studio");
   }
 #endif
-  if (m_vcamWriter->open()) {
+  // Deferred: open() can block for many seconds on first run (Linux: pkexec
+  // prompt + modprobe wait inside ensureModuleLoaded). init() runs before the
+  // QML window loads, so opening synchronously here froze startup and could
+  // pop a privilege dialog with no app window behind it. singleShot(0) queues
+  // it behind the initial QML load, after the window is up.
+  QTimer::singleShot(0, this, [this]() {
+    if (m_vcamWriter->open()) {
 #ifdef __linux__
-    m_virtualCam->setAvailable(
-        true, QString::fromStdString(m_vcamWriter->devicePath()));
+      m_virtualCam->setAvailable(
+          true, QString::fromStdString(m_vcamWriter->devicePath()));
 #else
-    m_virtualCam->setAvailable(true);
+      m_virtualCam->setAvailable(true);
 #endif
-    VC_INFO("Virtual camera active");
-  } else {
-    m_virtualCam->setAvailable(false);
-    VC_WARN("Virtual camera not available, preview only");
-  }
+      VC_INFO("Virtual camera active");
+    } else {
+      m_virtualCam->setAvailable(false);
+      VC_WARN("Virtual camera not available, preview only");
+    }
+  });
 
   if (m_settingsVm->autoDiscovery())
     m_discovery->start();
@@ -289,7 +307,7 @@ void AppController::publishFrame(const QImage &frame) {
 }
 
 void AppController::connectToDevice(const QString &name, const QString &host,
-                                    int port) {
+                                    int port, const QString &deviceId) {
   VC_INFO("Connecting to {} at {}:{}", name.toStdString(), host.toStdString(),
           port);
   m_userDisconnect = false;
@@ -299,7 +317,7 @@ void AppController::connectToDevice(const QString &name, const QString &host,
   m_frameBuffer.clear();
   m_settings->setLastHost(host);
   m_settings->setPort(port);
-  m_connection->beginConnecting(name, host, port);
+  m_connection->beginConnecting(name, host, port, deviceId);
   m_receiver->connectToHost(host, port);
 }
 

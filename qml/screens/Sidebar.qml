@@ -316,17 +316,26 @@ Rectangle {
                     VcDeviceRow {
                         required property string name
                         required property int port
+                        required property string deviceId
                         required host
 
                         Layout.fillWidth: true
-                        // hide the row for the currently connected device
+                        // Hide the row for the currently connected device.
+                        // Match by the stable deviceId, not by host: a Wi-Fi
+                        // roam / DHCP renew changes the phone's IP mid-session,
+                        // and a host comparison then resurfaces the live phone
+                        // as a duplicate row with a stale reconnect target.
+                        // (Manual connects have no deviceId — fall back to host.)
                         readonly property bool isConnected:
-                            AppController.connection.connected && host === AppController.connection.host
+                            AppController.connection.connected &&
+                            (AppController.connection.deviceId !== ""
+                                 ? deviceId === AppController.connection.deviceId
+                                 : host === AppController.connection.host)
                         visible: !isConnected
                         Layout.preferredHeight: visible ? implicitHeight : 0
 
                         deviceName: name
-                        onConnectClicked: AppController.connectToDevice(name, host, port)
+                        onConnectClicked: AppController.connectToDevice(name, host, port, deviceId)
                     }
                 }
 

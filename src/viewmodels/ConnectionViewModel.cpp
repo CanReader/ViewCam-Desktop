@@ -62,12 +62,14 @@ QString ConnectionViewModel::uptimeText() const {
 }
 
 void ConnectionViewModel::beginConnecting(const QString &name,
-                                          const QString &host, int port) {
+                                          const QString &host, int port,
+                                          const QString &deviceId) {
   m_deviceName = name;
   m_deviceOs.clear();
   m_lens.clear();
   m_host = host;
   m_port = port;
+  m_deviceId = deviceId;
   m_errorText.clear();
   m_sessionLimited = false;
   m_battery = -1;
@@ -145,10 +147,15 @@ void ConnectionViewModel::onFrame(const FrameData &frame) {
     m_intervalSamples++;
   }
   m_lastFrameTime.start();
-  if (frame.width != static_cast<uint32_t>(m_frameWidth) ||
-      frame.height != static_cast<uint32_t>(m_frameHeight)) {
-    m_frameWidth = frame.width;
-    m_frameHeight = frame.height;
+  // Header w/h describe the sensor-oriented JPEG; report the upright size the
+  // user actually sees (the decoder rotates 90/270 frames after decode).
+  uint32_t w = frame.width, h = frame.height;
+  if (frame.rotationDegrees == 90 || frame.rotationDegrees == 270)
+    std::swap(w, h);
+  if (w != static_cast<uint32_t>(m_frameWidth) ||
+      h != static_cast<uint32_t>(m_frameHeight)) {
+    m_frameWidth = w;
+    m_frameHeight = h;
     emit statsChanged();
   }
 }

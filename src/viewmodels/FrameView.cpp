@@ -77,6 +77,12 @@ QSGNode *FrameView::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
     } else {
       qWarning("FrameView: texture upload unavailable (scene graph not ready); "
                "retrying on next frame");
+      // Keep the previous texture AND its rects untouched this pass: sizing
+      // rect/sourceRect below from the NEW image against the OLD texture
+      // samples out of bounds when the resolution just changed (phone
+      // rotation mid-stream).
+      if (node->texture())
+        return node;
     }
   }
 

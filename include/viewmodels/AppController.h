@@ -78,7 +78,8 @@ public:
         emit activePageChanged();
     }
 
-    Q_INVOKABLE void connectToDevice(const QString &name, const QString &host, int port);
+    Q_INVOKABLE void connectToDevice(const QString &name, const QString &host, int port,
+                                     const QString &deviceId = QString());
     Q_INVOKABLE void connectManual(const QString &ip);
     Q_INVOKABLE void disconnectDevice();
 

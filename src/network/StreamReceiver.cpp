@@ -44,7 +44,13 @@ StreamReceiver::StreamReceiver(QObject *parent)
 }
 
 StreamReceiver::~StreamReceiver() {
-    disconnect();
+    // abort() on a connected socket emits disconnected() SYNCHRONOUSLY, and our
+    // signal connections are still live here (QObject severs them only after
+    // this dtor body). AppController destroys members in reverse declaration
+    // order, so its disconnected-lambda would touch an already-freed
+    // ConnectionViewModel — block the socket's signals during teardown.
+    m_socket->blockSignals(true);
+    disconnect(); // NB: the member (socket teardown), not QObject::disconnect
 }
 
 void StreamReceiver::connectToHost(const QString &host, int port) {
@@ -101,8 +107,20 @@ bool StreamReceiver::parseFrame() {
         m_buffer[2] != 'A' || m_buffer[3] != 'M') {
         const int idx = m_buffer.indexOf(vc::kFrameMagic, 1);
         if (idx < 0) {
-            VC_WARN("Lost sync, no VCAM magic, discarding {} bytes", m_buffer.size());
-            m_buffer.clear();
+            // Keep a trailing partial magic ("V"/"VC"/"VCA") — the next frame's
+            // magic may straddle the read boundary, and clearing it would make
+            // that frame unrecoverable, prolonging the desync by a full frame.
+            int keep = 0;
+            for (int k = 3; k >= 1; --k) {
+                if (m_buffer.size() >= k &&
+                    m_buffer.right(k) == QByteArray(vc::kFrameMagic, k)) {
+                    keep = k;
+                    break;
+                }
+            }
+            VC_WARN("Lost sync, no VCAM magic, discarding {} bytes (keeping {})",
+                    m_buffer.size() - keep, keep);
+            m_buffer.remove(0, m_buffer.size() - keep);
             return false; // nothing left to parse
         } else {
             VC_WARN("Lost sync, skipping {} bytes to resync", idx);
@@ -118,6 +136,10 @@ bool StreamReceiver::parseFrame() {
     const uint16_t width      = qFromLittleEndian<uint16_t>(data + vc::hdr::kWidth);
     const uint16_t height     = qFromLittleEndian<uint16_t>(data + vc::hdr::kHeight);
     const auto format = static_cast<vc::FrameFormat>(data[vc::hdr::kFormat]);
+    // Byte 22 (spec §4): sensor-to-upright transform the phone no longer
+    // applies itself. Zero on frames from older phone builds, which therefore
+    // decode exactly as before. Read here — `data` dangles after the remove().
+    const uint8_t orient = data[vc::hdr::kOrient];
 
     if (payloadLen > static_cast<uint32_t>(vc::kMaxFrameBytes)) {
         VC_ERROR("payloadLen {} exceeds {} byte cap, resyncing",
@@ -154,7 +176,10 @@ bool StreamReceiver::parseFrame() {
         frame.width = width;
         frame.height = height;
         frame.timestamp = timestamp;
-        VC_TRACE("VIDEO frame {}x{}, {} bytes", width, height, payloadLen);
+        frame.rotationDegrees = (orient & 0x03) * 90;
+        frame.mirror = (orient & 0x08) != 0;
+        VC_TRACE("VIDEO frame {}x{}, {} bytes, rot={} mirror={}",
+                 width, height, payloadLen, frame.rotationDegrees, frame.mirror);
         emit frameReceived(frame);
         break;
     }

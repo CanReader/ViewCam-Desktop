@@ -162,18 +162,14 @@ bool V4L2LoopbackWriter::setFormat(int width, int height) {
             struct v4l2_format current {};
             current.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
             if (ioctl(m_fd, VIDIOC_G_FMT, &current) == 0) {
-                m_width = static_cast<int>(current.fmt.pix.width);
-                m_height = static_cast<int>(current.fmt.pix.height);
-                m_formatSet = true;
-                m_yuyvBuffer.resize(static_cast<size_t>(m_width * m_height * 2));
-
+                if (!adoptDriverFormat(current))
+                    return false;
                 if (m_width == width && m_height == height) {
                     VC_INFO("Virtual camera format already set: {}x{} (locked by consumer)", m_width, m_height);
-                    return true;
+                } else {
+                    VC_WARN("Virtual camera locked at {}x{}, requested {}x{} - will scale",
+                            m_width, m_height, width, height);
                 }
-
-                VC_WARN("Virtual camera locked at {}x{}, requested {}x{} - will scale",
-                        m_width, m_height, width, height);
                 return true;
             }
             VC_ERROR("VIDIOC_S_FMT busy and VIDIOC_G_FMT failed: {}", strerror(errno));
@@ -183,12 +179,40 @@ bool V4L2LoopbackWriter::setFormat(int width, int height) {
         return false;
     }
 
-    m_width = width;
-    m_height = height;
-    m_formatSet = true;
+    // VIDIOC_S_FMT is allowed to ADJUST width/height/sizeimage to what the
+    // driver supports — trusting the requested values desynced our buffer from
+    // the driver's real frame size and corrupted every frame on such drivers.
+    if (!adoptDriverFormat(fmt))
+        return false;
+    VC_INFO("Virtual camera format set: {}x{} YUYV", m_width, m_height);
+    return true;
+}
 
-    m_yuyvBuffer.resize(static_cast<size_t>(width * height * 2));
-    VC_INFO("Virtual camera format set: {}x{} YUYV", width, height);
+/**
+ * Take the driver's post-ioctl format as the source of truth: validate the
+ * fourcc (a consumer may have locked something we can't produce), and size the
+ * write buffer from the driver's sizeimage, never from the requested WxH.
+ */
+bool V4L2LoopbackWriter::adoptDriverFormat(const struct v4l2_format &fmt) {
+    if (fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV) {
+        VC_ERROR("Virtual camera format is not YUYV (fourcc 0x{:08x}) — cannot feed it; disabling",
+                 fmt.fmt.pix.pixelformat);
+        return false;
+    }
+    const int w = static_cast<int>(fmt.fmt.pix.width);
+    const int h = static_cast<int>(fmt.fmt.pix.height);
+    if (w <= 0 || h <= 0) {
+        VC_ERROR("Virtual camera reported invalid format {}x{}", w, h);
+        return false;
+    }
+    m_width = w;
+    m_height = h;
+    m_formatSet = true;
+    const size_t tight = static_cast<size_t>(w) * static_cast<size_t>(h) * 2;
+    const size_t size = std::max(static_cast<size_t>(fmt.fmt.pix.sizeimage), tight);
+    m_yuyvBuffer.assign(size, 0); // zero-filled: any padding tail stays neutral
+    if (size != tight)
+        VC_WARN("Driver sizeimage {} != packed YUYV {} — writing zero-padded frames", size, tight);
     return true;
 }
 
@@ -196,7 +220,10 @@ void V4L2LoopbackWriter::convertRgbToYuyv(const uchar *rgb, int width, int heigh
     uint8_t *out = m_yuyvBuffer.data();
     int totalPixels = width * height;
 
-    for (int i = 0; i < totalPixels; i += 2) {
+    // i+1 guard: a consumer-locked ODD width makes totalPixels odd, and the
+    // pair-wise read (idx+3..5) would run 3 bytes past the RGB buffer on the
+    // final pixel. The dropped last pixel stays zero (buffer is pre-zeroed).
+    for (int i = 0; i + 1 < totalPixels; i += 2) {
         int idx = i * 3;
         int r0 = rgb[idx];
         int g0 = rgb[idx + 1];

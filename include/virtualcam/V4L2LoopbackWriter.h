@@ -26,6 +26,7 @@ private:
     bool ensureModuleLoaded();
     bool isModuleLoaded() const;
     bool setFormat(int width, int height);
+    bool adoptDriverFormat(const struct v4l2_format &fmt);
     void convertRgbToYuyv(const uchar *rgb, int width, int height);
 
     int m_fd = -1;

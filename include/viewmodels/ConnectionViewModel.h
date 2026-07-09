@@ -20,6 +20,9 @@ class ConnectionViewModel : public QObject {
     Q_PROPERTY(QString lens READ lens NOTIFY deviceChanged)
     Q_PROPERTY(QString host READ host NOTIFY deviceChanged)
     Q_PROPERTY(int port READ port NOTIFY deviceChanged)
+    // Stable per-install id of the connected phone (empty for manual connects).
+    // The sidebar de-dups by this, not by host — a Wi-Fi roam changes the IP.
+    Q_PROPERTY(QString deviceId READ deviceId NOTIFY deviceChanged)
     Q_PROPERTY(int fps READ fps NOTIFY statsChanged)
     Q_PROPERTY(double bitrateMbps READ bitrateMbps NOTIFY statsChanged)
     Q_PROPERTY(double frameIntervalMs READ frameIntervalMs NOTIFY statsChanged)
@@ -48,6 +51,7 @@ public:
     QString lens() const { return m_lens; }
     QString host() const { return m_host; }
     int port() const { return m_port; }
+    QString deviceId() const { return m_deviceId; }
     int fps() const { return m_fps; }
     double bitrateMbps() const { return m_bitrateMbps; }
     double frameIntervalMs() const { return m_frameIntervalMs; }
@@ -62,7 +66,8 @@ public:
     bool sessionLimited() const { return m_sessionLimited; }
 
     // Driven by AppController
-    void beginConnecting(const QString &name, const QString &host, int port);
+    void beginConnecting(const QString &name, const QString &host, int port,
+                         const QString &deviceId = QString());
     // HELLO arrived: authoritative device metadata + transition to connected.
     void setHelloInfo(const QString &name, const QString &os);
     // Battery % (-1 = unknown) and charging flag, from HELLO or a STATUS frame.
@@ -94,6 +99,7 @@ private:
     QString m_lens;
     QString m_host;
     int m_port = 8080;
+    QString m_deviceId;
     QString m_errorText;
     bool m_sessionLimited = false;
     int m_battery = -1;
