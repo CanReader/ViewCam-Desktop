@@ -33,6 +33,7 @@ inline constexpr int kWidth = 16;     // uint16 LE
 inline constexpr int kHeight = 18;    // uint16 LE
 inline constexpr int kFormat = 20;    // uint8
 inline constexpr int kType = 21;      // uint8
+inline constexpr int kOrient = 22;    // uint8: bits 0-1 = cw rotation in 90° steps, bit 3 = mirror
 } // namespace hdr
 
 // header.format
