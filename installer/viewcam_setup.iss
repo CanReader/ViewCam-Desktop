@@ -2,7 +2,12 @@
 ; Build: iscc installer\viewcam_setup.iss  (from the project root)
 
 #define AppName        "ViewCam Studio"
-#define AppVersion     "1.0.1"
+; Overridable from the command line: iscc /DAppVersion=1.2.3 ...
+; CI passes the release tag here; the fallback below is only for a bare local
+; `iscc` and should track CMakeLists project(VERSION).
+#ifndef AppVersion
+  #define AppVersion   "1.0.5"
+#endif
 #define AppPublisher   "Sleak Software"
 #define AppURL         "https://viewcam.tech"
 #define AppExeName     "ViewCam.exe"

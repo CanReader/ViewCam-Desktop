@@ -30,7 +30,10 @@ on:
   workflow_dispatch: {}
   push:
     tags:
-      - "v*"
+      # Matches your release tags with or without a leading "v":
+      # 1.0.3, 1.1.0, 2.0.0  AND  v1.0.3, v1.1.0, ...
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   build-windows:
@@ -42,6 +45,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Resolve release version
+        id: ver
+        shell: pwsh
+        run: |
+          # Source of truth is project(VERSION x.y.z) in CMakeLists.txt (the app's
+          # self-update version comes from there). On a tag build, the tag must
+          # match it — otherwise the installer/app versions would silently diverge.
+          $cmakeVer = [regex]::Match((Get-Content CMakeLists.txt -Raw), 'VERSION\s+(\d+\.\d+\.\d+)').Groups[1].Value
+          if (-not $cmakeVer) { Write-Error "Could not read project(VERSION) from CMakeLists.txt"; exit 1 }
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $ver = "${{ github.ref_name }}" -replace '^v',''
+            if ($ver -ne $cmakeVer) {
+              Write-Error "Tag '${{ github.ref_name }}' (=$ver) does not match CMakeLists project(VERSION) '$cmakeVer'. Bump project(VERSION) to match the tag (and the installer fallback), then re-tag."
+              exit 1
+            }
+          } else {
+            $ver = $cmakeVer   # manual run: use the source version
+          }
+          Write-Host "Release version: $ver"
+          "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Install CUDA Toolkit
         uses: Jimver/cuda-toolkit@v0.2.21
@@ -174,18 +198,22 @@ jobs:
       - name: Build installer (Inno Setup)
         shell: pwsh
         run: |
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\viewcam_setup.iss
+          # Override the installer's AppVersion with the resolved release version so
+          # the Setup.exe name + shown version always match the tag.
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=${{ steps.ver.outputs.version }}" `
+            installer\viewcam_setup.iss
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: ViewCam-Windows-Setup
+          name: ViewCam-Windows-Setup-${{ steps.ver.outputs.version }}
           path: installer/output/ViewCamStudio-*-Setup.exe
           if-no-files-found: error
 
       - name: Upload raw bundle (bin/)
         uses: actions/upload-artifact@v4
         with:
-          name: ViewCam-Windows-bin
+          name: ViewCam-Windows-bin-${{ steps.ver.outputs.version }}
           path: bin/**
           if-no-files-found: error
