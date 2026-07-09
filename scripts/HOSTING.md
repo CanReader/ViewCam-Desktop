@@ -79,6 +79,19 @@ at it, so it must be short-cached (and ideally served behind a CDN that honors t
 5. For staged rollout, publish the manifest with `rollout < 1.0` (e.g. `0.1`),
    watch, then re-upload with `rollout: 1.0`. Only the manifest changes; artifacts
    stay put.
+6. **AppImage + website links** (added after 1.0.5 shipped with stale 1.0.1 links —
+   don't skip):
+   - Build the AppImage from the zip bundle: extract it into `AppDir/`, add an
+     `AppRun` that execs `viewcam.sh`, plus a top-level `viewcam.desktop`
+     (`Icon=viewcam`; `viewcam.png` is already in the bundle), then
+     `appimagetool AppDir dist/ViewCam-<ver>-x86_64.AppImage`.
+   - Upload it next to the other artifacts under `dl.viewcam.tech/<ver>/`.
+   - Update the hardcoded `dl.viewcam.tech/<ver>/…` download links in
+     `Web/index.html` (Windows Setup.exe + Linux AppImage), add the release to
+     `Web/changelog/index.html`, and redeploy the site (`node deploy.js`).
+   NOTE: the AppImage is a plain download, NOT wired into the self-update swap;
+   its embedded updater installs new versions into `~/.local/share/ViewCam`
+   (versioned layout) rather than replacing the AppImage file itself.
 
 Ordering matters: artifacts before manifest. A manifest pointing at a not-yet-uploaded
 zip would make clients fail the download/verify step until the upload lands.
