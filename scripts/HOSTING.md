@@ -41,6 +41,12 @@ The **apply unit differs by platform** (verify is identical):
 | `<channel>/manifest.json` | `application/json` | `public, max-age=300, must-revalidate` (5 min) |
 | `<ver>/*.zip` | `application/zip` | `public, max-age=31536000, immutable` (1 yr) |
 | `<ver>/*-Setup.exe` | `application/octet-stream` | `public, max-age=31536000, immutable` (1 yr) |
+| `<ver>/*.AppImage` | `application/octet-stream` + `Content-Disposition: attachment` | `public, max-age=31536000, immutable` (1 yr) |
+
+The dl docroot's `.htaccess` must declare EVERY artifact extension via `AddType`
+— an undeclared one (as `.AppImage` was) falls back to `text/plain` and browsers
+render the raw bytes inline instead of downloading. The `Content-Disposition:
+attachment` on AppImage exists for the same reason.
 
 Artifacts are immutable: a published `<ver>/<zip>` is **never** overwritten. Ship a
 fix as a new version. The manifest is the only thing that changes to point clients
