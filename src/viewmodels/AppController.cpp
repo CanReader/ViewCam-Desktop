@@ -85,9 +85,19 @@ void AppController::init() {
         m_cudaVersion = QStringLiteral("CUDA ") + QString::fromStdString(ver);
   }
 
-  // discovery -> device model
-  connect(m_discovery.get(), &DeviceDiscovery::deviceFound, m_deviceModel.get(),
-          &DeviceListModel::addOrUpdate);
+  // discovery -> device model. While connected, ignore a beacon that advertises
+  // the SAME phone (deviceId) at a DIFFERENT address: a multi-homed phone
+  // (VPN / mobile data) beacons on its secondary interface too, which otherwise
+  // shows up as a phantom duplicate device flickering next to the real one. The
+  // live connection's own host is authoritative for that phone.
+  connect(m_discovery.get(), &DeviceDiscovery::deviceFound, this,
+          [this](const QString &deviceId, const QString &name, const QString &host,
+                 int port) {
+            if (m_connection->isConnected() && !m_connection->deviceId().isEmpty() &&
+                deviceId == m_connection->deviceId() && host != m_connection->host())
+              return;
+            m_deviceModel->addOrUpdate(deviceId, name, host, port);
+          });
 
   // receiver -> stats + decoder
   connect(m_receiver.get(), &StreamReceiver::frameReceived, m_connection.get(),
