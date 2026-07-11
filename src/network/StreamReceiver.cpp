@@ -207,7 +207,7 @@ void StreamReceiver::dispatchHello(const QByteArray &payload) {
     const QJsonDocument doc = QJsonDocument::fromJson(payload);
     if (!doc.isObject()) {
         VC_WARN("HELLO payload is not valid JSON");
-        emit helloReceived(QString(), QString(), 0, 0, -1, false, QString());
+        emit helloReceived(QString(), QString(), 0, 0, -1, false, QString(), false);
         return;
     }
     const QJsonObject o = doc.object();
@@ -218,10 +218,12 @@ void StreamReceiver::dispatchHello(const QByteArray &payload) {
     const int battery = parseBattery(o);
     const bool charging = o.value("charging").toBool(false);
     const QString lens = o.value("lens").toString();
-    VC_INFO("HELLO from '{}' ({}), caps {}x{}, battery {}, charging {}, lens '{}'",
+    const bool pro = o.value("pro").toBool(false); // absent on older phones => free
+    VC_INFO("HELLO from '{}' ({}), caps {}x{}, battery {}, charging {}, pro {}, lens '{}'",
             name.toStdString(), os.toStdString(), maxW, maxH, battery, charging,
-            lens.toStdString());
-    emit helloReceived(name, os, maxW, maxH, battery, charging, lens);
+            pro, lens.toStdString());
+    emit helloReceived(name, os, maxW, maxH, battery, charging, lens, pro);
+    emit proReceived(pro);
 }
 
 void StreamReceiver::dispatchStatus(const QByteArray &payload) {
@@ -236,6 +238,11 @@ void StreamReceiver::dispatchStatus(const QByteArray &payload) {
     const bool charging = o.value("charging").toBool(false);
     VC_TRACE("STATUS battery {}, charging {}", battery, charging);
     emit statusReceived(battery, charging);
+
+    // Live entitlement: a mid-session purchase flips this so the watermark drops
+    // and 4K unlocks without a reconnect. Absent on older phones => leave as-is.
+    if (o.contains("pro"))
+        emit proReceived(o.value("pro").toBool(false));
 
     // Optional lens descriptor — re-sent when the phone flips lenses.
     if (o.contains("lens")) {

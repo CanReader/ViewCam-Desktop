@@ -271,7 +271,7 @@ static void drawFrameWatermark(QImage &img) {
 }
 
 void V4L2LoopbackWriter::writeFrame(const QImage &image) {
-    if (m_fd < 0 || m_disabled)
+    if (m_fd < 0)
         return;
 
     if (image.isNull())
@@ -293,11 +293,19 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
     if (!m_formatSet || w != m_requestedWidth || h != m_requestedHeight) {
         m_requestedWidth = w;
         m_requestedHeight = h;
+        // A new requested size is a fresh chance: a format failure (e.g. a
+        // consumer briefly held a non-YUYV lock) must not permanently blank the
+        // vcam for the whole session — retry negotiation on every size change.
         if (!setFormat(w, h)) {
             m_disabled = true;
-            VC_ERROR("Virtual camera disabled, format setup failed");
+            VC_ERROR("Virtual camera format setup failed; retrying on next size change");
             return;
         }
+        m_disabled = false;
+    } else if (m_disabled) {
+        // Same size that previously failed to negotiate — keep skipping (a
+        // size change above is what triggers a retry).
+        return;
     }
 
     if (w != m_width || h != m_height) {

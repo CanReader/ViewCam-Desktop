@@ -30,8 +30,11 @@ signals:
     void helloReceived(const QString &name, const QString &os,
                        int maxW, int maxH,
                        int battery, bool charging,
-                       const QString &lens);             // HELLO (once on accept)
+                       const QString &lens, bool pro);   // HELLO (once on accept)
     void statusReceived(int battery, bool charging);     // STATUS (periodic, JSON)
+    // Phone Pro entitlement from HELLO + STATUS: drives the vcam watermark and
+    // 4K gating so a paying user isn't watermarked/capped on the desktop.
+    void proReceived(bool pro);
     // Active-camera descriptor (e.g. "Back · ƒ1.8") from HELLO and re-sent in
     // STATUS whenever the phone flips lenses. Empty => unknown.
     void lensReceived(const QString &lens);

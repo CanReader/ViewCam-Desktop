@@ -34,6 +34,11 @@ public:
     void addOrUpdate(const QString &deviceId, const QString &name,
                      const QString &host, int port);
 
+    // Current advertised host:port for a deviceId, or false if not (currently)
+    // discovered. Lets auto-reconnect chase a phone that changed IP (DHCP/roam)
+    // instead of retrying the frozen original address forever.
+    bool lookupHost(const QString &deviceId, QString &host, int &port) const;
+
 signals:
     void countChanged();
 

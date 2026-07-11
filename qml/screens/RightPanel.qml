@@ -12,7 +12,7 @@ Rectangle {
     readonly property var s: AppController.settings
     // camera controls — backed by the phone over the CONTROL channel
     readonly property var cc: AppController.cameraControl
-    readonly property bool isPro: s.isPro   // Debug unlocks all; release gated until IAP lands
+    readonly property bool isPro: s.isPro || AppController.connection.pro   // Debug flag OR the connected phone's live Pro entitlement
 
     property bool optimizationBlurred: true
 

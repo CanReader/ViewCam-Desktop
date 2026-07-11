@@ -37,6 +37,9 @@ class ConnectionViewModel : public QObject {
     Q_PROPERTY(QString uptimeText READ uptimeText NOTIFY uptimeChanged)
     Q_PROPERTY(QString errorText READ errorText NOTIFY errorChanged)
     Q_PROPERTY(bool sessionLimited READ sessionLimited NOTIFY sessionLimitedChanged)
+    // The connected phone's Pro entitlement (from HELLO/STATUS). QML gates 4K on
+    // it; false when disconnected or on a free phone.
+    Q_PROPERTY(bool pro READ pro NOTIFY proChanged)
 
 public:
     enum State { Disconnected, Connecting, Connected };
@@ -64,6 +67,7 @@ public:
     QString uptimeText() const;
     QString errorText() const { return m_errorText; }
     bool sessionLimited() const { return m_sessionLimited; }
+    bool pro() const { return m_pro; }
 
     // Driven by AppController
     void beginConnecting(const QString &name, const QString &host, int port,
@@ -78,6 +82,7 @@ public:
     void markDisconnected();
     void markError(const QString &error);
     void setSessionLimited(bool limited);
+    void setPro(bool pro);
     void onFrame(const FrameData &frame);
 
 signals:
@@ -88,6 +93,7 @@ signals:
     void uptimeChanged();
     void errorChanged();
     void sessionLimitedChanged();
+    void proChanged();
 
 private:
     void setState(State s);
@@ -102,6 +108,7 @@ private:
     QString m_deviceId;
     QString m_errorText;
     bool m_sessionLimited = false;
+    bool m_pro = false;
     int m_battery = -1;
     bool m_charging = false;
 

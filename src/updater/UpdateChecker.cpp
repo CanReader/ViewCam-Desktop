@@ -902,6 +902,13 @@ bool UpdateChecker::isTransient(QNetworkReply *reply) {
     switch (reply->error()) {
         // Network-layer transients worth retrying.
         case QNetworkReply::TimeoutError:
+        // Qt 6's setTransferTimeout() aborts a stalled request with
+        // OperationCanceledError (NOT TimeoutError). Without this, a slow /
+        // firewalled manifest host is misclassified as permanent, the whole
+        // backoff ladder is skipped, and the abort surfaces as the raw
+        // "QIODevice::read (QSslSocket): device not open" warning. We never
+        // issue a user-initiated cancel, so treating it as transient is safe.
+        case QNetworkReply::OperationCanceledError:
         case QNetworkReply::TemporaryNetworkFailureError:
         case QNetworkReply::NetworkSessionFailedError:
         case QNetworkReply::ConnectionRefusedError:

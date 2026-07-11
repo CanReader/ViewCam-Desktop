@@ -7,7 +7,7 @@ Flickable {
     id: root
 
     readonly property var s: AppController.settings
-    readonly property bool isPro: s.isPro   // Debug unlocks all; release gated until IAP lands
+    readonly property bool isPro: s.isPro || AppController.connection.pro   // Debug flag OR the connected phone's live Pro entitlement
 
     VcProGateDialog { id: proGate }
 

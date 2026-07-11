@@ -123,7 +123,15 @@ void ConnectionViewModel::markDisconnected() {
   m_uptimeTimer.stop();
   resetStats();
   emit statsChanged();
+  setPro(false); // no phone → back to free gating (watermark, 4K locked)
   setState(Disconnected);
+}
+
+void ConnectionViewModel::setPro(bool pro) {
+  if (m_pro == pro)
+    return;
+  m_pro = pro;
+  emit proChanged();
 }
 
 void ConnectionViewModel::markError(const QString &error) {

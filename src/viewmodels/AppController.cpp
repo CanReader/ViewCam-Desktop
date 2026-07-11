@@ -121,7 +121,7 @@ void AppController::init() {
   });
   connect(m_receiver.get(), &StreamReceiver::helloReceived, this,
           [this](const QString &name, const QString &os, int, int, int battery,
-                 bool charging, const QString &lens) {
+                 bool charging, const QString &lens, bool) {
             m_connection->setHelloInfo(name, os);
             m_connection->setPowerStatus(battery, charging);
             m_connection->setLens(lens);
@@ -134,6 +134,18 @@ void AppController::init() {
                 kQuality[qBound(0, m_settingsVm->encoderPreset(), 2)];
             m_receiver->sendControl(snap);
           });
+  // Phone Pro entitlement (HELLO + live STATUS): a paying user must not get the
+  // free-tier watermark burned into their virtual camera, and 4K unlocks. On
+  // disconnect we fall back to watermarked/gated.
+  connect(m_receiver.get(), &StreamReceiver::proReceived, this,
+          [this](bool pro) {
+            m_connection->setPro(pro);
+            m_vcamWriter->setWatermarkEnabled(!pro);
+          });
+  connect(m_receiver.get(), &StreamReceiver::disconnected, this, [this]() {
+    m_connection->setPro(false);
+    m_vcamWriter->setWatermarkEnabled(true);
+  });
   // Periodic STATUS frames keep battery/charging current without reconnecting.
   connect(m_receiver.get(), &StreamReceiver::statusReceived, this,
           [this](int battery, bool charging) {
@@ -211,12 +223,24 @@ void AppController::init() {
   connect(&m_reconnectTimer, &QTimer::timeout, this, [this]() {
     if (m_connection->state() != ConnectionViewModel::Disconnected)
       return;
+    // Chase the phone's CURRENT address: if it changed IP (DHCP renew / Wi-Fi
+    // roam) it's re-advertising the new host under the same deviceId. Reusing
+    // the frozen original host would just retry a dead IP until we give up,
+    // while the phone sits right there discoverable. Manual/empty-deviceId
+    // connects have no beacon, so they keep the stored host.
+    QString host = m_connection->host();
+    int port = m_connection->port();
+    QString freshHost;
+    int freshPort = 0;
+    if (m_deviceModel->lookupHost(m_connection->deviceId(), freshHost, freshPort)) {
+      host = freshHost;
+      port = freshPort;
+    }
     VC_INFO("Auto-reconnect attempt {} to {}:{}", m_reconnectAttempts,
-            m_connection->host().toStdString(), m_connection->port());
-    m_connection->beginConnecting(m_connection->deviceName(),
-                                  m_connection->host(), m_connection->port(),
+            host.toStdString(), port);
+    m_connection->beginConnecting(m_connection->deviceName(), host, port,
                                   m_connection->deviceId());
-    m_receiver->connectToHost(m_connection->host(), m_connection->port());
+    m_receiver->connectToHost(host, port);
   });
 
   // virtual camera backend

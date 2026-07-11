@@ -61,6 +61,20 @@ void DeviceListModel::addOrUpdate(const QString &deviceId, const QString &name,
           deviceId.toStdString(), host.toStdString(), port);
 }
 
+bool DeviceListModel::lookupHost(const QString &deviceId, QString &host,
+                                 int &port) const {
+  if (deviceId.isEmpty())
+    return false;
+  for (const Device &d : m_devices) {
+    if (d.deviceId == deviceId) {
+      host = d.host;
+      port = d.port;
+      return true;
+    }
+  }
+  return false;
+}
+
 void DeviceListModel::prune() {
   const qint64 now = QDateTime::currentMSecsSinceEpoch();
   for (int i = m_devices.size() - 1; i >= 0; --i) {
