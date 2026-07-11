@@ -335,9 +335,21 @@ void AppController::onImageReady(const QImage &image) {
 }
 
 void AppController::publishFrame(const QImage &frame) {
-  m_frameSource->publish(frame);
+  // Apply the user "Mirror image" flip to the FRAME (not just the preview's
+  // sourceRect) so the preview AND the virtual-camera output agree — otherwise
+  // apps like Zoom/OBS saw the un-mirrored feed while the local preview was
+  // flipped. Front-camera mirroring is already baked in by FrameDecoder.
+  QImage out = frame;
+  if (m_settingsVm->mirrorImage()) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+    out = frame.flipped(Qt::Horizontal);
+#else
+    out = frame.mirrored(true, false);
+#endif
+  }
+  m_frameSource->publish(out);
   if (m_virtualCam->available() && m_virtualCam->enabled())
-    m_vcamWriter->writeFrame(frame);
+    m_vcamWriter->writeFrame(out);
 }
 
 void AppController::connectToDevice(const QString &name, const QString &host,

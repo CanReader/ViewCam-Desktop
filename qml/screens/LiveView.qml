@@ -66,7 +66,10 @@ Item {
             id: frameView
             anchors.fill: parent
             source: AppController.frameSource
-            mirror: AppController.settings.mirrorImage
+            // "Mirror image" is now applied to the frame in AppController::
+            // publishFrame (so preview and virtual-cam match); FrameView must
+            // not flip again or the preview would double-mirror.
+            mirror: false
             visible: root.conn.connected && hasFrame
         }
 

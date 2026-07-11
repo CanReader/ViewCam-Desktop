@@ -248,26 +248,35 @@ void V4L2LoopbackWriter::convertRgbToYuyv(const uchar *rgb, int width, int heigh
 
 static void drawFrameWatermark(QImage &img) {
     const QString text = "ViewCam";
+    // Scale the watermark to the frame so it stays consistently visible on the
+    // free tier at any resolution — a fixed 14px pill was nearly invisible at
+    // 720p/1080p and applied no upgrade pressure. ~1/22 of frame height,
+    // clamped so it's neither tiny nor obnoxious.
+    const int fontPx = qBound(15, img.height() / 22, 40);
+    const int margin = qMax(10, img.height() / 40);
+
     QFont font;
-    font.setPixelSize(14);
+    font.setPixelSize(fontPx);
     font.setWeight(QFont::DemiBold);
 
     QFontMetrics fm(font);
+    const int padX = fontPx * 2 / 3;
+    const int padY = fontPx / 3;
     int tw = fm.horizontalAdvance(text);
-    int rh = fm.height() + 10;
-    int rw = tw + 18;
-    int rx = img.width()  - rw - 14;
-    int ry = 14;
+    int rh = fm.height() + padY * 2;
+    int rw = tw + padX * 2;
+    int rx = img.width() - rw - margin;
+    int ry = margin;
 
     QPainter p(&img);
     p.setRenderHint(QPainter::Antialiasing);
     p.setRenderHint(QPainter::TextAntialiasing);
     p.setPen(Qt::NoPen);
-    p.setBrush(QColor(0, 0, 0, 100));
+    p.setBrush(QColor(0, 0, 0, 115));
     p.drawRoundedRect(rx, ry, rw, rh, rh / 2, rh / 2);
     p.setFont(font);
-    p.setPen(QColor(255, 255, 255, 200));
-    p.drawText(rx + 9, ry + 5 + fm.ascent(), text);
+    p.setPen(QColor(255, 255, 255, 215));
+    p.drawText(rx + padX, ry + padY + fm.ascent(), text);
 }
 
 void V4L2LoopbackWriter::writeFrame(const QImage &image) {
