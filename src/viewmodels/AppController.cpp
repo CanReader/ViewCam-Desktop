@@ -138,13 +138,17 @@ void AppController::init() {
   // free-tier watermark burned into their virtual camera, and 4K unlocks. On
   // disconnect we fall back to watermarked/gated.
   connect(m_receiver.get(), &StreamReceiver::proReceived, this,
-          [this](bool pro) {
-            m_connection->setPro(pro);
-            m_vcamWriter->setWatermarkEnabled(!pro);
-          });
-  connect(m_receiver.get(), &StreamReceiver::disconnected, this, [this]() {
-    m_connection->setPro(false);
-    m_vcamWriter->setWatermarkEnabled(true);
+          [this](bool pro) { m_connection->setPro(pro); });
+  // All entitlement side effects hang off a SINGLE source of truth (proChanged),
+  // so the disconnect AND error teardown paths — both funnel through
+  // markDisconnected() -> setPro(false) — restore free-tier gating identically.
+  // Previously the watermark reset lived only on the `disconnected` signal, so an
+  // error-only teardown left the vcam watermark switched OFF for the next phone.
+  connect(m_connection.get(), &ConnectionViewModel::proChanged, this, [this]() {
+    const bool pro = m_connection->pro();
+    m_vcamWriter->setWatermarkEnabled(!pro);
+    if (m_settingsVm->gpuProcessing())
+      selectGpuBackend(); // Pro-gated GPU: re-evaluate CPU/GPU on entitlement flip
   });
   // Periodic STATUS frames keep battery/charging current without reconnecting.
   connect(m_receiver.get(), &StreamReceiver::statusReceived, this,
@@ -286,8 +290,11 @@ void AppController::init() {
 
 void AppController::selectGpuBackend() {
   // Toggle OFF forces CPU; ON applies the auto policy (+ VIEWCAM_GPU_BACKEND).
+  // GPU processing is Pro-gated: a free session forces CPU regardless of the
+  // persisted toggle, same anti-leak reasoning as the 4K cap in onImageReady().
+  const bool gpuOn = m_settingsVm->gpuProcessing() && m_connection->pro();
   const GpuBackendKind kind =
-      m_settingsVm->gpuProcessing() ? GpuBackendKind::Auto : GpuBackendKind::Cpu;
+      gpuOn ? GpuBackendKind::Auto : GpuBackendKind::Cpu;
   m_gpuBackend = GpuBackendFactory::select(kind);
 
   const bool proof = m_gpuBackend->runProofOfLife();
@@ -311,7 +318,13 @@ void AppController::onImageReady(const QImage &image) {
   // Cap at the max output resolution setting (0=720p, 1=1080p, 2=4K).
   static const int kResW[] = {1280, 1920, 3840};
   static const int kResH[] = {720,  1080, 2160};
-  const int ri = qBound(0, m_settingsVm->maxResolution(), 2);
+  int ri = qBound(0, m_settingsVm->maxResolution(), 2);
+  // 4K is a Pro feature. A free session (no phone Pro entitlement) is capped at
+  // 1080p regardless of the persisted setting — otherwise a device that once had
+  // a Pro phone connected keeps its 4K ceiling forever. Read live per frame so
+  // the cap re-applies the instant Pro ends (the QML row gate is cosmetic only).
+  if (!m_connection->pro())
+    ri = qMin(ri, 1);
   QImage frame = (image.width() > kResW[ri] || image.height() > kResH[ri])
       ? image.scaled(kResW[ri], kResH[ri], Qt::KeepAspectRatio, Qt::SmoothTransformation)
       : image;

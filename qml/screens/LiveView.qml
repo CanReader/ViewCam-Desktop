@@ -258,7 +258,9 @@ Item {
                 }
             }
 
-            // watermark — top-right, below battery chip (free tier)
+            // watermark — top-right, below battery chip (free tier only). Pro
+            // sessions hide it here just as the virtual-camera output drops the
+            // burned-in watermark, so preview and downstream apps agree.
             Rectangle {
                 anchors.top: parent.top
                 anchors.right: parent.right
@@ -267,6 +269,7 @@ Item {
                 height: 28
                 width: wmRow.implicitWidth + 18
                 radius: Theme.radiusPill
+                visible: !root.conn.pro
                 color: Theme.glassBg
                 border.width: 1
                 border.color: Theme.glassBorder
