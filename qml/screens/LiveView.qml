@@ -283,7 +283,7 @@ Item {
                         text: "ViewCam"
                         font.family: Theme.fontSans
                         font.pixelSize: 12
-                        font.weight: Font.SemiBold
+                        font.weight: Font.DemiBold
                         font.letterSpacing: 0.04 * 12
                         color: "white"
                     }
