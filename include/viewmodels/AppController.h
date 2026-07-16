@@ -51,6 +51,10 @@ class AppController : public QObject {
     // Currently active navigation page ("liveview" / "sources" / "settings").
     // Persists across QML hot-reloads so the user stays on the same screen.
     Q_PROPERTY(QString activePage READ activePage WRITE setActivePage NOTIFY activePageChanged)
+    // Windows only: true when Windows Firewall has no approved inbound rule
+    // for the discovery beacon, so phones silently never appear. Always
+    // false on other platforms.
+    Q_PROPERTY(bool firewallBlocked READ firewallBlocked NOTIFY firewallBlockedChanged)
 
 public:
     ~AppController() override;
@@ -78,14 +82,20 @@ public:
         emit activePageChanged();
     }
 
+    bool firewallBlocked() const { return m_firewallBlocked; }
+
     Q_INVOKABLE void connectToDevice(const QString &name, const QString &host, int port,
                                      const QString &deviceId = QString());
     Q_INVOKABLE void connectManual(const QString &ip);
     Q_INVOKABLE void disconnectDevice();
+    // Re-checked (Windows only) after the user asks to fix it — see
+    // fixFirewall(). No-op on other platforms.
+    Q_INVOKABLE void fixFirewall();
 
 signals:
     void gpuBackendChanged();
     void activePageChanged();
+    void firewallBlockedChanged();
 
 private:
     explicit AppController(QObject *parent = nullptr);
@@ -124,6 +134,7 @@ private:
     QString m_gpuBackendLabel;
     QString m_cudaVersion;
     QString m_activePage = QStringLiteral("liveview");
+    bool m_firewallBlocked = false;
 
     // Jitter buffer: holds up to bufferedFrames decoded frames for smooth display.
     QList<QImage> m_frameBuffer;

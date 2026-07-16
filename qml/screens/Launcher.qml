@@ -330,6 +330,54 @@ Rectangle {
                     Layout.preferredHeight: 14
                 }
 
+                // Windows only (AppController.firewallBlocked is always false
+                // elsewhere): no approved inbound rule for the discovery
+                // beacon, so phones will never show up here on their own.
+                Rectangle {
+                    Layout.fillWidth: true
+                    visible: AppController.firewallBlocked
+                    implicitHeight: fwRow.implicitHeight + 24
+                    radius: Theme.radiusLg
+                    color: Theme.alpha(Theme.statusWarn, 0.08)
+                    border.width: 1
+                    border.color: Theme.alpha(Theme.statusWarn, 0.25)
+
+                    RowLayout {
+                        id: fwRow
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 10
+
+                        VcIcon {
+                            Layout.alignment: Qt.AlignVCenter
+                            width: 16
+                            height: 16
+                            name: "shield"
+                            color: Theme.statusWarn
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                            text: qsTr("Windows Firewall may be blocking phone discovery.")
+                            font.family: Theme.fontSans
+                            font.pixelSize: 12
+                            color: Theme.fg2
+                            wrapMode: Text.WordWrap
+                        }
+                        VcButton {
+                            Layout.alignment: Qt.AlignVCenter
+                            kind: "soft"
+                            text: qsTr("Fix")
+                            onClicked: AppController.fixFirewall()
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.preferredHeight: 14
+                    visible: AppController.firewallBlocked
+                }
+
                 ListView {
                     id: deviceList
                     Layout.fillWidth: true

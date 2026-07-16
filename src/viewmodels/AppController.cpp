@@ -17,6 +17,8 @@
 #include "virtualcam/DirectShowVirtualCam.h"
 #include "virtualcam/FilterRegistrar.h"
 #include "MFVirtualCamManager.h"
+#include "network/FirewallGuard.h"
+#include <thread>
 #endif
 
 #include <QJsonObject>
@@ -263,6 +265,14 @@ void AppController::init() {
     // Windows Virtual Camera API (Win 11 22H2+) — for Windows Camera, Teams, Zoom, Discord
     m_mfVirtualCam->registerAndStart(L"ViewCam Studio");
   }
+
+  // Inbound UDP discovery beacon needs a firewall exception. The installer
+  // creates one at install time (elevated), but a dev build, a firewall
+  // reset, or a manually deleted rule leaves phones silently never appearing
+  // with no obvious symptom — surface a fix affordance instead (fixFirewall()).
+  m_firewallBlocked = FirewallGuard::checkDiscoveryStatus() != FirewallGuard::Status::Allowed;
+  if (m_firewallBlocked)
+    VC_WARN("Discovery may be blocked by Windows Firewall — no approved inbound rule found");
 #endif
   // Deferred: open() can block for many seconds on first run (Linux: pkexec
   // prompt + modprobe wait inside ensureModuleLoaded). init() runs before the
@@ -396,6 +406,27 @@ void AppController::disconnectDevice() {
   m_receiver->disconnect();
   m_connection->markDisconnected();
   m_cameraControl->reset();
+}
+
+void AppController::fixFirewall() {
+#ifdef _WIN32
+  // requestApproval() blocks on the UAC prompt + netsh — run it off the UI
+  // thread so the window stays responsive while the user answers the prompt.
+  std::thread([this]() {
+    FirewallGuard::requestApproval();
+    const bool stillBlocked =
+        FirewallGuard::checkDiscoveryStatus() != FirewallGuard::Status::Allowed;
+    QMetaObject::invokeMethod(
+        this,
+        [this, stillBlocked]() {
+          if (m_firewallBlocked != stillBlocked) {
+            m_firewallBlocked = stillBlocked;
+            emit firewallBlockedChanged();
+          }
+        },
+        Qt::QueuedConnection);
+  }).detach();
+#endif
 }
 
 void AppController::scheduleReconnect() {

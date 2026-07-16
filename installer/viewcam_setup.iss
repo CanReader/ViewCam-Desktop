@@ -18,6 +18,9 @@
 ; (createWindowsAppMutex). Lets the installer detect + close a running instance
 ; during an in-place self-update before swapping files.
 #define AppMutexName   "Global\ViewCamStudioRunning"
+; Must match the UDP discovery beacon port (VIEWCAM_BEACON_PORT in CMakeLists).
+#define BeaconPort     "8081"
+#define FirewallRuleName "ViewCam Studio (Discovery)"
 
 [Setup]
 AppId={{{#AppId}}
@@ -90,6 +93,16 @@ Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\ViewCamFilter.dll""";   
 ; Register MF virtual camera source (Windows 11 virtual camera API)
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\ViewCamMFSource.dll"""; StatusMsg: "Registering virtual camera (Media Foundation)..."; Flags: runhidden
 
+; Phone discovery (UDP beacon) is inbound traffic — Windows Firewall blocks it
+; by default on Private/Domain networks until an exception exists. Creating it
+; here (the installer already runs elevated) means it just works on first
+; launch instead of silently failing discovery until the user notices and
+; manually approves a firewall prompt. Delete-then-add makes this idempotent
+; across upgrades/re-installs. Scoped to this exe + this port + profile=any so
+; it only ever opens exactly what discovery needs, on every network type.
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""{#FirewallRuleName}"""; Flags: runhidden; StatusMsg: "Configuring firewall..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""{#FirewallRuleName}"" dir=in action=allow protocol=UDP localport={#BeaconPort} program=""{app}\{#AppExeName}"" profile=any"; Flags: runhidden
+
 ; Offer to launch after install
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
@@ -97,6 +110,7 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(
 ; Unregister both camera components before files are removed
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s /u ""{app}\ViewCamFilter.dll""";   Flags: runhidden; RunOnceId: "UnregFilter"
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s /u ""{app}\ViewCamMFSource.dll"""; Flags: runhidden; RunOnceId: "UnregMFSource"
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""{#FirewallRuleName}"""; Flags: runhidden; RunOnceId: "UnregFirewallRule"
 
 [Code]
 // Ensure the output directory exists before the compiler tries to write to it.

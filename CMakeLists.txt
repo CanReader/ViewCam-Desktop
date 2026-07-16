@@ -210,12 +210,14 @@ if(LINUX)
 elseif(WIN32)
     list(APPEND SOURCES src/virtualcam/windows/DirectShowVirtualCam.cpp
                         src/virtualcam/windows/FilterRegistrar.cpp
-                        src/virtualcam/windows/MFVirtualCamManager.cpp)
+                        src/virtualcam/windows/MFVirtualCamManager.cpp
+                        src/network/windows/FirewallGuard.cpp)
     list(APPEND HEADERS include/virtualcam/DirectShowVirtualCam.h
                         include/virtualcam/SharedFrameProtocol.h
                         include/virtualcam/FilterRegistrar.h
                         include/virtualcam/MFVirtualCamDefs.h
-                        src/virtualcam/windows/MFVirtualCamManager.h)
+                        src/virtualcam/windows/MFVirtualCamManager.h
+                        include/network/FirewallGuard.h)
 endif()
 
 # ── Build ──────────────────────────────────────────────────────
@@ -387,7 +389,7 @@ if(VIEWCAM_HAVE_VULKAN)
 endif()
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE advapi32 shell32 mfplat mfuuid ole32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE advapi32 shell32 mfplat mfuuid ole32 oleaut32)
 endif()
 
 # ── Deploy (portable bin/ directory) ──────────────────────────
