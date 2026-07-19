@@ -29,7 +29,7 @@
 #   VIEWCAM_SIGN_KEY   private key path   (default: release/update-signing-key.pem)
 #   VIEWCAM_DIST_DIR   dir with the zips  (default: dist/)
 #   VIEWCAM_BASE_URL   artifact base URL  (default: https://dl.viewcam.tech/<ver>/)
-#   VIEWCAM_NOTES_URL  release-notes URL  (default: https://viewcam.tech/releases/<ver>)
+#   VIEWCAM_NOTES_URL  release-notes URL  (default: https://viewcam.tech/changelog/)
 #   VIEWCAM_MIN_VER    min_version        (default: <ver>)
 #   VIEWCAM_ROLLOUT    0..1 staged ratio  (default: 1.0)
 #   VIEWCAM_PUB_DATE   ISO-8601 UTC       (default: now)
@@ -63,7 +63,7 @@ CHANNEL="${2:-stable}"
 DIST_DIR="${VIEWCAM_DIST_DIR:-${ROOT_DIR}/dist}"
 SIGN_KEY="${VIEWCAM_SIGN_KEY:-${ROOT_DIR}/release/update-signing-key.pem}"
 BASE_URL="${VIEWCAM_BASE_URL:-https://dl.viewcam.tech/${VERSION}/}"
-NOTES_URL="${VIEWCAM_NOTES_URL:-https://viewcam.tech/releases/${VERSION}}"
+NOTES_URL="${VIEWCAM_NOTES_URL:-https://viewcam.tech/changelog/}"
 MIN_VER="${VIEWCAM_MIN_VER:-${VERSION}}"
 ROLLOUT="${VIEWCAM_ROLLOUT:-1.0}"
 PUB_DATE="${VIEWCAM_PUB_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
