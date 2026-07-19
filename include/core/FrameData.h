@@ -4,7 +4,12 @@
 #include <cstdint>
 
 struct FrameData {
+  // Compressed video payload: a complete JPEG (format 0) or one H264 Annex-B
+  // access unit (format 1). Name kept from the MJPEG-only era — renaming
+  // would touch every consumer for zero behavior change.
   QByteArray jpegData;
+  // Header format byte: 0 = MJPEG, 1 = H264 (vc::FrameFormat values).
+  uint8_t format = 0;
   uint32_t width = 0;
   uint32_t height = 0;
   uint64_t timestamp = 0; // microseconds

@@ -176,6 +176,7 @@ set(SOURCES
     src/network/StreamReceiver.cpp
     src/network/DeviceDiscovery.cpp
     src/network/FrameDecoder.cpp
+    src/network/H264Decoder.cpp
     src/gpu/GpuBackendFactory.cpp
     src/gpu/CudaBackend.cpp
     src/gpu/VulkanComputeBackend.cpp
@@ -190,6 +191,7 @@ set(HEADERS
     include/network/StreamReceiver.h
     include/network/DeviceDiscovery.h
     include/network/FrameDecoder.h
+    include/network/H264Decoder.h
     include/gpu/GpuBackend.h
     include/gpu/GpuFrameFilter.h
     include/gpu/CpuBackend.h
@@ -347,6 +349,26 @@ if(UNIX AND SPDLOG_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${SPDLOG_LIBRARIES})
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog)
+endif()
+
+# ── FFmpeg (OPTIONAL): H264 decode for the phone's hardware encoder ──────────
+# Found → the desktop advertises "h264" to phones and decodes format=1 frames.
+# Not found → build stays MJPEG-only and fully functional (phones fall back
+# automatically). Windows: install FFmpeg dev libs + pkgconf, or vcpkg
+# (ffmpeg[avcodec,swscale]) with CMAKE_TOOLCHAIN_FILE; until then Windows
+# builds simply ship without H264.
+if(NOT PkgConfig_FOUND)
+    find_package(PkgConfig QUIET)
+endif()
+if(PkgConfig_FOUND)
+    pkg_check_modules(VC_FFMPEG IMPORTED_TARGET libavcodec libavutil libswscale)
+endif()
+if(VC_FFMPEG_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::VC_FFMPEG)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VIEWCAM_HAVE_FFMPEG)
+    message(STATUS "ViewCam: FFmpeg found — H264 decode ENABLED")
+else()
+    message(STATUS "ViewCam: FFmpeg not found — H264 decode disabled (MJPEG only)")
 endif()
 
 # ── QML hot-reload (Debug only) ───────────────────────────────
