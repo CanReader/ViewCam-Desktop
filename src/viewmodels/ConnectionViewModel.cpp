@@ -124,6 +124,8 @@ void ConnectionViewModel::markDisconnected() {
   resetStats();
   emit statsChanged();
   setPro(false); // no phone → back to free gating (watermark, 4K locked)
+  // Phone capabilities die with the connection; the next HELLO re-populates.
+  setPhoneCodecs({QStringLiteral("mjpeg")});
   setState(Disconnected);
 }
 
@@ -150,6 +152,13 @@ void ConnectionViewModel::setSessionLimited(bool limited) {
 void ConnectionViewModel::onFrame(const FrameData &frame) {
   m_framesThisSecond++;
   m_bytesThisSecond += frame.jpegData.size();
+  // Live codec readout for the Connection row (format byte: 0=MJPEG, 1=H264).
+  const QString codec =
+      frame.format == 1 ? QStringLiteral("H.264") : QStringLiteral("MJPEG");
+  if (codec != m_streamCodec) {
+    m_streamCodec = codec;
+    emit statsChanged();
+  }
   if (m_lastFrameTime.isValid()) {
     m_intervalAccum += m_lastFrameTime.nsecsElapsed() / 1e6;
     m_intervalSamples++;

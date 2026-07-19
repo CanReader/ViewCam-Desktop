@@ -24,6 +24,10 @@ class ConnectionViewModel : public QObject {
     // The sidebar de-dups by this, not by host — a Wi-Fi roam changes the IP.
     Q_PROPERTY(QString deviceId READ deviceId NOTIFY deviceChanged)
     Q_PROPERTY(int fps READ fps NOTIFY statsChanged)
+    Q_PROPERTY(QString streamCodec READ streamCodec NOTIFY statsChanged)
+    // Encoder codecs the connected phone advertises (HELLO). Always contains
+    // "mjpeg"; drives the Settings protocol-picker gray-out.
+    Q_PROPERTY(QStringList phoneCodecs READ phoneCodecs NOTIFY deviceChanged)
     Q_PROPERTY(double bitrateMbps READ bitrateMbps NOTIFY statsChanged)
     Q_PROPERTY(double frameIntervalMs READ frameIntervalMs NOTIFY statsChanged)
     Q_PROPERTY(int frameWidth READ frameWidth NOTIFY statsChanged)
@@ -126,4 +130,17 @@ private:
     double m_frameIntervalMs = 0;
     int m_frameWidth = 0;
     int m_frameHeight = 0;
+    // Codec of the most recent VIDEO frame (header format byte) — what the
+    // phone is ACTUALLY sending, not a setting. "MJPEG" until told otherwise.
+    QString m_streamCodec = QStringLiteral("MJPEG");
+    QStringList m_phoneCodecs{QStringLiteral("mjpeg")};
+
+public:
+    QString streamCodec() const { return m_streamCodec; }
+    QStringList phoneCodecs() const { return m_phoneCodecs; }
+    void setPhoneCodecs(const QStringList &codecs) {
+        if (codecs == m_phoneCodecs) return;
+        m_phoneCodecs = codecs;
+        emit deviceChanged();
+    }
 };
