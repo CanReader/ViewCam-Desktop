@@ -76,13 +76,24 @@ Flickable {
             VcSettingRow {
                 icon: "protocol"
                 title: qsTr("Stream protocol")
-                description: qsTr("MJPEG active · H.264/H.265 require mobile update")
+                description: qsTr("H.264 negotiates automatically when the phone supports it")
                 pro: true
                 isPro: root.isPro
                 onProGateTapped: proGate.open()
                 VcSeg {
                     model: ["MJPEG", "H.264", "H.265"]
                     currentIndex: root.s.streamProtocol
+                    // Gray out what can't work right now: H.265 has no
+                    // pipeline yet; H.264 grays while a connected phone
+                    // doesn't advertise it (old app / iOS). Disconnected =
+                    // free choice (it's a preference for the next session).
+                    disabledIndices: {
+                        var d = [2]
+                        var conn = AppController.connection
+                        if (conn.connected && conn.phoneCodecs.indexOf("h264") < 0)
+                            d.push(1)
+                        return d
+                    }
                     onActivated: (i) => root.s.streamProtocol = i
                 }
             }

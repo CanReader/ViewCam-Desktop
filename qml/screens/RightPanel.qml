@@ -62,7 +62,7 @@ Rectangle {
                     showDivider: false
                     icon: "wifi"
                     label: qsTr("Connection")
-                    value: root.conn.connected ? "TCP · MJPEG" : "—"
+                    value: root.conn.connected ? "TCP · " + root.conn.streamCodec : "—"
                 }
                 VcStatRow {
                     icon: "address"

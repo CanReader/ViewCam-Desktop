@@ -8,7 +8,12 @@ Rectangle {
 
     property var model: []
     property int currentIndex: 0
+    // Indices rendered dimmed and non-interactive (e.g. codecs the connected
+    // phone can't encode). Selection of a disabled index is blocked here.
+    property var disabledIndices: []
     signal activated(int index)
+
+    function isDisabled(i) { return disabledIndices.indexOf(i) >= 0 }
 
     implicitWidth: row.implicitWidth + 6
     implicitHeight: row.implicitHeight + 6
@@ -35,6 +40,7 @@ Rectangle {
                 implicitHeight: label.implicitHeight + 10
                 radius: Theme.radiusPill
                 color: seg.index === root.currentIndex ? Theme.bg4 : "transparent"
+                opacity: root.isDisabled(seg.index) ? 0.35 : 1.0
 
                 Behavior on color {
                     ColorAnimation { duration: Theme.durSnap }
@@ -47,12 +53,13 @@ Rectangle {
                     font.family: Theme.fontMono
                     font.pixelSize: 12
                     font.weight: Font.Medium
-                    color: seg.index === root.currentIndex ? Theme.fg1 : Theme.fg3
+                    color: root.isDisabled(seg.index) ? Theme.fg4
+                           : seg.index === root.currentIndex ? Theme.fg1 : Theme.fg3
                 }
 
                 // Owner updates `currentIndex` in response (keeps bindings alive)
                 TapHandler {
-                    onTapped: root.activated(seg.index)
+                    onTapped: if (!root.isDisabled(seg.index)) root.activated(seg.index)
                 }
             }
         }
