@@ -16,7 +16,9 @@
 #define VIEWCAM_VERSION_MINOR   @PROJECT_VERSION_MINOR@
 #define VIEWCAM_VERSION_PATCH   @PROJECT_VERSION_PATCH@
 #define VIEWCAM_VERSION_STRING  "@PROJECT_VERSION@"
-#define VIEWCAM_SHORT_VERSION   "v@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@"
+// Full version incl. patch ("v1.0.7") — major.minor alone made it impossible
+// to tell exactly which release was running from the UI.
+#define VIEWCAM_SHORT_VERSION   "v@PROJECT_VERSION@"
 #define VIEWCAM_BUILD_NUMBER    @VIEWCAM_BUILD_NUMBER@
 
 #define VIEWCAM_BUNDLE_ID       "@VIEWCAM_BUNDLE_ID@"
