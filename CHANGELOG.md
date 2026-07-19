@@ -2,6 +2,29 @@
 
 All notable changes to ViewCam Studio (desktop).
 
+## [1.0.7] — 2026-07-19
+
+### New
+- H.264 streaming: hardware-encoded video from the phone (mobile app 1.2.0+), decoded with FFmpeg. Sharper image at a fraction of MJPEG's bitrate, and 1080p becomes practical on budget phones. Negotiated automatically — any older phone/desktop pairing keeps working on MJPEG.
+- The stream protocol setting now actually works: switch MJPEG/H.264 live mid-connection, and options the connected phone can't encode are grayed out. Default is H.264.
+- The network panel's Connection row shows the codec that is actually streaming.
+- Windows: discovery is auto-approved through Windows Firewall, fixing phones never appearing on first run.
+
+### Fixed
+- Windows: watermark toggle now works on the DirectShow virtual camera.
+- The version label now includes the patch number (e.g. "Studio v1.0.7") so the exact release is identifiable.
+
+### Notes
+- H.264 decode requires FFmpeg at build time; builds without it (current Windows build) keep running MJPEG-only and say so at configure.
+
+## [1.0.6] — 2026-07-16
+
+### Improved
+- Pro entitlement enforced in the engine (capture pipeline), not just the UI: 4K and GPU processing gate on the connected phone's live entitlement.
+- The free-tier watermark scales with output resolution, and mirroring applies to the virtual-camera output too.
+- Reconnect chases the phone's current IP after a Wi-Fi roam / DHCP renew instead of retrying a dead address.
+- Virtual-camera recovery hardening and update-check retry on timeout.
+
 ## [1.0.5] — 2026-07-09
 
 ### Improved
