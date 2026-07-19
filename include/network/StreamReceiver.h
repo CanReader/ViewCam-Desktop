@@ -32,6 +32,9 @@ signals:
                        int battery, bool charging,
                        const QString &lens, bool pro);   // HELLO (once on accept)
     void statusReceived(int battery, bool charging);     // STATUS (periodic, JSON)
+    // Encoder codecs the phone advertises in HELLO (always contains "mjpeg";
+    // "h264" on phones ≥1.2.0). Drives the Settings protocol-picker gray-out.
+    void phoneCodecsReceived(const QStringList &codecs);
     // Phone Pro entitlement from HELLO + STATUS: drives the vcam watermark and
     // 4K gating so a paying user isn't watermarked/capped on the desktop.
     void proReceived(bool pro);

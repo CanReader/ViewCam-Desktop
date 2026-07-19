@@ -2,6 +2,7 @@
 #include "core/Logger.h"
 #include <QtEndian>
 #include <QDateTime>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <cstring>
@@ -170,22 +171,22 @@ bool StreamReceiver::parseFrame() {
             emit heartbeatReceived();
         }
         break;
-    case vc::FrameFormat::Mjpeg: {
+    case vc::FrameFormat::Mjpeg:
+    case vc::FrameFormat::H264: {
         FrameData frame;
         frame.jpegData = payload;
+        frame.format = static_cast<uint8_t>(format);
         frame.width = width;
         frame.height = height;
         frame.timestamp = timestamp;
         frame.rotationDegrees = (orient & 0x03) * 90;
         frame.mirror = (orient & 0x08) != 0;
-        VC_TRACE("VIDEO frame {}x{}, {} bytes, rot={} mirror={}",
-                 width, height, payloadLen, frame.rotationDegrees, frame.mirror);
+        VC_TRACE("VIDEO frame fmt={} {}x{}, {} bytes, rot={} mirror={}",
+                 static_cast<int>(format), width, height, payloadLen,
+                 frame.rotationDegrees, frame.mirror);
         emit frameReceived(frame);
         break;
     }
-    case vc::FrameFormat::H264:
-        VC_WARN("H264 frame received but not supported (MJPEG only); dropping");
-        break;
     }
     return true;
 }
@@ -224,6 +225,16 @@ void StreamReceiver::dispatchHello(const QByteArray &payload) {
             pro, lens.toStdString());
     emit helloReceived(name, os, maxW, maxH, battery, charging, lens, pro);
     emit proReceived(pro);
+
+    // Encoder codecs the phone can produce ("codecs":["mjpeg","h264"], phones
+    // ≥1.2.0). Absent on older phones / iOS ⇒ MJPEG only — the Settings
+    // protocol picker grays out what the phone can't do.
+    QStringList codecs{QStringLiteral("mjpeg")};
+    for (const auto &v : o.value("codecs").toArray()) {
+        const QString c = v.toString().toLower();
+        if (!c.isEmpty() && !codecs.contains(c)) codecs.append(c);
+    }
+    emit phoneCodecsReceived(codecs);
 }
 
 void StreamReceiver::dispatchStatus(const QByteArray &payload) {
