@@ -21,6 +21,7 @@
 #include <thread>
 #endif
 
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QQmlEngine>
 
@@ -111,6 +112,15 @@ void AppController::init() {
   connect(m_decoder.get(), &FrameDecoder::imageReady, this,
           &AppController::onImageReady);
 
+  // H264 lost sync (mid-stream join / decode hiccup): ask the phone for an
+  // IDR. Old phones ignore the unknown key — harmless.
+  connect(m_decoder.get(), &FrameDecoder::keyframeNeeded, this, [this]() {
+    m_receiver->sendControl(QJsonObject{{QStringLiteral("keyframe"), true}});
+  });
+  // Stateful H264 decoder must not carry reference frames across connections.
+  connect(m_receiver.get(), &StreamReceiver::disconnected, m_decoder.get(),
+          &FrameDecoder::resetStream);
+
   // connection lifecycle — per protocol, "connected" is reached on HELLO, not
   // on the raw TCP socket coming up.
   connect(m_receiver.get(), &StreamReceiver::connected, this, [this]() {
@@ -134,6 +144,10 @@ void AppController::init() {
             QJsonObject snap = m_cameraControl->snapshot();
             snap[QStringLiteral("jpegQuality")] =
                 kQuality[qBound(0, m_settingsVm->encoderPreset(), 2)];
+            // Codec negotiation: phones that see "h264" switch this
+            // connection to hardware H264 (huge fps/battery/bitrate win);
+            // older phones ignore the key and keep sending MJPEG.
+            snap[QStringLiteral("codecs")] = advertisedCodecs();
             m_receiver->sendControl(snap);
           });
   // Phone Pro entitlement (HELLO + live STATUS): a paying user must not get the
@@ -141,6 +155,9 @@ void AppController::init() {
   // disconnect we fall back to watermarked/gated.
   connect(m_receiver.get(), &StreamReceiver::proReceived, this,
           [this](bool pro) { m_connection->setPro(pro); });
+  // Phone encoder capabilities (HELLO) → Settings protocol-picker gray-out.
+  connect(m_receiver.get(), &StreamReceiver::phoneCodecsReceived, this,
+          [this](const QStringList &codecs) { m_connection->setPhoneCodecs(codecs); });
   // All entitlement side effects hang off a SINGLE source of truth (proChanged),
   // so the disconnect AND error teardown paths — both funnel through
   // markDisconnected() -> setPro(false) — restore free-tier gating identically.
@@ -203,6 +220,16 @@ void AppController::init() {
             static const int kQuality[] = {95, 85, 65};
             const int q = kQuality[qBound(0, m_settingsVm->encoderPreset(), 2)];
             m_receiver->sendControl(QJsonObject{{QStringLiteral("jpegQuality"), q}});
+          });
+
+  // Stream protocol setting -> re-advertise codecs live, so flipping the
+  // Settings combo switches the phone's encoder mid-connection (no reconnect).
+  // The panel's Connection row reflects what actually arrives next.
+  connect(m_settingsVm.get(), &SettingsViewModel::streamProtocolChanged, this,
+          [this]() {
+            if (!m_connection->isConnected()) return;
+            m_receiver->sendControl(
+                QJsonObject{{QStringLiteral("codecs"), advertisedCodecs()}});
           });
 
   // Dead-connection watchdog: if no data arrives for 5 s after HELLO, abort
@@ -316,6 +343,19 @@ void AppController::selectGpuBackend() {
   if (!dev.isEmpty())
     m_gpuBackendLabel += QStringLiteral(" · ") + dev;
   emit gpuBackendChanged();
+}
+
+/**
+ * Decoder codecs offered to the phone, honoring the Settings "Stream
+ * protocol" choice: MJPEG (index 0) forces the universal codec; H.264/H.265
+ * (1/2) offer h264 when this build can decode it (H.265 has no pipeline yet,
+ * so it behaves as H.264 rather than silently breaking the stream).
+ */
+QJsonArray AppController::advertisedCodecs() const {
+  QJsonArray codecs{QStringLiteral("mjpeg")};
+  if (FrameDecoder::h264Supported() && m_settingsVm->streamProtocol() >= 1)
+    codecs.append(QStringLiteral("h264"));
+  return codecs;
 }
 
 void AppController::onImageReady(const QImage &image) {

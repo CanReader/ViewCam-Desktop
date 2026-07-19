@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+#include <QJsonArray>
 #include <QList>
 #include <QObject>
 #include <QTimer>
@@ -100,6 +101,7 @@ signals:
 private:
     explicit AppController(QObject *parent = nullptr);
     void init();
+    QJsonArray advertisedCodecs() const;
     void onImageReady(const QImage &image);
     void publishFrame(const QImage &frame);
     void scheduleReconnect();
