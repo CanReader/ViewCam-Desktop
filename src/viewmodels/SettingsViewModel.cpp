@@ -120,7 +120,10 @@ void SettingsViewModel::applyLaunchAtLogin(bool enable) {
 
 VC_IMPL(bool, hardwareAccel, setHardwareAccel, hardwareAccelChanged, "engine/hardwareAccel", true)
 VC_IMPL(bool, gpuProcessing, setGpuProcessing, gpuProcessingChanged, "engine/gpuProcessing", true)
-VC_IMPL(int, streamProtocol, setStreamProtocol, streamProtocolChanged, "engine/protocol", 0)
+// Default 1 (H.264): the negotiated path falls back to MJPEG automatically
+// wherever h264 isn't possible, so the fast codec should not hide behind an
+// opt-in. Index 0 remains a user-selectable MJPEG force.
+VC_IMPL(int, streamProtocol, setStreamProtocol, streamProtocolChanged, "engine/protocol", 1)
 VC_IMPL(int, encoderPreset, setEncoderPreset, encoderPresetChanged, "engine/preset", 1)
 VC_IMPL(int, maxResolution, setMaxResolution, maxResolutionChanged, "engine/maxResolution", 1)
 VC_IMPL(int, keyframeInterval, setKeyframeInterval, keyframeIntervalChanged, "engine/keyframeInterval", 2)
