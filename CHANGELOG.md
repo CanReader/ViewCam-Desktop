@@ -2,6 +2,21 @@
 
 All notable changes to ViewCam Studio (desktop).
 
+## [1.0.8] — 2026-07-27
+
+### New
+- Zoom the phone's camera with Ctrl+scroll on the preview; a ×N chip shows the level, click to reset. Coalesced CONTROL sends; phone echoes zoom/zoomMax.
+- Aspect ratio presets (Full / 16:9 / 4:3 / 1:1 / 9:16). MJPEG crops on-phone; H264 crops desktop-side after decode (mid-stream encoder resize desyncs the decoder).
+- Snapshot button — saves the current output frame (post-mirror) as PNG to Pictures/ViewCam.
+
+### Improved
+- H264 color fidelity: full-range streams no longer get shadows crushed / highlights clipped; proper chroma interpolation + accurate rounding; deprecated-YUVJ swscale warning silenced.
+- Latency defaults: frame buffering defaults to latest-wins (was 2 = +67ms), streaming default is 720p, and the panel resolution re-asserts on every reconnect (phone previously reverted to 480p).
+- Virtual camera conversion is one SIMD swscale pass (BGRA→YUYV) instead of a per-pixel scalar loop.
+
+### Fixed
+- Corrupted H264 frames (dropped reference / resolution switch) are suppressed until the next clean keyframe instead of rendering a noise burst.
+
 ## [1.0.7] — 2026-07-19
 
 ### New
