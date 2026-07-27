@@ -244,6 +244,16 @@ Rectangle {
                         }
                     }
                 }
+                VcOptRow {
+                    title: qsTr("Aspect ratio")
+                    // Free for all: the phone crops the capture to this ratio.
+                    VcSeg {
+                        readonly property var ratios: ["full", "16:9", "4:3", "1:1", "9:16"]
+                        model: [qsTr("Full"), "16:9", "4:3", "1:1", "9:16"]
+                        currentIndex: Math.max(0, ratios.indexOf(root.cc.aspectRatio))
+                        onActivated: i => root.cc.setAspectRatio(ratios[i])
+                    }
+                }
 
                 Item {
                     width: 1

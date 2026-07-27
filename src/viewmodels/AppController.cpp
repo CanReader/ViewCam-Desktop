@@ -21,9 +21,14 @@
 #include <thread>
 #endif
 
+#include <cmath>
+
+#include <QDateTime>
+#include <QDir>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QQmlEngine>
+#include <QStandardPaths>
 
 AppController *AppController::s_instance = nullptr;
 
@@ -365,6 +370,35 @@ void AppController::onImageReady(const QImage &image) {
             image.width(), image.height());
   }
 
+  // Aspect-ratio preset: centered crop AFTER decode. The phone only pre-crops
+  // the MJPEG path (where each frame is independent); H264 always arrives as
+  // the full frame because resizing the phone's hardware encoder mid-stream
+  // desynced the decoder. Cropping here is a cheap lossless copy, makes both
+  // codecs behave identically, and works even for phones that don't understand
+  // the "aspect" control at all. No-op when the frame already matches (the
+  // MJPEG pre-crop case) or the ratio is "full". Frames are already upright
+  // here (FrameDecoder rotates), so the ratio applies directly.
+  QImage src = image;
+  const QString ar = m_cameraControl->aspectRatio();
+  if (ar != QStringLiteral("full") && !src.isNull()) {
+    const QStringList parts = ar.split(QLatin1Char(':'));
+    if (parts.size() == 2) {
+      const double target = parts[0].toDouble() / qMax(1.0, parts[1].toDouble());
+      const double have = double(src.width()) / double(src.height());
+      if (target > 0.0 && std::abs(have - target) > 0.01) {
+        int cw = src.width();
+        int ch = src.height();
+        if (have > target)
+          cw = int(src.height() * target) & ~1;
+        else
+          ch = int(src.width() / target) & ~1;
+        cw = qBound(2, cw, src.width());
+        ch = qBound(2, ch, src.height());
+        src = src.copy((src.width() - cw) / 2, (src.height() - ch) / 2, cw, ch);
+      }
+    }
+  }
+
   // Cap at the max output resolution setting (0=720p, 1=1080p, 2=4K).
   static const int kResW[] = {1280, 1920, 3840};
   static const int kResH[] = {720,  1080, 2160};
@@ -375,9 +409,9 @@ void AppController::onImageReady(const QImage &image) {
   // the cap re-applies the instant Pro ends (the QML row gate is cosmetic only).
   if (!m_connection->pro())
     ri = qMin(ri, 1);
-  QImage frame = (image.width() > kResW[ri] || image.height() > kResH[ri])
-      ? image.scaled(kResW[ri], kResH[ri], Qt::KeepAspectRatio, Qt::SmoothTransformation)
-      : image;
+  QImage frame = (src.width() > kResW[ri] || src.height() > kResH[ri])
+      ? src.scaled(kResW[ri], kResH[ri], Qt::KeepAspectRatio, Qt::SmoothTransformation)
+      : src;
 
   const int bufSize = m_settingsVm->bufferedFrames();
   if (bufSize == 0) {
@@ -410,9 +444,34 @@ void AppController::publishFrame(const QImage &frame) {
     out = frame.mirrored(true, false);
 #endif
   }
+  m_lastFrame = out; // keep the composited frame for snapshots
   m_frameSource->publish(out);
   if (m_virtualCam->available() && m_virtualCam->enabled())
     m_vcamWriter->writeFrame(out);
+}
+
+QString AppController::saveSnapshot() {
+  if (m_lastFrame.isNull()) {
+    VC_WARN("Snapshot requested but no live frame");
+    emit snapshotSaved(QString());
+    return QString();
+  }
+  const QString dir =
+      QStandardPaths::writableLocation(QStandardPaths::PicturesLocation) +
+      QStringLiteral("/ViewCam");
+  QDir().mkpath(dir);
+  const QString path =
+      dir + QStringLiteral("/ViewCam-") +
+      QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss")) +
+      QStringLiteral(".png");
+  if (!m_lastFrame.save(path, "PNG")) {
+    VC_ERROR("Snapshot save failed: {}", path.toStdString());
+    emit snapshotSaved(QString());
+    return QString();
+  }
+  VC_INFO("Snapshot saved: {}", path.toStdString());
+  emit snapshotSaved(path);
+  return path;
 }
 
 void AppController::connectToDevice(const QString &name, const QString &host,

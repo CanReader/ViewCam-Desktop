@@ -11,6 +11,7 @@ Item {
     property real volume: 0.6
 
     readonly property var conn: AppController.connection
+    readonly property var cc: AppController.cameraControl
 
     // viewfinder — a camera monitor: deliberately a flat, neutral charcoal in
     // both themes (no warm/brown tones). Empty state reads as "standby / waiting
@@ -72,6 +73,7 @@ Item {
             mirror: false
             visible: root.conn.connected && hasFrame
         }
+
 
         // vignette
         Canvas {
@@ -145,6 +147,46 @@ Item {
         Item {
             anchors.fill: parent
             visible: root.conn.connected
+
+            // transient snapshot confirmation
+            Rectangle {
+                id: snapToast
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 92
+                height: 34
+                width: snapToastText.implicitWidth + 28
+                radius: Theme.radiusPill
+                color: Theme.glassBg
+                border.width: 1
+                border.color: Theme.glassBorder
+                opacity: 0
+                property string message: ""
+
+                Text {
+                    id: snapToastText
+                    anchors.centerIn: parent
+                    text: snapToast.message
+                    font.family: Theme.fontSans
+                    font.pixelSize: 13
+                    color: Theme.fg1
+                }
+                SequentialAnimation {
+                    id: snapToastAnim
+                    NumberAnimation { target: snapToast; property: "opacity"; to: 1; duration: 160 }
+                    PauseAnimation { duration: 1600 }
+                    NumberAnimation { target: snapToast; property: "opacity"; to: 0; duration: 400 }
+                }
+            }
+            Connections {
+                target: AppController
+                function onSnapshotSaved(path) {
+                    snapToast.message = path.length > 0
+                        ? qsTr("Snapshot saved to Pictures/ViewCam")
+                        : qsTr("Couldn't save snapshot")
+                    snapToastAnim.restart()
+                }
+            }
 
             // LIVE chip — top-left
             Rectangle {
@@ -232,6 +274,35 @@ Item {
                         font.weight: Font.Medium
                         color: Theme.fg2
                     }
+                }
+            }
+
+            // zoom chip — top-center, only while zoomed. Click resets to 1x.
+            Rectangle {
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.topMargin: 16
+                height: 34
+                width: zoomChipText.implicitWidth + 26
+                radius: Theme.radiusPill
+                color: Theme.glassBg
+                border.width: 1
+                border.color: Theme.glassBorder
+                visible: root.cc.zoom > 1.01
+
+                Text {
+                    id: zoomChipText
+                    anchors.centerIn: parent
+                    text: "×" + root.cc.zoom.toFixed(1)
+                    font.family: Theme.fontMono
+                    font.pixelSize: 13
+                    font.weight: Font.Medium
+                    color: Theme.fg1
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.cc.resetZoom()
                 }
             }
 
@@ -346,6 +417,12 @@ Item {
                         onClicked: root.micOff = !root.micOff
                     }
 
+                    VcIconButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon: "capture"
+                        onClicked: AppController.saveSnapshot()
+                    }
+
                     Row {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 10
@@ -383,6 +460,27 @@ Item {
                         checked: AppController.virtualCam.enabled
                         onToggled: c => AppController.virtualCam.enabled = c
                     }
+                }
+            }
+        }
+
+        // Ctrl + mouse wheel zooms the PHONE camera (CONTROL frame). Declared
+        // LAST inside the viewfinder = topmost, so it gets wheel events first.
+        // Qt.NoButton -> clicks/hover pass straight through to the HUD; wheel
+        // without Ctrl is explicitly not accepted so normal scrolling works.
+        // (A WheelHandler with acceptedModifiers was unreliable on Wayland —
+        // MouseArea.onWheel with an in-handler modifier check is the portable
+        // pattern.)
+        MouseArea {
+            anchors.fill: parent
+            enabled: root.conn.connected
+            acceptedButtons: Qt.NoButton
+            onWheel: wheel => {
+                if (wheel.modifiers & Qt.ControlModifier) {
+                    root.cc.zoomBy(wheel.angleDelta.y > 0 ? 1.1 : 1 / 1.1)
+                    wheel.accepted = true
+                } else {
+                    wheel.accepted = false
                 }
             }
         }

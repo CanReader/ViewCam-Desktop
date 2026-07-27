@@ -92,11 +92,17 @@ public:
     // Re-checked (Windows only) after the user asks to fix it — see
     // fixFirewall(). No-op on other platforms.
     Q_INVOKABLE void fixFirewall();
+    // Save the current live frame (post-mirror, exactly what apps receive) to
+    // the user's Pictures/ViewCam folder as a timestamped PNG. Returns the saved
+    // path, or an empty string if there's no frame / the write failed.
+    Q_INVOKABLE QString saveSnapshot();
 
 signals:
     void gpuBackendChanged();
     void activePageChanged();
     void firewallBlockedChanged();
+    // path is empty on failure (no live frame or write error).
+    void snapshotSaved(const QString &path);
 
 private:
     explicit AppController(QObject *parent = nullptr);
@@ -125,6 +131,9 @@ private:
     std::unique_ptr<SettingsViewModel> m_settingsVm;
     std::unique_ptr<CameraControlViewModel> m_cameraControl;
     std::unique_ptr<FrameSource> m_frameSource;
+
+    // Last frame published to preview/vcam (post-mirror) — the snapshot source.
+    QImage m_lastFrame;
 
     // (Re)pick the GPU compute backend per the hardware policy + the
     // GPU-processing setting, run its proof-of-life, and log the choice.

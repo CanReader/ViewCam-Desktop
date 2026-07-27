@@ -2,6 +2,8 @@
 
 #include <QJsonObject>
 #include <QObject>
+#include <QString>
+#include <QTimer>
 #include <QtQml/qqmlregistration.h>
 
 // Desktop-side mirror of the phone's camera-control state (Torch / Focus lock /
@@ -27,6 +29,13 @@ class CameraControlViewModel : public QObject {
     Q_PROPERTY(int resolutionIndex READ resolutionIndex NOTIFY resolutionIndexChanged)
     // Echoed from STATUS controls{}.lens — tracks which camera is active on the phone.
     Q_PROPERTY(bool lensFront READ lensFront NOTIFY lensFrontChanged)
+    // Output aspect ratio: "full" (native) | "16:9" | "4:3" | "1:1" | "9:16".
+    // The phone crops the capture to this before encoding.
+    Q_PROPERTY(QString aspectRatio READ aspectRatio NOTIFY aspectRatioChanged)
+    // Phone camera zoom. zoom is the applied ratio (1.0 = none); zoomMax is the
+    // active lens's ceiling, echoed by the phone in STATUS controls{}.
+    Q_PROPERTY(double zoom READ zoom NOTIFY zoomChanged)
+    Q_PROPERTY(double zoomMax READ zoomMax NOTIFY zoomMaxChanged)
 
 public:
     explicit CameraControlViewModel(QObject *parent = nullptr);
@@ -39,6 +48,9 @@ public:
     bool torchAvailable() const { return m_torchAvailable; }
     int resolutionIndex() const { return m_resolutionIndex; }
     bool lensFront() const { return m_lensFront; }
+    QString aspectRatio() const { return m_aspectRatio; }
+    double zoom() const { return m_zoom; }
+    double zoomMax() const { return m_zoomMax; }
 
     // User-initiated changes (from QML). Each updates local state and emits a
     // single-key controlPatch() to push to the phone.
@@ -52,6 +64,14 @@ public:
     Q_INVOKABLE void flipLens();
     // Trigger a one-shot centre-point autofocus on the phone.
     Q_INVOKABLE void triggerFocus();
+    // Set the output aspect ratio ("full"|"16:9"|"4:3"|"1:1"|"9:16").
+    Q_INVOKABLE void setAspectRatio(const QString &ratio);
+    // Multiply zoom by factor (Ctrl+wheel: >1 in, <1 out), clamped to
+    // [1, zoomMax]. The CONTROL send is coalesced (~70ms) so a fast wheel
+    // burst becomes one frame, not dozens.
+    Q_INVOKABLE void zoomBy(double factor);
+    // Reset zoom to 1x immediately.
+    Q_INVOKABLE void resetZoom();
 
     // Full snapshot sent once on connect so the phone matches the panel.
     QJsonObject snapshot() const;
@@ -72,6 +92,9 @@ signals:
     void torchAvailableChanged();
     void resolutionIndexChanged();
     void lensFrontChanged();
+    void aspectRatioChanged();
+    void zoomChanged();
+    void zoomMaxChanged();
     // Emitted on a user toggle — AppController turns it into a CONTROL frame.
     void controlPatch(const QJsonObject &patch);
 
@@ -83,8 +106,14 @@ private:
     bool m_hdr = true;
     bool m_hdrSupported = true; // assume supported until the phone says otherwise
     bool m_torchAvailable = true; // assume available until the phone says otherwise
-    int m_resolutionIndex = 0;   // 0=480p, 1=720p, 2=1080p
+    // Default 720p (index 1): 480p upscaled by meeting apps was the top cause
+    // of "stream looks bad". 1080p stays a deliberate user choice (bandwidth).
+    int m_resolutionIndex = 1;   // 0=480p, 1=720p, 2=1080p
     bool m_lensFront = false;
+    QString m_aspectRatio = QStringLiteral("full"); // native until the user picks
+    double m_zoom = 1.0;
+    double m_zoomMax = 4.0; // conservative default until the phone reports
+    QTimer *m_zoomSendTimer = nullptr; // coalesces wheel bursts into one CONTROL
 
     static constexpr int RES_WIDTHS[]  = {640, 1280, 1920};
     static constexpr int RES_HEIGHTS[] = {480,  720, 1080};
