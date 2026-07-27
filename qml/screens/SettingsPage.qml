@@ -100,7 +100,7 @@ Flickable {
             VcSettingRow {
                 icon: "plus"
                 title: qsTr("Encoder preset")
-                description: qsTr("MJPEG quality / H.264 speed trade-off")
+                description: qsTr("Image quality vs bandwidth — applies live to the stream")
                 pro: true
                 isPro: root.isPro
                 onProGateTapped: proGate.open()

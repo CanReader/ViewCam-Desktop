@@ -127,7 +127,10 @@ VC_IMPL(int, streamProtocol, setStreamProtocol, streamProtocolChanged, "engine/p
 VC_IMPL(int, encoderPreset, setEncoderPreset, encoderPresetChanged, "engine/preset", 1)
 VC_IMPL(int, maxResolution, setMaxResolution, maxResolutionChanged, "engine/maxResolution", 1)
 VC_IMPL(int, keyframeInterval, setKeyframeInterval, keyframeIntervalChanged, "engine/keyframeInterval", 2)
-VC_IMPL(int, bufferedFrames, setBufferedFrames, bufferedFramesChanged, "engine/bufferedFrames", 2)
+// Default 0 (latest-wins): a webcam must optimize latency. The old default of
+// 2 held a constant two-frame queue = +67ms glass-to-glass FOR EVERY USER.
+// Users who want jitter absorption can still raise it in Settings.
+VC_IMPL(int, bufferedFrames, setBufferedFrames, bufferedFramesChanged, "engine/bufferedFrames", 0)
 
 // Updates: auto-download toggle + periodic check frequency.
 // updateFrequency: 0 = On launch, 1 = Daily, 2 = Weekly. Default Daily.
