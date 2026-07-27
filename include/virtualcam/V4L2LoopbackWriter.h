@@ -5,6 +5,10 @@
 #include <string>
 #include <vector>
 
+extern "C" {
+struct SwsContext;
+}
+
 class V4L2LoopbackWriter : public QObject {
     Q_OBJECT
 
@@ -39,4 +43,8 @@ private:
     bool m_disabled = false;
     bool m_watermarkEnabled = true;
     std::vector<uint8_t> m_yuyvBuffer;
+    // Cached BGRA→YUYV422 converter (SIMD, one pass). Replaces the old
+    // convertToFormat(RGB888) + scalar per-pixel loop (2 passes, ~3-6ms/frame
+    // at 1080p). Null when built without FFmpeg (scalar fallback used).
+    SwsContext *m_sws = nullptr;
 };

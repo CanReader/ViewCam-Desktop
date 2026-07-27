@@ -15,6 +15,12 @@
 #include <filesystem>
 #include <thread>
 
+#ifdef VIEWCAM_HAVE_FFMPEG
+extern "C" {
+#include <libswscale/swscale.h>
+}
+#endif
+
 V4L2LoopbackWriter::V4L2LoopbackWriter(QObject *parent)
     : QObject(parent)
 {
@@ -68,6 +74,12 @@ void V4L2LoopbackWriter::close() {
         m_requestedHeight = 0;
         VC_INFO("Virtual camera closed");
     }
+#ifdef VIEWCAM_HAVE_FFMPEG
+    if (m_sws) {
+        sws_freeContext(m_sws);
+        m_sws = nullptr;
+    }
+#endif
 }
 
 bool V4L2LoopbackWriter::isOpen() const {
@@ -286,9 +298,14 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
     if (image.isNull())
         return;
 
-    QImage rgb = image.format() == QImage::Format_RGB888
+    // Stay in RGB32 (BGRA): it's the decoder's native output (zero-conversion
+    // in the common case), QPainter's fastest raster format for the watermark
+    // and letterbox, and feeds the SIMD BGRA→YUYV pass directly. The old path
+    // detoured through RGB888 (an extra full-frame conversion) just to feed a
+    // scalar per-pixel YUYV loop.
+    QImage rgb = image.format() == QImage::Format_RGB32
         ? image
-        : image.convertToFormat(QImage::Format_RGB888);
+        : image.convertToFormat(QImage::Format_RGB32);
 
     int w = rgb.width();
     int h = rgb.height();
@@ -328,12 +345,10 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
         int fitH = static_cast<int>(h * scale);
         if (fitW % 2 != 0) fitW--;
 
-        QImage canvas(m_width, m_height, QImage::Format_RGB888);
+        QImage canvas(m_width, m_height, QImage::Format_RGB32);
         canvas.fill(Qt::black);
 
         QImage scaled = rgb.scaled(fitW, fitH, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        if (scaled.format() != QImage::Format_RGB888)
-            scaled = scaled.convertToFormat(QImage::Format_RGB888);
 
         int offX = (m_width  - fitW) / 2;
         int offY = (m_height - fitH) / 2;
@@ -350,16 +365,32 @@ void V4L2LoopbackWriter::writeFrame(const QImage &image) {
     if (m_watermarkEnabled)
         drawFrameWatermark(rgb);
 
-    // handle scanline padding
-    if (rgb.bytesPerLine() == w * 3) {
-        convertRgbToYuyv(rgb.constBits(), w, h);
+#ifdef VIEWCAM_HAVE_FFMPEG
+    // One SIMD pass, stride-aware (no compact copy needed). BT.601 limited
+    // range — same convention as the old scalar loop; YUYV consumers expect it.
+    m_sws = sws_getCachedContext(
+        m_sws, w, h, AV_PIX_FMT_BGRA,
+        w, h, AV_PIX_FMT_YUYV422, SWS_POINT, nullptr, nullptr, nullptr);
+    if (m_sws) {
+        const uint8_t *src[4] = { rgb.constBits(), nullptr, nullptr, nullptr };
+        const int srcStride[4] = { static_cast<int>(rgb.bytesPerLine()), 0, 0, 0 };
+        uint8_t *dst[4] = { m_yuyvBuffer.data(), nullptr, nullptr, nullptr };
+        const int dstStride[4] = { w * 2, 0, 0, 0 };
+        sws_scale(m_sws, src, srcStride, 0, h, dst, dstStride);
+    }
+#else
+    // Scalar fallback (no FFmpeg): needs tightly-packed RGB888.
+    QImage packed = rgb.convertToFormat(QImage::Format_RGB888);
+    if (packed.bytesPerLine() == w * 3) {
+        convertRgbToYuyv(packed.constBits(), w, h);
     } else {
         std::vector<uint8_t> compact(static_cast<size_t>(w * h * 3));
         for (int y = 0; y < h; ++y) {
-            std::memcpy(compact.data() + y * w * 3, rgb.constScanLine(y), static_cast<size_t>(w * 3));
+            std::memcpy(compact.data() + y * w * 3, packed.constScanLine(y), static_cast<size_t>(w * 3));
         }
         convertRgbToYuyv(compact.data(), w, h);
     }
+#endif
 
     ssize_t written = ::write(m_fd, m_yuyvBuffer.data(), m_yuyvBuffer.size());
     if (written < 0) {
