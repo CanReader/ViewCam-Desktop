@@ -54,6 +54,17 @@ private:
     AVPacket *m_packet = nullptr;
     SwsContext *m_sws = nullptr;
     bool m_needKeyframe = false;
+    // Set when a frame decodes with errors (concealment). Output is suppressed
+    // until the next KEYFRAME — frames after a corrupted one decode "cleanly"
+    // but inherit garbage through their references, so waiting for a clean
+    // decode is not enough. A frozen last-good frame beats rendered noise.
+    bool m_suppressUntilKey = false;
+
+    // Output ring: avoids a fresh full-frame QImage allocation per frame while
+    // downstream consumers still hold references to the last couple of frames.
+    static constexpr int kRingSize = 3;
+    QImage m_ring[kRingSize];
+    int m_ringIdx = 0;
 };
 
 #endif // VIEWCAM_HAVE_FFMPEG
