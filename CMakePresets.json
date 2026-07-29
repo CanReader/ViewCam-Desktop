@@ -47,7 +47,11 @@
         "CMAKE_CXX_STANDARD": "17",
         "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
         "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL",
-        "Qt6_DIR": "C:/Qt/6.8.2/msvc2022_64/lib/cmake/Qt6"
+        "Qt6_DIR": "C:/Qt/6.8.2/msvc2022_64/lib/cmake/Qt6",
+        "PKG_CONFIG_EXECUTABLE": "D:/msys64/ucrt64/bin/pkgconf.exe"
+      },
+      "environment": {
+        "PKG_CONFIG_PATH": "${sourceDir}/third_party/ffmpeg/lib/pkgconfig"
       }
     }
   ],

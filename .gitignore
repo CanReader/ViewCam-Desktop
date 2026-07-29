@@ -4,6 +4,8 @@ bin/
 dist/
 installer/output/
 cmake-build-*/
+# Prebuilt FFmpeg LGPL-shared runtime (downloaded, not vendored — see CMakeLists FFmpeg section)
+third_party/ffmpeg/
 .cache/
 compile_commands.json
 *.o

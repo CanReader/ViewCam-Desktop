@@ -5,6 +5,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMetaObject>
+#include <QThread>
 #include <cstring>
 
 namespace {
@@ -35,6 +37,11 @@ StreamReceiver::StreamReceiver(QObject *parent)
     connect(m_socket, &QTcpSocket::disconnected, this, &StreamReceiver::onDisconnected);
     connect(m_socket, &QTcpSocket::errorOccurred, this, &StreamReceiver::onError);
 
+    // The receiver lives on a dedicated network thread (moveToThread in
+    // AppController). A plain member QObject does NOT move with its owner —
+    // only children do — so parent the timer or its start()/stop() would run
+    // against the wrong thread.
+    m_connectTimer.setParent(this);
     m_connectTimer.setSingleShot(true);
     m_connectTimer.setInterval(CONNECT_TIMEOUT_MS);
     connect(&m_connectTimer, &QTimer::timeout, this, [this]() {
@@ -50,11 +57,23 @@ StreamReceiver::~StreamReceiver() {
     // this dtor body). AppController destroys members in reverse declaration
     // order, so its disconnected-lambda would touch an already-freed
     // ConnectionViewModel — block the socket's signals during teardown.
+    // Deliberately NOT the marshaling disconnect(): by the time this dtor runs
+    // the network thread has been stopped (AppController's dtor blockingly
+    // aborted the socket there first), so a queued self-invoke would never run.
     m_socket->blockSignals(true);
-    disconnect(); // NB: the member (socket teardown), not QObject::disconnect
+    if (m_socket->state() != QAbstractSocket::UnconnectedState)
+        m_socket->abort();
 }
 
 void StreamReceiver::connectToHost(const QString &host, int port) {
+    // Public API is called from the GUI thread; the socket lives on the
+    // network thread — self-marshal so all socket access stays single-threaded.
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(
+            this, [this, host, port] { connectToHost(host, port); },
+            Qt::QueuedConnection);
+        return;
+    }
     VC_INFO("StreamReceiver connecting to {}:{}", host.toStdString(), port);
     if (m_socket->state() != QAbstractSocket::UnconnectedState) {
         VC_DEBUG("Aborting previous connection");
@@ -66,6 +85,11 @@ void StreamReceiver::connectToHost(const QString &host, int port) {
 }
 
 void StreamReceiver::disconnect() {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, [this] { disconnect(); },
+                                  Qt::QueuedConnection);
+        return;
+    }
     m_connectTimer.stop();
     if (m_socket->state() != QAbstractSocket::UnconnectedState) {
         VC_DEBUG("Disconnecting socket");
@@ -79,6 +103,11 @@ bool StreamReceiver::isConnected() const {
 }
 
 void StreamReceiver::sendControl(const QJsonObject &patch) {
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(this, [this, patch] { sendControl(patch); },
+                                  Qt::QueuedConnection);
+        return;
+    }
     if (!isConnected()) {
         VC_DEBUG("sendControl ignored: socket not connected");
         return;
@@ -293,9 +322,12 @@ void StreamReceiver::dispatchStatus(const QByteArray &payload) {
 
 void StreamReceiver::onConnected() {
     m_connectTimer.stop();
-    // Disable Nagle: CONTROL and 20 ms speaker AUDIO chunks are small, and
-    // batching them for up to an RTT is pure added latency on a LAN.
+    // TCP_NODELAY: CONTROL frames (zoom, torch, focus) and 20 ms speaker AUDIO
+    // chunks are tiny — never let Nagle hold them back behind an unacked
+    // segment. SO_KEEPALIVE: detect a silently dead link (AP roam, phone
+    // sleep) at the OS level too, not just via the app-level watchdog.
     m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+    m_socket->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
     VC_INFO("TCP connection established to {}:{}",
             m_socket->peerAddress().toString().toStdString(),
             m_socket->peerPort());

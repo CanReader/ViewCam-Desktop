@@ -4,6 +4,14 @@ All notable changes to ViewCam Studio (desktop).
 
 ## [1.0.8] — 2026-07-27
 
+### Windows build (first published 2026-07-29)
+The Windows 1.0.8 artifact additionally includes:
+- H.264 streaming enabled on Windows — the FFmpeg (LGPL) runtime now ships with the app. Matches Linux frame rate and frame pacing instead of falling back to MJPEG.
+- Networking and the whole frame pipeline (decode → transforms → virtual camera) moved off the GUI thread with latest-wins backpressure. Fixes disconnects and unresponsive camera controls while Meet/Zoom/OBS consume the virtual camera.
+- Media Foundation virtual camera: far less lock contention against the app, and it repeats the last frame instead of flashing grey between frames.
+- Auto-reconnect is persistent (exponential backoff, ~10 min) and reconnects instantly when the phone's beacon re-appears. TCP keepalive + NODELAY on the stream socket.
+- The process opts out of Windows 11 background power throttling while minimized behind the call app.
+
 ### New
 - Zoom the phone's camera with Ctrl+scroll on the preview; a ×N chip shows the level, click to reset. Coalesced CONTROL sends; phone echoes zoom/zoomMax.
 - Aspect ratio presets (Full / 16:9 / 4:3 / 1:1 / 9:16). MJPEG crops on-phone; H264 crops desktop-side after decode (mid-stream encoder resize desyncs the decoder).

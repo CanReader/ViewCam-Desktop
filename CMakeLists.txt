@@ -173,6 +173,7 @@ set(SOURCES
     src/core/Settings.cpp
     src/core/Logger.cpp
     src/core/QmlDevMode.cpp
+    src/core/FramePipeline.cpp
     src/network/StreamReceiver.cpp
     src/network/DeviceDiscovery.cpp
     src/network/FrameDecoder.cpp
@@ -191,6 +192,7 @@ set(HEADERS
     include/core/FrameData.h
     include/core/Logger.h
     include/core/QmlDevMode.h
+    include/core/FramePipeline.h
     include/network/StreamReceiver.h
     include/network/DeviceDiscovery.h
     include/network/FrameDecoder.h
@@ -483,6 +485,27 @@ if(WIN32)
         )
     else()
         message(WARNING "windeployqt not found — Qt DLLs will NOT be copied automatically.")
+    endif()
+
+    # Ship the FFmpeg runtime next to the exe (windeployqt knows nothing about
+    # it). LGPL-shared build only — dynamic linking keeps the proprietary app
+    # compliant. avcodec pulls in avutil + swresample; swscale is linked
+    # directly for the color-space conversion.
+    if(VC_FFMPEG_FOUND)
+        pkg_get_variable(_vc_ffmpeg_prefix libavcodec prefix)
+        file(GLOB _vc_ffmpeg_dlls
+            "${_vc_ffmpeg_prefix}/bin/avcodec-*.dll"
+            "${_vc_ffmpeg_prefix}/bin/avutil-*.dll"
+            "${_vc_ffmpeg_prefix}/bin/swscale-*.dll"
+            "${_vc_ffmpeg_prefix}/bin/swresample-*.dll")
+        if(_vc_ffmpeg_dlls)
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${_vc_ffmpeg_dlls} "${DEPLOY_DIR}"
+                COMMENT "Deploying FFmpeg runtime DLLs (H264 decode)")
+        else()
+            message(WARNING "FFmpeg found but no runtime DLLs under ${_vc_ffmpeg_prefix}/bin — H264 will fail to load at runtime.")
+        endif()
     endif()
 
 else()

@@ -89,6 +89,25 @@ void createWindowsAppMutex() {
   if (h == nullptr)
     VC_WARN("Could not create app mutex (installer may not detect us)");
 }
+
+// Opt out of Windows power throttling (EcoQoS) and background timer-resolution
+// coarsening. In the primary use case this app is MINIMIZED behind Meet/Zoom
+// while actively producing the virtual-camera feed — Windows 11 slowing a
+// "background" process here degrades the stream and its network servicing.
+void disableWindowsPowerThrottling() {
+#if defined(PROCESS_POWER_THROTTLING_EXECUTION_SPEED)
+  PROCESS_POWER_THROTTLING_STATE state{};
+  state.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
+  state.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED;
+#if defined(PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION)
+  state.ControlMask |= PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION;
+#endif
+  state.StateMask = 0; // 0 with bits in ControlMask = throttling OFF
+  if (!SetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling,
+                             &state, sizeof(state)))
+    VC_DEBUG("SetProcessInformation(PowerThrottling) failed: {}", GetLastError());
+#endif
+}
 #endif
 
 } // namespace
@@ -122,6 +141,8 @@ int main(int argc, char *argv[]) {
     // Hold a named mutex so the Inno Setup installer can detect + close this
     // running instance during an in-place upgrade (AppMutex / /CLOSEAPPLICATIONS).
     createWindowsAppMutex();
+    // Keep full speed while minimized behind the video-call app.
+    disableWindowsPowerThrottling();
 #endif
 
     // Post-update first-run: if relaunched by vc-updater with --just-updated,

@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QList>
 #include <QObject>
+#include <QThread>
 #include <QTimer>
 #include <QtQml/qqmlregistration.h>
 #include <memory>
@@ -25,6 +26,7 @@ class QJSEngine;
 class Settings;
 class StreamReceiver;
 class DeviceDiscovery;
+class FramePipeline;
 class FrameDecoder;
 class VirtualMicSink;
 class SystemAudioCapture;
@@ -114,8 +116,6 @@ private:
     explicit AppController(QObject *parent = nullptr);
     void init();
     QJsonArray advertisedCodecs() const;
-    void onImageReady(const QImage &image);
-    void publishFrame(const QImage &frame);
     void scheduleReconnect();
     // Start/stop the system-audio → phone speaker feed to match the current
     // (connected && phone-capable && enabled) state.
@@ -133,13 +133,14 @@ private:
     std::unique_ptr<Settings> m_settings;
     std::unique_ptr<StreamReceiver> m_receiver;
     std::unique_ptr<DeviceDiscovery> m_discovery;
-    std::unique_ptr<FrameDecoder> m_decoder;
 #ifdef __linux__
     std::unique_ptr<V4L2LoopbackWriter>   m_vcamWriter;
 #elif defined(_WIN32)
     std::unique_ptr<DirectShowVirtualCam> m_vcamWriter;
     std::unique_ptr<MFVirtualCamManager>  m_mfVirtualCam;
 #endif
+    // Frame work (decode/transform/vcam write) — lives on m_pipelineThread.
+    std::unique_ptr<FramePipeline> m_pipeline;
 
     std::unique_ptr<VirtualMicSink> m_micSink;
     std::unique_ptr<SystemAudioCapture> m_sysAudio;
@@ -174,16 +175,21 @@ private:
     QString m_activePage = QStringLiteral("liveview");
     bool m_firewallBlocked = false;
 
-    // Jitter buffer: holds up to bufferedFrames decoded frames for smooth display.
-    QList<QImage> m_frameBuffer;
+    // Worker threads. The socket must always be drained (net thread) and frame
+    // CPU work must never block the GUI (pipeline thread) — a saturated GUI
+    // event loop is what used to starve the socket, backpressure the phone,
+    // and drop the connection when Meet/Zoom opened the virtual camera.
+    QThread m_netThread;
+    QThread m_pipelineThread;
 
     QTimer m_reconnectTimer;
     QTimer m_receiveWatchdog;   // fires if no data arrives for RECEIVE_TIMEOUT_MS
     bool m_userDisconnect = false;
-    bool m_sawFirstFrame = false;
+    // True whenever a connection was lost unexpectedly and not yet re-established:
+    // keeps beacon-triggered self-heal armed even after the retry budget is spent.
+    bool m_wantReconnect = false;
     int m_reconnectAttempts = 0;
 
-    static constexpr int RECONNECT_DELAY_MS    = 2500;
-    static constexpr int RECONNECT_MAX_ATTEMPTS = 5;
+    static constexpr int RECONNECT_MAX_ATTEMPTS = 40;
     static constexpr int RECEIVE_TIMEOUT_MS    = 5000;
 };

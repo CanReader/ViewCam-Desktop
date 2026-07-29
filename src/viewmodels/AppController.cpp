@@ -3,6 +3,7 @@
 #include "audio/AudioEncoder.h"
 #include "audio/SystemAudioCapture.h"
 #include "audio/VirtualMicSink.h"
+#include "core/FramePipeline.h"
 #include "core/Logger.h"
 #include "core/Settings.h"
 #include "gpu/CudaBackend.h"
@@ -39,7 +40,6 @@ AppController::AppController(QObject *parent)
     : QObject(parent), m_settings(std::make_unique<Settings>()),
       m_receiver(std::make_unique<StreamReceiver>()),
       m_discovery(std::make_unique<DeviceDiscovery>()),
-      m_decoder(std::make_unique<FrameDecoder>()),
 #ifdef __linux__
       m_vcamWriter(std::make_unique<V4L2LoopbackWriter>()),
 #elif defined(_WIN32)
@@ -56,11 +56,29 @@ AppController::AppController(QObject *parent)
       m_cameraControl(std::make_unique<CameraControlViewModel>()),
       m_audio(std::make_unique<AudioViewModel>(m_settings.get())),
       m_frameSource(std::make_unique<FrameSource>()) {
+  // Constructed in the body (not the init list) so the writer pointer it
+  // captures is guaranteed fully constructed regardless of member order.
+  m_pipeline = std::make_unique<FramePipeline>(m_vcamWriter.get());
   s_instance = this;
   VC_DEBUG("AppController created");
 }
 
 AppController::~AppController() {
+  // Stop the worker threads BEFORE members are destroyed. Tear the socket
+  // down on its own thread first (blocking) so no cross-thread socket access
+  // remains, then stop both event loops. After wait() returns, destroying the
+  // (now thread-less) receiver/pipeline from this thread is safe.
+  if (m_netThread.isRunning()) {
+    QMetaObject::invokeMethod(
+        m_receiver.get(), [r = m_receiver.get()] { r->disconnect(); },
+        Qt::BlockingQueuedConnection);
+    m_netThread.quit();
+    m_netThread.wait();
+  }
+  if (m_pipelineThread.isRunning()) {
+    m_pipelineThread.quit();
+    m_pipelineThread.wait();
+  }
   m_gpuBackend.reset(); // backends release their device/context in their dtor
   s_instance = nullptr;
   VC_DEBUG("AppController destroyed");
@@ -112,32 +130,53 @@ void AppController::init() {
                 deviceId == m_connection->deviceId() && host != m_connection->host())
               return;
             m_deviceModel->addOrUpdate(deviceId, name, host, port);
+            // Self-heal: the phone we lost is beaconing again (rejoined Wi-Fi,
+            // app reopened, new DHCP lease). Reconnect immediately instead of
+            // waiting out the backoff timer — and even after the retry budget
+            // was exhausted.
+            if (m_wantReconnect && m_settingsVm->autoReconnect() &&
+                m_connection->state() == ConnectionViewModel::Disconnected &&
+                !m_connection->deviceId().isEmpty() &&
+                deviceId == m_connection->deviceId()) {
+              VC_INFO("Lost phone re-appeared at {} — reconnecting now",
+                      host.toStdString());
+              connectToDevice(name, host, port, deviceId);
+            }
           });
 
-  // receiver -> stats + decoder
+  // receiver -> stats (GUI, queued from the net thread; ~30 light events/s)
   connect(m_receiver.get(), &StreamReceiver::frameReceived, m_connection.get(),
           &ConnectionViewModel::onFrame);
-  connect(m_receiver.get(), &StreamReceiver::frameReceived, m_decoder.get(),
-          &FrameDecoder::decode);
+  // receiver -> pipeline: direct call ON the net thread into the pipeline's
+  // coalescing mailbox. Deliberately NOT a queued connection to the pipeline —
+  // the mailbox drops stale MJPEG frames when decode falls behind, so neither
+  // thread ever builds an unbounded event backlog and the socket always drains.
+  connect(m_receiver.get(), &StreamReceiver::frameReceived, m_receiver.get(),
+          [this](const FrameData &frame) { m_pipeline->submitFrame(frame); });
 
-  // decoder -> preview + virtual camera
-  connect(m_decoder.get(), &FrameDecoder::imageReady, this,
-          &AppController::onImageReady);
+  // pipeline -> GUI preview (+ snapshot source)
+  connect(m_pipeline.get(), &FramePipeline::previewReady, this,
+          [this](const QImage &image) {
+            m_lastFrame = image;
+            m_frameSource->publish(image);
+          });
 
-  // H264 lost sync (mid-stream join / decode hiccup): ask the phone for an
-  // IDR. Old phones ignore the unknown key — harmless.
-  connect(m_decoder.get(), &FrameDecoder::keyframeNeeded, this, [this]() {
-    m_receiver->sendControl(QJsonObject{{QStringLiteral("keyframe"), true}});
-  });
-  // Stateful H264 decoder must not carry reference frames across connections.
-  connect(m_receiver.get(), &StreamReceiver::disconnected, m_decoder.get(),
-          &FrameDecoder::resetStream);
+  // H264 lost sync (mid-stream join / decode hiccup / pipeline overflow): ask
+  // the phone for an IDR. Old phones ignore the unknown key — harmless.
+  // Context = receiver, so this runs on the net thread and writes directly.
+  connect(m_pipeline.get(), &FramePipeline::keyframeNeeded, m_receiver.get(),
+          [r = m_receiver.get()]() {
+            r->sendControl(QJsonObject{{QStringLiteral("keyframe"), true}});
+          });
+  // Stateful H264 decoder must not carry reference frames across connections;
+  // this also drops queued/buffered frames and blanks the preview.
+  connect(m_receiver.get(), &StreamReceiver::disconnected, m_pipeline.get(),
+          &FramePipeline::resetStream);
 
   // connection lifecycle — per protocol, "connected" is reached on HELLO, not
   // on the raw TCP socket coming up.
   connect(m_receiver.get(), &StreamReceiver::connected, this, [this]() {
     VC_INFO("TCP socket up, awaiting HELLO");
-    m_reconnectAttempts = 0;
     // Arm the watchdog for the TCP-up → HELLO gap: a phone that accepts the
     // socket but never sends HELLO would otherwise leave us in "Connecting"
     // forever (the watchdog used to start only on HELLO/frame/heartbeat).
@@ -146,6 +185,10 @@ void AppController::init() {
   connect(m_receiver.get(), &StreamReceiver::helloReceived, this,
           [this](const QString &name, const QString &os, int, int, int battery,
                  bool charging, const QString &lens, bool) {
+            // Reset the retry budget only on a COMPLETED handshake — resetting
+            // on the raw TCP connect let an accept-then-die phone loop forever.
+            m_reconnectAttempts = 0;
+            m_wantReconnect = false;
             m_connection->setHelloInfo(name, os);
             m_connection->setPowerStatus(battery, charging);
             m_connection->setLens(lens);
@@ -186,7 +229,8 @@ void AppController::init() {
   // error-only teardown left the vcam watermark switched OFF for the next phone.
   connect(m_connection.get(), &ConnectionViewModel::proChanged, this, [this]() {
     const bool pro = m_connection->pro();
-    m_vcamWriter->setWatermarkEnabled(!pro);
+    m_pipeline->setWatermarkEnabled(!pro);
+    m_pipeline->setPro(pro); // 4K cap re-applies on the next frame
     if (m_settingsVm->gpuProcessing())
       selectGpuBackend(); // Pro-gated GPU: re-evaluate CPU/GPU on entitlement flip
   });
@@ -302,12 +346,9 @@ void AppController::init() {
           [this](const QJsonObject &patch) { m_receiver->sendControl(patch); });
   connect(m_receiver.get(), &StreamReceiver::disconnected, this, [this]() {
     VC_INFO("Stream disconnected");
-    // Blank the preview NOW: the last decoded frame otherwise lingers in
-    // FrameView and flashes into the next connection (potentially another
-    // phone's image) until that session's first frame decodes. Also drop any
-    // queued frames so they can't replay into the new session.
-    m_frameBuffer.clear();
-    m_frameSource->publish(QImage());
+    // Preview blanking + queued-frame drop happen in FramePipeline::resetStream
+    // (connected to the same signal above) so no stale frame replays into the
+    // next session.
     // Audio teardown mirrors the video path: stop feeding the phone, drop the
     // per-session capability, zero the meter, and unload the virtual mic (a
     // writer-less pipe source must never linger — it wedges PipeWire).
@@ -358,6 +399,19 @@ void AppController::init() {
                 QJsonObject{{QStringLiteral("codecs"), advertisedCodecs()}});
           });
 
+  // GUI state the pipeline consumes per frame. Values are read here on the GUI
+  // thread and handed to the pipeline's thread-safe setters.
+  connect(m_settingsVm.get(), &SettingsViewModel::mirrorImageChanged, this,
+          [this]() { m_pipeline->setMirror(m_settingsVm->mirrorImage()); });
+  connect(m_settingsVm.get(), &SettingsViewModel::maxResolutionChanged, this,
+          [this]() { m_pipeline->setMaxResolutionIndex(m_settingsVm->maxResolution()); });
+  connect(m_settingsVm.get(), &SettingsViewModel::bufferedFramesChanged, this,
+          [this]() { m_pipeline->setBufferedFrames(m_settingsVm->bufferedFrames()); });
+  connect(m_cameraControl.get(), &CameraControlViewModel::aspectRatioChanged, this,
+          [this]() { m_pipeline->setAspectRatio(m_cameraControl->aspectRatio()); });
+  connect(m_virtualCam.get(), &VirtualCamViewModel::enabledChanged, this,
+          [this]() { m_pipeline->setVcamEnabled(m_virtualCam->enabled()); });
+
   // Dead-connection watchdog: if no data arrives for 5 s after HELLO, abort
   // the socket so the reconnect cycle fires (covers silent TCP loss / NAT expiry).
   m_receiveWatchdog.setSingleShot(true);
@@ -380,7 +434,7 @@ void AppController::init() {
           this, [this]() { m_receiveWatchdog.stop(); });
 
   m_reconnectTimer.setSingleShot(true);
-  m_reconnectTimer.setInterval(RECONNECT_DELAY_MS);
+  // Interval is set per attempt by scheduleReconnect() (exponential backoff).
   connect(&m_reconnectTimer, &QTimer::timeout, this, [this]() {
     if (m_connection->state() != ConnectionViewModel::Disconnected)
       return;
@@ -429,25 +483,38 @@ void AppController::init() {
   if (m_firewallBlocked)
     VC_WARN("Discovery may be blocked by Windows Firewall — no approved inbound rule found");
 #endif
-  // Deferred: open() can block for many seconds on first run (Linux: pkexec
-  // prompt + modprobe wait inside ensureModuleLoaded). init() runs before the
-  // QML window loads, so opening synchronously here froze startup and could
-  // pop a privilege dialog with no app window behind it. singleShot(0) queues
-  // it behind the initial QML load, after the window is up.
-  QTimer::singleShot(0, this, [this]() {
-    if (m_vcamWriter->open()) {
-#ifdef __linux__
-      m_virtualCam->setAvailable(
-          true, QString::fromStdString(m_vcamWriter->devicePath()));
-#else
-      m_virtualCam->setAvailable(true);
-#endif
-      VC_INFO("Virtual camera active");
-    } else {
-      m_virtualCam->setAvailable(false);
-      VC_WARN("Virtual camera not available, preview only");
-    }
-  });
+  // Seed the pipeline's config while it is still on this thread (its worker
+  // thread starts below), so the first frame already sees correct values.
+  m_pipeline->setMirror(m_settingsVm->mirrorImage());
+  m_pipeline->setMaxResolutionIndex(m_settingsVm->maxResolution());
+  m_pipeline->setBufferedFrames(m_settingsVm->bufferedFrames());
+  m_pipeline->setAspectRatio(m_cameraControl->aspectRatio());
+  m_pipeline->setVcamEnabled(m_virtualCam->enabled());
+  m_pipeline->setWatermarkEnabled(!m_connection->pro());
+  m_pipeline->setPro(m_connection->pro());
+
+  connect(m_pipeline.get(), &FramePipeline::vcamOpened, this,
+          [this](bool ok, const QString &devicePath) {
+            m_virtualCam->setAvailable(ok, devicePath);
+            if (ok)
+              VC_INFO("Virtual camera active");
+            else
+              VC_WARN("Virtual camera not available, preview only");
+          });
+
+  // Start the workers: socket I/O on m_netThread, frame work on m_pipelineThread.
+  m_netThread.setObjectName(QStringLiteral("vc-net"));
+  m_pipelineThread.setObjectName(QStringLiteral("vc-pipeline"));
+  m_receiver->moveToThread(&m_netThread);
+  m_pipeline->moveToThread(&m_pipelineThread);
+  m_netThread.start();
+  m_pipelineThread.start();
+
+  // open() can block for many seconds on first run (Linux: pkexec prompt +
+  // modprobe wait inside ensureModuleLoaded). It now runs on the pipeline
+  // thread, so startup and the GUI stay responsive regardless.
+  m_pipeline->openVcam();
+
   // NB: the virtual microphone is NOT opened here. A pipe source that sits
   // loaded with no writer destabilizes PipeWire's graph clock and can break
   // ALL system audio, so the device lives only while phone mic audio
@@ -492,7 +559,7 @@ void AppController::init() {
 void AppController::selectGpuBackend() {
   // Toggle OFF forces CPU; ON applies the auto policy (+ VIEWCAM_GPU_BACKEND).
   // GPU processing is Pro-gated: a free session forces CPU regardless of the
-  // persisted toggle, same anti-leak reasoning as the 4K cap in onImageReady().
+  // persisted toggle, same anti-leak reasoning as the pipeline's 4K cap.
   const bool gpuOn = m_settingsVm->gpuProcessing() && m_connection->pro();
   const GpuBackendKind kind =
       gpuOn ? GpuBackendKind::Auto : GpuBackendKind::Cpu;
@@ -522,92 +589,9 @@ QJsonArray AppController::advertisedCodecs() const {
   return codecs;
 }
 
-void AppController::onImageReady(const QImage &image) {
-  if (!m_sawFirstFrame) {
-    m_sawFirstFrame = true;
-    VC_INFO("First video frame decoded: {}x{} -> preview + virtual camera",
-            image.width(), image.height());
-  }
-
-  // Aspect-ratio preset: centered crop AFTER decode. The phone only pre-crops
-  // the MJPEG path (where each frame is independent); H264 always arrives as
-  // the full frame because resizing the phone's hardware encoder mid-stream
-  // desynced the decoder. Cropping here is a cheap lossless copy, makes both
-  // codecs behave identically, and works even for phones that don't understand
-  // the "aspect" control at all. No-op when the frame already matches (the
-  // MJPEG pre-crop case) or the ratio is "full". Frames are already upright
-  // here (FrameDecoder rotates), so the ratio applies directly.
-  QImage src = image;
-  const QString ar = m_cameraControl->aspectRatio();
-  if (ar != QStringLiteral("full") && !src.isNull()) {
-    const QStringList parts = ar.split(QLatin1Char(':'));
-    if (parts.size() == 2) {
-      const double target = parts[0].toDouble() / qMax(1.0, parts[1].toDouble());
-      const double have = double(src.width()) / double(src.height());
-      if (target > 0.0 && std::abs(have - target) > 0.01) {
-        int cw = src.width();
-        int ch = src.height();
-        if (have > target)
-          cw = int(src.height() * target) & ~1;
-        else
-          ch = int(src.width() / target) & ~1;
-        cw = qBound(2, cw, src.width());
-        ch = qBound(2, ch, src.height());
-        src = src.copy((src.width() - cw) / 2, (src.height() - ch) / 2, cw, ch);
-      }
-    }
-  }
-
-  // Cap at the max output resolution setting (0=720p, 1=1080p, 2=4K).
-  static const int kResW[] = {1280, 1920, 3840};
-  static const int kResH[] = {720,  1080, 2160};
-  int ri = qBound(0, m_settingsVm->maxResolution(), 2);
-  // 4K is a Pro feature. A free session (no phone Pro entitlement) is capped at
-  // 1080p regardless of the persisted setting — otherwise a device that once had
-  // a Pro phone connected keeps its 4K ceiling forever. Read live per frame so
-  // the cap re-applies the instant Pro ends (the QML row gate is cosmetic only).
-  if (!m_connection->pro())
-    ri = qMin(ri, 1);
-  QImage frame = (src.width() > kResW[ri] || src.height() > kResH[ri])
-      ? src.scaled(kResW[ri], kResH[ri], Qt::KeepAspectRatio, Qt::SmoothTransformation)
-      : src;
-
-  const int bufSize = m_settingsVm->bufferedFrames();
-  if (bufSize == 0) {
-    // Flush any queued frames before passing the new one through.
-    while (!m_frameBuffer.isEmpty())
-      publishFrame(m_frameBuffer.takeFirst());
-    publishFrame(frame);
-  } else {
-    // Jitter buffer: queue the incoming frame and display the oldest once
-    // we have enough to absorb a burst. Caps at 2×bufSize to avoid unbounded
-    // growth if the consumer stalls.
-    m_frameBuffer.append(frame);
-    while (m_frameBuffer.size() > bufSize * 2)
-      m_frameBuffer.removeFirst();
-    if (m_frameBuffer.size() > bufSize)
-      publishFrame(m_frameBuffer.takeFirst());
-  }
-}
-
-void AppController::publishFrame(const QImage &frame) {
-  // Apply the user "Mirror image" flip to the FRAME (not just the preview's
-  // sourceRect) so the preview AND the virtual-camera output agree — otherwise
-  // apps like Zoom/OBS saw the un-mirrored feed while the local preview was
-  // flipped. Front-camera mirroring is already baked in by FrameDecoder.
-  QImage out = frame;
-  if (m_settingsVm->mirrorImage()) {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
-    out = frame.flipped(Qt::Horizontal);
-#else
-    out = frame.mirrored(true, false);
-#endif
-  }
-  m_lastFrame = out; // keep the composited frame for snapshots
-  m_frameSource->publish(out);
-  if (m_virtualCam->available() && m_virtualCam->enabled())
-    m_vcamWriter->writeFrame(out);
-}
+// Frame processing (decode -> crop -> cap -> mirror -> preview/vcam) lives in
+// FramePipeline on its own thread — see core/FramePipeline.cpp. m_lastFrame is
+// refreshed on this thread by the previewReady connection in init().
 
 QString AppController::saveSnapshot() {
   if (m_lastFrame.isNull()) {
@@ -638,10 +622,10 @@ void AppController::connectToDevice(const QString &name, const QString &host,
   VC_INFO("Connecting to {} at {}:{}", name.toStdString(), host.toStdString(),
           port);
   m_userDisconnect = false;
-  m_sawFirstFrame = false;
+  m_wantReconnect = false;
   m_reconnectAttempts = 0;
   m_reconnectTimer.stop();
-  m_frameBuffer.clear();
+  m_pipeline->resetStream();
   m_settings->setLastHost(host);
   m_settings->setPort(port);
   m_connection->beginConnecting(name, host, port, deviceId);
@@ -659,9 +643,12 @@ void AppController::connectManual(const QString &ip) {
 void AppController::disconnectDevice() {
   VC_INFO("Disconnect requested by user");
   m_userDisconnect = true;
+  m_wantReconnect = false;
   m_reconnectTimer.stop();
-  m_frameBuffer.clear();
   m_receiver->disconnect();
+  // If the socket was already down no disconnected() fires — reset explicitly
+  // (idempotent) so no stale frames survive into the next session.
+  m_pipeline->resetStream();
   m_connection->markDisconnected();
   m_cameraControl->reset();
 }
@@ -737,15 +724,22 @@ void AppController::updateSpeakerCapture() {
 void AppController::scheduleReconnect() {
   if (!m_settingsVm->autoReconnect() || m_connection->host().isEmpty())
     return;
+  m_wantReconnect = true; // arms beacon-triggered self-heal in deviceFound
   // A single failed connection commonly fires BOTH disconnected and errorOccurred;
   // if a reconnect is already pending, don't count the same failure twice (which
   // would make us give up at half the intended attempts).
   if (m_reconnectTimer.isActive())
     return;
   if (++m_reconnectAttempts > RECONNECT_MAX_ATTEMPTS) {
-    VC_WARN("Auto-reconnect gave up after {} attempts", RECONNECT_MAX_ATTEMPTS);
+    VC_WARN("Auto-reconnect pausing after {} attempts — will resume the moment "
+            "the phone's beacon re-appears", RECONNECT_MAX_ATTEMPTS);
     m_reconnectAttempts = 0;
     return;
   }
-  m_reconnectTimer.start();
+  // Exponential backoff, capped: quick retries first for a blip (AP roam,
+  // phone app restart), then gentle steady retries for minutes-long outages.
+  static constexpr int kBackoffMs[] = {1000, 2000, 4000, 8000, 15000};
+  constexpr int kSteps = int(sizeof(kBackoffMs) / sizeof(kBackoffMs[0]));
+  const int idx = qMin(m_reconnectAttempts - 1, kSteps - 1);
+  m_reconnectTimer.start(kBackoffMs[idx]);
 }

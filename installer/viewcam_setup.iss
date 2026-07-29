@@ -6,7 +6,7 @@
 ; CI passes the release tag here; the fallback below is only for a bare local
 ; `iscc` and should track CMakeLists project(VERSION).
 #ifndef AppVersion
-  #define AppVersion   "1.0.5"
+  #define AppVersion   "1.0.8"
 #endif
 #define AppPublisher   "Sleak Software"
 #define AppURL         "https://viewcam.tech"

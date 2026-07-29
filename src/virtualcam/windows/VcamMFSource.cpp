@@ -129,6 +129,14 @@ private:
     void   *m_mapped  = nullptr;
     UINT64  m_lastFrm = 0;
     UINT64  m_tick    = 0;
+    // Staging + cache. The shared mutex is contended with the app's writer at
+    // frame rate; hold it only for a fast memcpy into m_bgrStage and run the
+    // (slow, per-pixel) NV12 conversion OUTSIDE the lock. m_nv12Cache repeats
+    // the last delivered frame when no new one arrived — repeating a frame is
+    // invisible in a call, flashing neutral grey is not.
+    BYTE   *m_bgrStage  = nullptr;   // W*H*3
+    BYTE   *m_nv12Cache = nullptr;   // NV12_SZ
+    bool    m_haveCache = false;
 };
 
 // ---- VcamMFSource ------------------------------------------------------------
@@ -316,6 +324,8 @@ VcamMFStream::~VcamMFStream() {
     if (m_hMem)    CloseHandle(m_hMem);
     if (m_hMutex)  CloseHandle(m_hMutex);
     if (m_hEvent)  CloseHandle(m_hEvent);
+    delete[] m_bgrStage;
+    delete[] m_nv12Cache;
     SAFE_RELEASE(m_sd);
     SAFE_RELEASE(m_q);
     m_src->Release();  // matched by AddRef in constructor
@@ -361,6 +371,10 @@ void VcamMFStream::EnsureHandles() {
         m_hMutex = OpenMutexW(SYNCHRONIZE, FALSE, ViewCam::MUTEX_NAME_W);
     if (!m_hEvent)
         m_hEvent = OpenEventW(SYNCHRONIZE, FALSE, ViewCam::EVENT_NAME_W);
+    if (!m_bgrStage)
+        m_bgrStage = new (std::nothrow) BYTE[W * H * 3];
+    if (!m_nv12Cache)
+        m_nv12Cache = new (std::nothrow) BYTE[NV12_SZ];
 }
 
 STDMETHODIMP VcamMFStream::RequestSample(IUnknown *token) {
@@ -383,26 +397,42 @@ HRESULT VcamMFStream::BuildAndQueueSample(IUnknown *token) {
     BYTE *pData = nullptr;
     pBuf->Lock(&pData, nullptr, nullptr);
 
-    bool got = false;
-    if (m_mapped && m_hMutex &&
-        WaitForSingleObject(m_hMutex, 16) == WAIT_OBJECT_0)
-    {
-        const auto *hdr = static_cast<const ViewCam::SharedFrameHeader *>(m_mapped);
-        if (hdr->magic == ViewCam::FRAME_MAGIC &&
-            hdr->frame_number != m_lastFrm &&
-            hdr->width == W && hdr->height == H)
-        {
-            const BYTE *raw = static_cast<const BYTE *>(m_mapped)
-                              + ViewCam::SHMEM_HEADER_SIZE;
-            Bgr24BottomUpToNV12(raw, pData);
-            m_lastFrm = hdr->frame_number;
-            got = true;
+    // Under the shared mutex do ONLY a fast memcpy into the staging buffer.
+    // The app's writer contends this mutex per frame — holding it through the
+    // per-pixel NV12 conversion made the writer skip frames (16 ms timeouts)
+    // whenever a consumer was pulling.
+    bool gotNew = false;
+    if (m_mapped && m_hMutex && m_bgrStage) {
+        DWORD wait = WaitForSingleObject(m_hMutex, 16);
+        if (wait == WAIT_OBJECT_0 || wait == WAIT_ABANDONED) {
+            const auto *hdr = static_cast<const ViewCam::SharedFrameHeader *>(m_mapped);
+            if (hdr->magic == ViewCam::FRAME_MAGIC &&
+                hdr->frame_number != m_lastFrm &&
+                hdr->width == W && hdr->height == H)
+            {
+                const BYTE *raw = static_cast<const BYTE *>(m_mapped)
+                                  + ViewCam::SHMEM_HEADER_SIZE;
+                memcpy(m_bgrStage, raw, W * H * 3);
+                m_lastFrm = hdr->frame_number;
+                gotNew = true;
+            }
+            ReleaseMutex(m_hMutex);
         }
-        ReleaseMutex(m_hMutex);
     }
 
-    if (!got) {
-        // No source running -- neutral grey (Y=128, UV=128)
+    // Convert OUTSIDE the lock, into the cache so an unchanged frame can be
+    // re-delivered next request.
+    if (gotNew && m_nv12Cache) {
+        Bgr24BottomUpToNV12(m_bgrStage, m_nv12Cache);
+        m_haveCache = true;
+    }
+
+    if (m_haveCache && m_nv12Cache) {
+        // New frame, or repeat of the last one when the app is between frames
+        // (slow stream, brief hiccup) — never flash grey mid-session.
+        memcpy(pData, m_nv12Cache, NV12_SZ);
+    } else {
+        // No source has ever produced a frame -- neutral grey (Y=128, UV=128)
         memset(pData,            128, W * H);
         memset(pData + W * H,    128, W * H / 2);
     }
