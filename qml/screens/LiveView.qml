@@ -7,7 +7,6 @@ Item {
 
     signal openLauncher
 
-    property bool micOff: false   // local UI state — no desktop audio backend wired yet
     property real volume: 0.6
 
     readonly property var conn: AppController.connection
@@ -413,8 +412,8 @@ Item {
                     VcIconButton {
                         anchors.verticalCenter: parent.verticalCenter
                         icon: "mic"
-                        off: root.micOff
-                        onClicked: root.micOff = !root.micOff
+                        off: !AppController.audio.micEnabled
+                        onClicked: AppController.audio.micEnabled = !AppController.audio.micEnabled
                     }
 
                     VcIconButton {

@@ -1,57 +1,70 @@
 import QtQuick
-import QtQuick.Effects
 import ViewCam.Studio
 
-// Sources page: audio inputs, output & monitoring, processing.
+// Sources page: Input (phone mic into this computer) and Output (this
+// computer's audio out to the phone speaker), as two sub-tabs.
 Flickable {
     id: root
 
     readonly property var s: AppController.settings
-    property var isBlurred: true
+    readonly property var audio: AppController.audio
+    readonly property bool phoneAudioReady: AppController.connection.connected && audio.phoneAudioCapable
 
-    contentHeight: content.implicitHeight + 128
+    // 0 = Input, 1 = Output
+    property int subTab: 0
+
+    contentHeight: content.y + content.implicitHeight + 128
     clip: true
 
-    Item {
-        id: contentContainer
+    Column {
+        id: content
         width: Math.min(Theme.contentMax, root.width - 80)
-        height: content.y + content.implicitHeight
         anchors.horizontalCenter: parent.horizontalCenter
-        layer.enabled: root.isBlurred
-        opacity: root.isBlurred ? 0 : 1
+        y: 48
+        spacing: 0
 
-        Column {
-            id: content
+        Text {
+            text: qsTr("Sources")
+            font.family: Theme.fontSans
+            font.pixelSize: 28
+            font.weight: Font.DemiBold
+            font.letterSpacing: -0.01 * 28
+            color: Theme.fg1
+        }
+
+        Item {
+            width: 1
+            height: 8
+        }
+
+        Text {
             width: parent.width
-            y: 48
+            text: qsTr("How this computer captures, mixes and plays back audio. The connected phone is already linked — no re-pairing needed.")
+            font.family: Theme.fontSans
+            font.pixelSize: 14
+            color: Theme.fg2
+            wrapMode: Text.WordWrap
+        }
+        Item {
+            width: 1
+            height: 20
+        }
+
+        VcSeg {
+            model: [qsTr("Input"), qsTr("Output")]
+            currentIndex: root.subTab
+            onActivated: i => root.subTab = i
+        }
+        Item {
+            width: 1
+            height: 20
+        }
+
+        // ── Input: the phone microphone into this computer ────────
+        Column {
+            width: parent.width
             spacing: 0
-
-            Text {
-                text: qsTr("Sources")
-                font.family: Theme.fontSans
-                font.pixelSize: 28
-                font.weight: Font.DemiBold
-                font.letterSpacing: -0.01 * 28
-                color: Theme.fg1
-            }
-
-            Item {
-                width: 1
-                height: 8
-            }
-
-            Text {
-                width: parent.width
-                text: qsTr("How this computer captures, mixes and plays back audio. The connected phone is already linked — no re-pairing needed.")
-                font.family: Theme.fontSans
-                font.pixelSize: 14
-                color: Theme.fg2
-                wrapMode: Text.WordWrap
-            }
-            Item {
-                width: 1
-                height: 24
-            }
+            visible: root.subTab === 0
 
             VcCard {
                 width: parent.width
@@ -62,19 +75,53 @@ Flickable {
                     icon: "mic"
                     accent: true
                     title: AppController.connection.connected ? AppController.connection.deviceName + qsTr(" — Microphone") : qsTr("Phone microphone")
-                    description: qsTr("From phone · Compressed 64 Kb/s · 48 kHz")
-                    VcMeter {
-                        running: AppController.connection.connected
+                    description: {
+                        if (!AppController.connection.connected)
+                            return qsTr("Connect a phone to stream its microphone");
+                        if (!root.audio.phoneAudioCapable)
+                            return qsTr("Update the phone app to stream audio");
+                        if (!root.audio.micEnabled)
+                            return qsTr("Muted · PCM 48 kHz");
+                        if (!root.audio.micPermission)
+                            return qsTr("Allow microphone access on the phone");
+                        return root.audio.micActive ? qsTr("Live · PCM 48 kHz mono")
+                                                    : qsTr("Waiting for phone audio…");
+                    }
+                    Row {
+                        spacing: 14
+                        VcMeter {
+                            anchors.verticalCenter: parent.verticalCenter
+                            // Real level while mic audio flows; the decorative
+                            // animation otherwise (a dead-flat meter reads as
+                            // broken, and with no signal there IS no level).
+                            level: root.audio.micActive ? root.audio.micLevel : -1
+                            running: AppController.connection.connected
+                        }
+                        VcToggle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            checked: root.audio.micEnabled
+                            onToggled: c => root.audio.micEnabled = c
+                        }
                     }
                 }
                 VcSettingRow {
-                    icon: "wave"
-                    accent: true
-                    title: qsTr("Capture system audio")
-                    description: qsTr("Record what you hear from this computer")
-                    VcToggle {
-                        checked: root.s.captureSystemAudio
-                        onToggled: c => root.s.captureSystemAudio = c
+                    icon: "volume"
+                    title: qsTr("Input volume")
+                    description: qsTr("Software gain on the phone microphone")
+                    Row {
+                        spacing: 12
+                        VcSlider {
+                            anchors.verticalCenter: parent.verticalCenter
+                            value: root.s.micVolume / 200
+                            onMoved: v => root.s.micVolume = Math.round(v * 200)
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.s.micVolume + "%"
+                            font.family: Theme.fontMono
+                            font.pixelSize: 12
+                            color: Theme.fg2
+                        }
                     }
                 }
                 VcSettingRow {
@@ -90,55 +137,12 @@ Flickable {
                 VcSettingRow {
                     icon: "loopback"
                     title: qsTr("Loopback device")
-                    description: qsTr("Virtual cable for routing to other apps")
+                    description: root.audio.virtualMicReady ? qsTr("Select it as the microphone in any app") : qsTr("Appears while the phone microphone is live")
                     Text {
-                        text: "ViewCam Audio"
+                        text: root.audio.virtualMicReady ? "ViewCam Microphone" : "—"
                         font.family: Theme.fontMono
                         font.pixelSize: 12
                         color: Theme.fg2
-                    }
-                }
-            }
-            Item {
-                width: 1
-                height: 24
-            }
-
-            VcCard {
-                width: parent.width
-                header: qsTr("Output & monitoring")
-
-                VcSettingRow {
-                    showDivider: false
-                    icon: "volume-waves"
-                    accent: true
-                    title: qsTr("Output device")
-                    description: qsTr("Where the return feed plays")
-                    Text {
-                        text: qsTr("System default")
-                        font.family: Theme.fontMono
-                        font.pixelSize: 12
-                        color: Theme.fg2
-                    }
-                }
-                VcSettingRow {
-                    icon: "volume"
-                    title: qsTr("Monitor volume")
-                    description: qsTr("Loopback monitoring level")
-                    Text {
-                        text: "72%"
-                        font.family: Theme.fontMono
-                        font.pixelSize: 12
-                        color: Theme.fg2
-                    }
-                }
-                VcSettingRow {
-                    icon: "meters"
-                    title: qsTr("Mute monitor while talking")
-                    description: qsTr("Avoid echo on calls")
-                    VcToggle {
-                        checked: root.s.monitorMute
-                        onToggled: c => root.s.monitorMute = c
                     }
                 }
             }
@@ -205,45 +209,95 @@ Flickable {
                 }
             }
         }
-    }
 
-    MultiEffect {
-        id: blur
-        anchors.fill: contentContainer
-        source: contentContainer
+        // ── Output: this computer's audio out to the phone speaker ─
+        Column {
+            width: parent.width
+            spacing: 0
+            visible: root.subTab === 1
 
-        blurEnabled: true
-        blurMax: 48
-        blur: 1.0
-        brightness: -0.02
+            VcCard {
+                width: parent.width
+                header: qsTr("Phone speaker")
 
-        visible: root.isBlurred
-    }
+                VcSettingRow {
+                    showDivider: false
+                    icon: "wave"
+                    accent: true
+                    title: qsTr("Capture system audio")
+                    description: {
+                        if (root.s.captureSystemAudio && root.phoneAudioReady && !root.audio.speakerCaptureRunning)
+                            return qsTr("No output device found to capture on this computer");
+                        return root.audio.speakerActive ? qsTr("Playing on the phone — wireless speaker") : qsTr("Play what you hear from this computer on the phone");
+                    }
+                    VcToggle {
+                        checked: root.s.captureSystemAudio
+                        onToggled: c => root.s.captureSystemAudio = c
+                    }
+                }
+                VcSettingRow {
+                    icon: "volume-waves"
+                    title: qsTr("Also play on this computer")
+                    description: root.s.localPlayback ? qsTr("This computer's speakers stay on while streaming") : qsTr("Phone only — this computer goes silent while streaming")
+                    VcToggle {
+                        checked: root.s.localPlayback
+                        onToggled: c => root.s.localPlayback = c
+                    }
+                }
+            }
+            Item {
+                width: 1
+                height: 24
+            }
 
-    MouseArea {
-        anchors.fill: contentContainer
-        enabled: root.isBlurred
-        visible: root.isBlurred
-    }
+            VcCard {
+                width: parent.width
+                header: qsTr("Output & monitoring")
 
-    Rectangle {
-        id: unavailableOverlay
-        anchors.centerIn: contentContainer
-        color: Qt.rgba(0.05, 0.07, 0.12, 0.05)
-        width: unavailableText.width + 20
-        height: unavailableText.height + 20
-        radius: 15
-        visible: root.isBlurred
-
-        Text {
-            id: unavailableText
-            anchors.centerIn: parent
-            text: qsTr("This feature is currently unavailable!\n Please wait for the next update...")
-            horizontalAlignment: Text.AlignHCenter
-            color: Theme.fg1
-            font.family: Theme.fontMono
-            font.pixelSize: 18
-            font.letterSpacing: -0.01 * 60
+                VcSettingRow {
+                    showDivider: false
+                    icon: "volume-waves"
+                    accent: true
+                    title: qsTr("Output device")
+                    description: qsTr("Where the return feed plays")
+                    Text {
+                        text: root.phoneAudioReady && root.audio.speakerActive
+                              ? AppController.connection.deviceName : qsTr("System default")
+                        font.family: Theme.fontMono
+                        font.pixelSize: 12
+                        color: Theme.fg2
+                    }
+                }
+                VcSettingRow {
+                    icon: "volume"
+                    title: qsTr("Speaker volume")
+                    description: qsTr("Level of the feed sent to the phone")
+                    Row {
+                        spacing: 12
+                        VcSlider {
+                            anchors.verticalCenter: parent.verticalCenter
+                            value: root.s.speakerVolume / 200
+                            onMoved: v => root.s.speakerVolume = Math.round(v * 200)
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.s.speakerVolume + "%"
+                            font.family: Theme.fontMono
+                            font.pixelSize: 12
+                            color: Theme.fg2
+                        }
+                    }
+                }
+                VcSettingRow {
+                    icon: "meters"
+                    title: qsTr("Mute monitor while talking")
+                    description: qsTr("Avoid echo on calls")
+                    VcToggle {
+                        checked: root.s.monitorMute
+                        onToggled: c => root.s.monitorMute = c
+                    }
+                }
+            }
         }
     }
 }

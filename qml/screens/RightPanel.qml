@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 import ViewCam.Studio
 
 // Right stats panel: network + device stats, device control, optimization,
@@ -14,7 +13,6 @@ Rectangle {
     readonly property var cc: AppController.cameraControl
     readonly property bool isPro: s.isPro || AppController.connection.pro   // Debug flag OR the connected phone's live Pro entitlement
 
-    property bool optimizationBlurred: true
 
     VcProGateDialog { id: proGate }
 
@@ -290,8 +288,6 @@ Rectangle {
                     id: optimizationContent
                     width: parent.width
                     spacing: 0
-                    layer.enabled: root.optimizationBlurred
-                    opacity: root.optimizationBlurred ? 0 : 1
 
                     Text {
                         text: qsTr("Optimization").toUpperCase()
@@ -369,42 +365,6 @@ Rectangle {
                             currentIndex: root.s.audioSampleRate
                             onActivated: i => root.s.audioSampleRate = i
                         }
-                    }
-                }
-
-                MultiEffect {
-                    anchors.fill: optimizationContent
-                    source: optimizationContent
-                    blurEnabled: true
-                    blurMax: 48
-                    blur: 1.0
-                    brightness: -0.02
-                    visible: root.optimizationBlurred
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: root.optimizationBlurred
-                    visible: root.optimizationBlurred
-                }
-
-                Rectangle {
-                    anchors.centerIn: parent
-                    visible: root.optimizationBlurred
-                    color: Qt.rgba(0.05, 0.07, 0.12, 0.05)
-                    width: optUnavailableText.width + 20
-                    height: optUnavailableText.height + 20
-                    radius: 15
-
-                    Text {
-                        id: optUnavailableText
-                        anchors.centerIn: parent
-                        text: qsTr("This feature is currently unavailable!\n Please wait for the next update...")
-                        horizontalAlignment: Text.AlignHCenter
-                        color: Theme.fg1
-                        font.family: Theme.fontMono
-                        font.pixelSize: 14
-                        font.letterSpacing: -0.01 * 60
                     }
                 }
             }
