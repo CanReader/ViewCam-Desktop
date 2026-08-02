@@ -95,6 +95,20 @@ void StreamReceiver::sendControl(const QJsonObject &patch) {
     VC_INFO("CONTROL -> phone: {}", body.constData());
 }
 
+void StreamReceiver::sendAudio(const QByteArray &payload, int sampleRate,
+                               int channels, vc::FrameFormat format) {
+    if (!isConnected() || payload.isEmpty()) return;
+    const QByteArray header = makeHeader(static_cast<quint32>(payload.size()),
+                                         static_cast<quint16>(sampleRate),
+                                         static_cast<quint16>(channels),
+                                         format, vc::FrameType::Audio);
+    if (m_socket->write(header)  != header.size() ||
+        m_socket->write(payload) != payload.size()) {
+        VC_ERROR("sendAudio write failed: {}", m_socket->errorString().toStdString());
+        emit errorOccurred(m_socket->errorString());
+    }
+}
+
 void StreamReceiver::onReadyRead() {
     m_buffer.append(m_socket->readAll());
     while (parseFrame()) {}
@@ -187,6 +201,12 @@ bool StreamReceiver::parseFrame() {
         emit frameReceived(frame);
         break;
     }
+    case vc::FrameFormat::AudioPcm:
+        // Spec §4.1: width carries the sample rate, height the channel count.
+        VC_TRACE("AUDIO frame {} Hz x{}, {} bytes", width, height, payloadLen);
+        if (width > 0 && height > 0 && payloadLen > 0)
+            emit audioReceived(payload, width, height);
+        break;
     }
     return true;
 }
@@ -223,6 +243,9 @@ void StreamReceiver::dispatchHello(const QByteArray &payload) {
     VC_INFO("HELLO from '{}' ({}), caps {}x{}, battery {}, charging {}, pro {}, lens '{}'",
             name.toStdString(), os.toStdString(), maxW, maxH, battery, charging,
             pro, lens.toStdString());
+    // Before helloReceived: AppController folds audio keys into the control
+    // snapshot it sends from its helloReceived handler. Absent ⇒ video-only.
+    emit audioCapableReceived(o.value("audio").toBool(false));
     emit helloReceived(name, os, maxW, maxH, battery, charging, lens, pro);
     emit proReceived(pro);
 
@@ -270,6 +293,9 @@ void StreamReceiver::dispatchStatus(const QByteArray &payload) {
 
 void StreamReceiver::onConnected() {
     m_connectTimer.stop();
+    // Disable Nagle: CONTROL and 20 ms speaker AUDIO chunks are small, and
+    // batching them for up to an RTT is pure added latency on a LAN.
+    m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
     VC_INFO("TCP connection established to {}:{}",
             m_socket->peerAddress().toString().toStdString(),
             m_socket->peerPort());

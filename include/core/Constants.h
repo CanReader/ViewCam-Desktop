@@ -43,13 +43,25 @@ enum class FrameFormat : uint8_t {
     Hello = 2,
     Heartbeat = 3, // zero-length keep-alive OR JSON STATUS body
     Control = 4,   // Desktop -> Phone camera control (JSON body)
+    AudioPcm = 5,  // Interleaved PCM s16le. width = sample rate (Hz), height =
+                   // channels. Phone -> Desktop = microphone, Desktop -> Phone
+                   // = speaker. Pre-audio builds ignore unknown formats.
+    AudioOpus = 6, // One 20 ms Opus packet (Desktop -> Phone speaker only,
+                   // sent when the phone's STATUS asked speakerCodec=opus).
+                   // width/height carry the DECODED rate/channels.
 };
 
 // header.type
 enum class FrameType : uint8_t {
     Video = 0,
     Control = 1,
+    Audio = 2,
 };
+
+// Audio profile shared by both directions (see CONNECTIVITY_PROTOCOL.md §4.1).
+inline constexpr int kAudioSampleRate = 48000;
+inline constexpr int kMicChannels = 1;     // phone mic -> desktop
+inline constexpr int kSpeakerChannels = 2; // desktop system audio -> phone
 
 // Default capture profile (modest, Wi-Fi friendly) — easy to change.
 inline constexpr int kDefaultCaptureWidth = 1280;

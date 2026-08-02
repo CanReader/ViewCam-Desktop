@@ -25,8 +25,18 @@ public:
     // is bidirectional: we keep reading VIDEO/STATUS while writing these.
     void sendControl(const QJsonObject &patch);
 
+    // Desktop -> Phone AUDIO frame (spec §4.1): one chunk of system audio for
+    // the phone-as-speaker path. format=5 PCM s16le, or format=6 one Opus
+    // packet (when the phone's STATUS asked speakerCodec=opus).
+    void sendAudio(const QByteArray &payload, int sampleRate, int channels,
+                   vc::FrameFormat format = vc::FrameFormat::AudioPcm);
+
 signals:
     void frameReceived(const FrameData &frame);          // VIDEO
+    // Phone microphone AUDIO frame (format=5, spec §4.1): PCM s16le.
+    void audioReceived(const QByteArray &pcm, int sampleRate, int channels);
+    // Phone can capture/play audio at all (HELLO "audio":true, phones ≥1.3.0).
+    void audioCapableReceived(bool capable);
     void helloReceived(const QString &name, const QString &os,
                        int maxW, int maxH,
                        int battery, bool charging,
