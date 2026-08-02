@@ -20,6 +20,9 @@ void Logger::init(Level level) {
         case Level::Error:    s_logger->set_level(spdlog::level::err);   break;
         case Level::Critical: s_logger->set_level(spdlog::level::critical); break;
     }
+    // Flush per message: log volume is low at these levels, and a buffered
+    // tail is exactly the part needed when diagnosing a hang or crash.
+    s_logger->flush_on(s_logger->level());
 }
 
 void Logger::shutdown() {
