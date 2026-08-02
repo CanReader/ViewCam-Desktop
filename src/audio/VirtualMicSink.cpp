@@ -402,7 +402,7 @@ void VirtualMicSink::writeAudio(const QByteArray &pcm) {
 // select "CABLE Output" as their microphone. Without VB-CABLE, open() fails
 // and the mic is preview/meter-only on Windows.
 
-#include "audio/windows/WasapiUtil.h"
+#include "windows/WasapiUtil.h"
 #include <atomic>
 #include <thread>
 
@@ -424,29 +424,22 @@ bool VirtualMicSink::open(int sampleRate, int channels) {
         m_priming = true;
     }
 
-    // Find the VB-CABLE render endpoint.
+    // Find any installed cable-style driver (VB-CABLE, Voicemeeter, VAC).
     vcwin::ComPtr<IMMDevice> cable;
     {
         vcwin::ScopedCom com;
         if (!com.ok) return false;
-        auto en = vcwin::makeEnumerator();
-        if (!en) return false;
-        vcwin::ComPtr<IMMDeviceCollection> devices;
-        if (FAILED(en->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &devices)))
-            return false;
-        UINT count = 0;
-        devices->GetCount(&count);
-        for (UINT i = 0; i < count && !cable; ++i) {
-            vcwin::ComPtr<IMMDevice> dev;
-            if (FAILED(devices->Item(i, &dev))) continue;
-            if (vcwin::deviceFriendlyName(dev.Get())
-                    .contains(QStringLiteral("CABLE Input"), Qt::CaseInsensitive))
-                cable = dev;
-        }
+        const vcwin::CablePair pair = vcwin::findCablePair();
+        cable = pair.render;
+        m_deviceName = pair.captureName;
+        if (cable)
+            VC_INFO("Virtual mic bridge: rendering into '{}', apps record from '{}'",
+                    pair.renderName.toStdString(), pair.captureName.toStdString());
     }
     if (!cable) {
-        VC_WARN("Virtual microphone unavailable: VB-CABLE not installed "
-                "(vb-audio.com/Cable) — mic stays meter-only on Windows");
+        VC_WARN("Virtual microphone unavailable: no virtual-cable driver "
+                "(install the free VB-CABLE, vb-audio.com/Cable) — mic stays "
+                "meter-only on Windows");
         return false;
     }
 

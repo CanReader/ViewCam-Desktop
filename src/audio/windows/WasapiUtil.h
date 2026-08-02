@@ -114,6 +114,49 @@ inline QString deviceFriendlyName(IMMDevice *dev) {
     return name;
 }
 
+// A virtual-cable driver pair: audio rendered into `render` re-appears at a
+// paired capture endpoint (`captureName`) that apps select as their mic.
+struct CablePair {
+    ComPtr<IMMDevice> render;
+    QString renderName;  // matched render endpoint, for logs
+    QString captureName; // what users pick in Zoom/OBS/etc.
+};
+
+// Find the first installed cable-style driver we can feed. Checked in
+// priority order so a PC with several drivers gets a deterministic pick.
+inline CablePair findCablePair() {
+    CablePair out;
+    auto en = makeEnumerator();
+    if (!en) return out;
+    ComPtr<IMMDeviceCollection> devices;
+    if (FAILED(en->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &devices)))
+        return out;
+    struct Known { const wchar_t *match; const wchar_t *mic; };
+    static const Known kKnown[] = {
+        {L"CABLE Input",         L"CABLE Output"},      // VB-CABLE
+        {L"Voicemeeter Input",   L"Voicemeeter Out"},   // Voicemeeter VAIO
+        {L"Voicemeeter VAIO",    L"Voicemeeter Out"},
+        {L"Virtual Audio Cable", L"Line 1"},            // E. Muzychenko VAC
+    };
+    UINT count = 0;
+    devices->GetCount(&count);
+    for (const auto &k : kKnown) {
+        for (UINT i = 0; i < count; ++i) {
+            ComPtr<IMMDevice> dev;
+            if (FAILED(devices->Item(i, &dev))) continue;
+            const QString name = deviceFriendlyName(dev.Get());
+            if (name.contains(QString::fromWCharArray(k.match),
+                              Qt::CaseInsensitive)) {
+                out.render = dev;
+                out.renderName = name;
+                out.captureName = QString::fromWCharArray(k.mic);
+                return out;
+            }
+        }
+    }
+    return out;
+}
+
 } // namespace vcwin
 
 #endif // _WIN32

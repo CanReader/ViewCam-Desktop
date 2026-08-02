@@ -191,7 +191,7 @@ void SystemAudioCapture::recoverStaleRouting(Settings *settings) {
 // use sampleRate()/channels(), not what it asked for). Always emitted as
 // 2-channel s16le in ~20 ms chunks. No driver required.
 
-#include "audio/windows/WasapiUtil.h"
+#include "windows/WasapiUtil.h"
 #include <atomic>
 #include <thread>
 
@@ -224,26 +224,14 @@ bool SystemAudioCapture::start(int, int, bool exclusive) {
         if (!en) return false;
         vcwin::ComPtr<IMMDevice> dev;
         if (FAILED(en->GetDefaultAudioEndpoint(eRender, eConsole, &dev))) {
-            vcwin::ComPtr<IMMDeviceCollection> devices;
-            if (SUCCEEDED(en->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE,
-                                                 &devices))) {
-                UINT count = 0;
-                devices->GetCount(&count);
-                for (UINT i = 0; i < count && !dev; ++i) {
-                    vcwin::ComPtr<IMMDevice> d;
-                    if (FAILED(devices->Item(i, &d))) continue;
-                    if (vcwin::deviceFriendlyName(d.Get()).contains(
-                            QStringLiteral("CABLE Input"), Qt::CaseInsensitive))
-                        dev = d;
-                }
-            }
+            dev = vcwin::findCablePair().render;
             if (!dev) {
                 VC_WARN("No playback device to capture — on a speakerless PC "
                         "install VB-CABLE (vb-audio.com/Cable) so apps have an "
                         "output and the phone can play it");
                 return false;
             }
-            VC_INFO("No default output — capturing VB-CABLE loopback instead");
+            VC_INFO("No default output — capturing the virtual-cable loopback instead");
         }
         vcwin::ComPtr<IAudioClient> probe;
         if (FAILED(dev->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,

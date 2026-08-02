@@ -29,6 +29,13 @@ public:
     void close();
     bool isOpen() const { return m_open; }
 
+    // What users select as the microphone in other apps: the cable pair's
+    // capture side on Windows ("CABLE Output"), the native node elsewhere.
+    QString deviceName() const {
+        return m_deviceName.isEmpty() ? QStringLiteral("ViewCam Microphone")
+                                      : m_deviceName;
+    }
+
     // Unload any viewcam_mic pipe-source a crashed previous run left behind
     // (a writer-less pipe source destabilizes PipeWire). Only relevant to the
     // pactl fallback — a native node can't outlive the process.
@@ -76,5 +83,6 @@ private:
     QString m_fifoPath;
     QString m_moduleId; // pactl module index, for unload on close
     int m_fd = -1;
-    void *m_win = nullptr; // Windows WASAPI state (opaque; audio/windows)
+    void *m_win = nullptr;  // Windows WASAPI state (opaque; audio/windows)
+    QString m_deviceName;   // Windows: cable capture endpoint; empty elsewhere
 };
