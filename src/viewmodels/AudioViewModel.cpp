@@ -43,6 +43,12 @@ void AudioViewModel::setVirtualMicReady(bool ready) {
     emit virtualMicReadyChanged();
 }
 
+void AudioViewModel::setMicSinkDevice(const QString &name) {
+    if (m_micSinkDevice == name) return;
+    m_micSinkDevice = name;
+    emit micSinkDeviceChanged();
+}
+
 void AudioViewModel::setSpeakerCaptureRunning(bool running) {
     if (m_speakerCaptureRunning == running) return;
     m_speakerCaptureRunning = running;

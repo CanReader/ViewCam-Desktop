@@ -135,14 +135,41 @@ Flickable {
                     }
                 }
                 VcSettingRow {
+                    id: loopbackRow
                     icon: "loopback"
                     title: qsTr("Loopback device")
-                    description: root.audio.virtualMicReady ? qsTr("Select it as the microphone in any app") : qsTr("Appears while the phone microphone is live")
+                    // Windows can't create a mic device in user space — a
+                    // cable driver (VB-CABLE et al.) provides it. When it's
+                    // missing, say so and link the fix instead of a dead "—".
+                    readonly property bool needsDriver:
+                        !root.audio.virtualMicReady &&
+                        Qt.platform.os === "windows" &&
+                        AppController.connection.connected &&
+                        root.audio.phoneAudioCapable &&
+                        root.audio.micEnabled
+                    description: {
+                        if (root.audio.virtualMicReady)
+                            return qsTr("Select it as the microphone in any app");
+                        if (needsDriver)
+                            return qsTr("Needs the free VB-CABLE driver — click to download, install, then toggle the mic");
+                        return qsTr("Appears while the phone microphone is live");
+                    }
                     Text {
-                        text: root.audio.virtualMicReady ? "ViewCam Microphone" : "—"
+                        text: {
+                            if (root.audio.virtualMicReady)
+                                return root.audio.micSinkDevice;
+                            return loopbackRow.needsDriver ? qsTr("Get VB-CABLE") : "—";
+                        }
                         font.family: Theme.fontMono
                         font.pixelSize: 12
-                        color: Theme.fg2
+                        color: loopbackRow.needsDriver ? Theme.iris : Theme.fg2
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -6
+                            enabled: loopbackRow.needsDriver
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: Qt.openUrlExternally("https://vb-audio.com/Cable/")
+                        }
                     }
                 }
             }

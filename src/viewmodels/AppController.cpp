@@ -695,12 +695,14 @@ void AppController::updateMicSink() {
   const bool shouldRun = m_connection->isConnected() &&
                          m_audio->phoneAudioCapable() &&
                          m_audio->micEnabled();
-  if (shouldRun && !m_micSink->isOpen())
-    m_audio->setVirtualMicReady(
-        m_micSink->open(vc::kAudioSampleRate, vc::kMicChannels));
-  else if (!shouldRun && m_micSink->isOpen()) {
+  if (shouldRun && !m_micSink->isOpen()) {
+    const bool ok = m_micSink->open(vc::kAudioSampleRate, vc::kMicChannels);
+    m_audio->setVirtualMicReady(ok);
+    m_audio->setMicSinkDevice(ok ? m_micSink->deviceName() : QString());
+  } else if (!shouldRun && m_micSink->isOpen()) {
     m_micSink->close();
     m_audio->setVirtualMicReady(false);
+    m_audio->setMicSinkDevice(QString());
   }
 }
 

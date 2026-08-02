@@ -32,6 +32,10 @@ class AudioViewModel : public QObject {
     Q_PROPERTY(bool phoneAudioCapable READ phoneAudioCapable NOTIFY phoneAudioCapableChanged)
     // The desktop-side virtual microphone opened (Linux: pipe source loaded).
     Q_PROPERTY(bool virtualMicReady READ virtualMicReady NOTIFY virtualMicReadyChanged)
+    // The device apps should record from while the mic is live: "ViewCam
+    // Microphone" on Linux, the cable pair's capture side on Windows
+    // ("CABLE Output"). Empty while the sink is closed.
+    Q_PROPERTY(QString micSinkDevice READ micSinkDevice NOTIFY micSinkDeviceChanged)
     // System-audio capture actually running (false + speakerEnabled = this
     // computer has no output device to capture — zero-speaker PC guidance).
     Q_PROPERTY(bool speakerCaptureRunning READ speakerCaptureRunning NOTIFY speakerCaptureRunningChanged)
@@ -54,9 +58,12 @@ public:
     void setSpeakerCaptureRunning(bool running);
     double micLevel() const { return m_micLevel; }
 
+    QString micSinkDevice() const { return m_micSinkDevice; }
+
     // Driven by AppController
     void setPhoneAudioCapable(bool capable);
     void setVirtualMicReady(bool ready);
+    void setMicSinkDevice(const QString &name);
     // "mic"/"speaker" echo from STATUS controls{} (absent keys = unchanged).
     void applyControlEcho(const QJsonObject &controls);
     // Feed a received mic PCM chunk (s16le) into the level meter.
@@ -71,6 +78,7 @@ signals:
     void micPermissionChanged();
     void phoneAudioCapableChanged();
     void virtualMicReadyChanged();
+    void micSinkDeviceChanged();
     void speakerCaptureRunningChanged();
     void micLevelChanged();
 
@@ -86,6 +94,7 @@ private:
     bool m_micPermission = true; // assume granted until the phone says otherwise
     bool m_phoneAudioCapable = false;
     bool m_virtualMicReady = false;
+    QString m_micSinkDevice;
     bool m_speakerCaptureRunning = false;
     double m_micLevel = 0.0;
     QElapsedTimer m_levelNotify; // throttles micLevelChanged to UI rates
