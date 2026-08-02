@@ -1,5 +1,8 @@
 #include "viewmodels/AppController.h"
 #include "ViewCamConfig.h"
+#include "audio/AudioEncoder.h"
+#include "audio/SystemAudioCapture.h"
+#include "audio/VirtualMicSink.h"
 #include "core/Logger.h"
 #include "core/Settings.h"
 #include "gpu/CudaBackend.h"
@@ -43,11 +46,15 @@ AppController::AppController(QObject *parent)
       m_vcamWriter(std::make_unique<DirectShowVirtualCam>()),
       m_mfVirtualCam(std::make_unique<MFVirtualCamManager>()),
 #endif
+      m_micSink(std::make_unique<VirtualMicSink>()),
+      m_sysAudio(std::make_unique<SystemAudioCapture>(m_settings.get())),
+      m_speakerEnc(std::make_unique<AudioEncoder>()),
       m_deviceModel(std::make_unique<DeviceListModel>()),
       m_connection(std::make_unique<ConnectionViewModel>()),
       m_virtualCam(std::make_unique<VirtualCamViewModel>()),
       m_settingsVm(std::make_unique<SettingsViewModel>(m_settings.get())),
       m_cameraControl(std::make_unique<CameraControlViewModel>()),
+      m_audio(std::make_unique<AudioViewModel>(m_settings.get())),
       m_frameSource(std::make_unique<FrameSource>()) {
   s_instance = this;
   VC_DEBUG("AppController created");
@@ -153,7 +160,16 @@ void AppController::init() {
             // connection to hardware H264 (huge fps/battery/bitrate win);
             // older phones ignore the key and keep sending MJPEG.
             snap[QStringLiteral("codecs")] = advertisedCodecs();
+            // Audio negotiation (spec §4.1): micEnabled starts the phone's
+            // capture, speakerEnabled announces the return feed. Sent only to
+            // audio-capable phones (audioCapableReceived fires before HELLO);
+            // older phones would ignore the unknown keys anyway.
+            if (m_audio->phoneAudioCapable()) {
+              snap[QStringLiteral("micEnabled")] = m_audio->micEnabled();
+              snap[QStringLiteral("speakerEnabled")] = m_audio->speakerEnabled();
+            }
             m_receiver->sendControl(snap);
+            updateSpeakerCapture();
           });
   // Phone Pro entitlement (HELLO + live STATUS): a paying user must not get the
   // free-tier watermark burned into their virtual camera, and 4K unlocks. On
@@ -185,6 +201,102 @@ void AppController::init() {
   // Phone-acknowledged control state (STATUS controls{}) -> reconcile the UI.
   connect(m_receiver.get(), &StreamReceiver::controlStateReceived,
           m_cameraControl.get(), &CameraControlViewModel::applyControls);
+
+  // ── Audio (spec §4.1) ────────────────────────────────────────────────────
+  // Phone capability flag from HELLO — gates every audio path this session.
+  connect(m_receiver.get(), &StreamReceiver::audioCapableReceived, this,
+          [this](bool capable) {
+            m_audio->setPhoneAudioCapable(capable);
+            updateMicSink();
+          });
+  // Phone mic PCM -> input volume gain -> virtual mic device + level meter.
+  connect(m_receiver.get(), &StreamReceiver::audioReceived, this,
+          [this](const QByteArray &pcm, int, int) {
+            if (!m_audio->micEnabled()) return; // mid-flight frames after mute
+            const QByteArray out =
+                applyGainPercent(pcm, m_settingsVm->micVolume());
+            m_micSink->writeAudio(out);
+            m_audio->reportMicChunk(out);
+          });
+  // Phone-acknowledged mic/speaker state (STATUS controls{}).
+  connect(m_receiver.get(), &StreamReceiver::controlStateReceived,
+          m_audio.get(), &AudioViewModel::applyControlEcho);
+  // Phone's speaker codec preference (Audio tab Quality): switch the outgoing
+  // feed between Opus (at the requested bitrate) and PCM live.
+  connect(m_receiver.get(), &StreamReceiver::controlStateReceived, this,
+          [this](const QJsonObject &controls) {
+            if (controls.contains(QStringLiteral("speakerCodec")))
+              m_speakerOpusWanted =
+                  controls.value(QStringLiteral("speakerCodec")).toString() ==
+                  QStringLiteral("opus");
+            if (controls.contains(QStringLiteral("speakerBitrate"))) {
+              const int b =
+                  controls.value(QStringLiteral("speakerBitrate")).toInt(64000);
+              m_speakerBitrate = qBound(6000, b, 512000);
+            }
+            m_opusFailedBitrate = 0; // fresh request — allow one open attempt
+          });
+  // Mic toggle (LiveView button) -> CONTROL patch; the phone starts/stops its
+  // recorder, so a muted mic costs zero bandwidth AND zero phone battery.
+  connect(m_audio.get(), &AudioViewModel::micEnabledChanged, this, [this]() {
+    if (!m_audio->micEnabled()) m_audio->resetLevel();
+    if (m_connection->isConnected() && m_audio->phoneAudioCapable())
+      m_receiver->sendControl(
+          QJsonObject{{QStringLiteral("micEnabled"), m_audio->micEnabled()}});
+    updateMicSink();
+  });
+  // Speaker toggle -> announce, then start/stop the system-audio capture.
+  connect(m_audio.get(), &AudioViewModel::speakerEnabledChanged, this, [this]() {
+    if (m_connection->isConnected() && m_audio->phoneAudioCapable())
+      m_receiver->sendControl(QJsonObject{
+          {QStringLiteral("speakerEnabled"), m_audio->speakerEnabled()}});
+    updateSpeakerCapture();
+  });
+  // Captured system audio -> speaker volume gain -> (Opus encode) -> phone.
+  // Rate/channels come from the CAPTURE, not the wire default: Windows
+  // WASAPI delivers the device mix rate (often 44100), and the phone honors
+  // whatever the frame header says.
+  connect(m_sysAudio.get(), &SystemAudioCapture::chunkReady, this,
+          [this](const QByteArray &pcm) {
+            const int rate = m_sysAudio->sampleRate();
+            const int channels = m_sysAudio->channels();
+            const QByteArray out =
+                applyGainPercent(pcm, m_settingsVm->speakerVolume());
+            // Codec follows the phone's live preference (Audio tab Quality):
+            // Opus at the chosen bitrate, PCM otherwise or when this build
+            // has no encoder. A failed open latches to PCM until the request
+            // changes — retrying every 20 ms chunk would just spam.
+            if (m_speakerOpusWanted && m_speakerBitrate != m_opusFailedBitrate) {
+              if (!m_speakerEnc->isOpen() ||
+                  m_speakerEnc->bitrate() != m_speakerBitrate) {
+                // libopus only accepts 8/12/16/24/48 kHz input; a 44.1 kHz
+                // mix falls back to PCM rather than resampling here.
+                if (!m_speakerEnc->open(rate, channels, m_speakerBitrate))
+                  m_opusFailedBitrate = m_speakerBitrate;
+              }
+              if (m_speakerEnc->isOpen()) {
+                const auto packets = m_speakerEnc->encode(out);
+                for (const QByteArray &p : packets)
+                  m_receiver->sendAudio(p, rate, channels,
+                                        vc::FrameFormat::AudioOpus);
+                return;
+              }
+            } else if (!m_speakerOpusWanted && m_speakerEnc->isOpen()) {
+              m_speakerEnc->close();
+            }
+            m_receiver->sendAudio(out, rate, channels);
+          });
+  // The Sources toggle persists via Settings; mirror it into runtime state.
+  m_audio->setSpeakerEnabled(m_settingsVm->captureSystemAudio());
+  connect(m_settingsVm.get(), &SettingsViewModel::captureSystemAudioChanged, this,
+          [this]() { m_audio->setSpeakerEnabled(m_settingsVm->captureSystemAudio()); });
+  // "Also play on this computer" flip mid-stream: restart the capture so it
+  // re-routes (shared @DEFAULT_MONITOR@ ↔ exclusive null-sink) atomically.
+  connect(m_settingsVm.get(), &SettingsViewModel::localPlaybackChanged, this,
+          [this]() {
+            if (m_sysAudio->isRunning()) m_sysAudio->stop();
+            updateSpeakerCapture();
+          });
   // User toggles -> CONTROL frame patch to the phone.
   connect(m_cameraControl.get(), &CameraControlViewModel::controlPatch, this,
           [this](const QJsonObject &patch) { m_receiver->sendControl(patch); });
@@ -196,6 +308,15 @@ void AppController::init() {
     // queued frames so they can't replay into the new session.
     m_frameBuffer.clear();
     m_frameSource->publish(QImage());
+    // Audio teardown mirrors the video path: stop feeding the phone, drop the
+    // per-session capability, zero the meter, and unload the virtual mic (a
+    // writer-less pipe source must never linger — it wedges PipeWire).
+    m_audio->setPhoneAudioCapable(false);
+    m_audio->applyControlEcho(QJsonObject{{QStringLiteral("mic"), false},
+                                          {QStringLiteral("speaker"), false},
+                                          {QStringLiteral("micPermission"), true}});
+    updateSpeakerCapture();
+    updateMicSink();
     const bool wasConnected = m_connection->isConnected();
     m_connection->markDisconnected();
     if (!m_userDisconnect && wasConnected && !m_connection->sessionLimited())
@@ -251,6 +372,8 @@ void AppController::init() {
           this, [this](const FrameData &) { m_receiveWatchdog.start(); });
   connect(m_receiver.get(), &StreamReceiver::heartbeatReceived,
           this, [this]() { m_receiveWatchdog.start(); });
+  connect(m_receiver.get(), &StreamReceiver::audioReceived,
+          this, [this](const QByteArray &, int, int) { m_receiveWatchdog.start(); });
   connect(m_receiver.get(), &StreamReceiver::statusReceived,
           this, [this](int, bool) { m_receiveWatchdog.start(); });
   connect(m_receiver.get(), &StreamReceiver::disconnected,
@@ -325,6 +448,42 @@ void AppController::init() {
       VC_WARN("Virtual camera not available, preview only");
     }
   });
+  // NB: the virtual microphone is NOT opened here. A pipe source that sits
+  // loaded with no writer destabilizes PipeWire's graph clock and can break
+  // ALL system audio, so the device lives only while phone mic audio
+  // actually flows — see updateMicSink().
+  //
+  // Crash aftermath repair (deferred, same reasoning as the vcam open): if a
+  // previous run died mid-session it may have left a viewcam module loaded —
+  // worst case the user's default sink is still our null sink, i.e. total
+  // silence. These touch the sound server ONLY when such leftovers exist.
+  QTimer::singleShot(0, this, [this]() {
+    SystemAudioCapture::recoverStaleRouting(m_settings.get());
+    m_micSink->cleanupStale();
+  });
+  // Dev-only harness (VIEWCAM_MIC_TEST=1): open the virtual mic with no phone
+  // and feed it a 440 Hz tone, so the node + latency path can be verified
+  // with parec alone. Never set in production launches.
+  if (qEnvironmentVariableIsSet("VIEWCAM_MIC_TEST")) {
+    QTimer::singleShot(0, this, [this]() {
+      m_audio->setVirtualMicReady(
+          m_micSink->open(vc::kAudioSampleRate, vc::kMicChannels));
+      auto *tone = new QTimer(this);
+      tone->setTimerType(Qt::PreciseTimer); // coarse timers fake wire jitter
+      tone->setInterval(20);
+      connect(tone, &QTimer::timeout, this, [this]() {
+        static int phase = 0;
+        QByteArray pcm(960 * 2, 0);
+        auto *s = reinterpret_cast<qint16 *>(pcm.data());
+        for (int i = 0; i < 960; ++i)
+          s[i] = qint16(12000 *
+                        std::sin(6.283185307179586 * 440.0 * (phase + i) / 48000.0));
+        phase += 960;
+        m_micSink->writeAudio(pcm);
+      });
+      tone->start();
+    });
+  }
 
   if (m_settingsVm->autoDiscovery())
     m_discovery->start();
@@ -526,6 +685,53 @@ void AppController::fixFirewall() {
         Qt::QueuedConnection);
   }).detach();
 #endif
+}
+
+QByteArray AppController::applyGainPercent(const QByteArray &pcm, int percent) {
+  const int p = qBound(0, percent, 200);
+  if (p == 100 || pcm.isEmpty()) return pcm;
+  QByteArray out(pcm);
+  auto *s = reinterpret_cast<qint16 *>(out.data());
+  const int n = int(out.size() / 2);
+  for (int i = 0; i < n; ++i) {
+    const int v = int(s[i]) * p / 100;
+    s[i] = qint16(qBound(-32768, v, 32767));
+  }
+  return out;
+}
+
+void AppController::updateMicSink() {
+  // The "ViewCam Microphone" pipe source exists ONLY while phone mic audio is
+  // actually being delivered. Loaded idle (no FIFO writer) it destabilizes
+  // PipeWire's graph clock and breaks unrelated system audio — so its
+  // lifetime is connect(+mic on) → disconnect, never app launch → quit.
+  const bool shouldRun = m_connection->isConnected() &&
+                         m_audio->phoneAudioCapable() &&
+                         m_audio->micEnabled();
+  if (shouldRun && !m_micSink->isOpen())
+    m_audio->setVirtualMicReady(
+        m_micSink->open(vc::kAudioSampleRate, vc::kMicChannels));
+  else if (!shouldRun && m_micSink->isOpen()) {
+    m_micSink->close();
+    m_audio->setVirtualMicReady(false);
+  }
+}
+
+void AppController::updateSpeakerCapture() {
+  const bool shouldRun = m_connection->isConnected() &&
+                         m_audio->phoneAudioCapable() &&
+                         m_audio->speakerEnabled();
+  if (shouldRun && !m_sysAudio->isRunning()) {
+    m_sysAudio->start(vc::kAudioSampleRate, vc::kSpeakerChannels,
+                      /*exclusive=*/!m_settingsVm->localPlayback());
+  } else if (!shouldRun && m_sysAudio->isRunning()) {
+    m_sysAudio->stop();
+    m_speakerEnc->close();
+  }
+  // Truthful UI: "enabled but not capturing" means this computer has no
+  // output device to tap (zero-speaker PC) — the row says so instead of
+  // pretending the phone is playing.
+  m_audio->setSpeakerCaptureRunning(m_sysAudio->isRunning());
 }
 
 void AppController::scheduleReconnect() {

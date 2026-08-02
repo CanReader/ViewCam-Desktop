@@ -142,7 +142,16 @@ VC_IMPL(int, listenPort, setListenPort, listenPortChanged, "connection/port", vc
 VC_IMPL(bool, autoReconnect, setAutoReconnect, autoReconnectChanged, "network/autoReconnect", true)
 VC_IMPL(bool, restrictSubnet, setRestrictSubnet, restrictSubnetChanged, "network/restrictSubnet", true)
 
-VC_IMPL(bool, captureSystemAudio, setCaptureSystemAudio, captureSystemAudioChanged, "sources/captureSystemAudio", true)
+// Off by default: streaming system audio to the phone is opt-in — nobody
+// should discover their desktop is broadcasting sound they didn't ask to send.
+VC_IMPL(bool, captureSystemAudio, setCaptureSystemAudio, captureSystemAudioChanged, "sources/captureSystemAudio", false)
+// Default true: enabling the speaker must not silently kill local sound —
+// phone-only is the explicit second step.
+VC_IMPL(bool, localPlayback, setLocalPlayback, localPlaybackChanged, "sources/localPlayback", true)
+// Software gains, percent (100 = unity, 200 = +6 dB). Applied desktop-side to
+// the respective PCM streams — see AppController::applyGainPercent.
+VC_IMPL(int, micVolume, setMicVolume, micVolumeChanged, "sources/micVolume", 100)
+VC_IMPL(int, speakerVolume, setSpeakerVolume, speakerVolumeChanged, "sources/speakerVolume", 100)
 VC_IMPL(int, appCapture, setAppCapture, appCaptureChanged, "sources/appCapture", 0)
 VC_IMPL(int, sampleRate, setSampleRate, sampleRateChanged, "sources/sampleRate", 1)
 VC_IMPL(int, bufferSize, setBufferSize, bufferSizeChanged, "sources/bufferSize", 1)

@@ -51,6 +51,13 @@ class SettingsViewModel : public QObject {
 
     // Sources / audio
     Q_PROPERTY(bool captureSystemAudio READ captureSystemAudio WRITE setCaptureSystemAudio NOTIFY captureSystemAudioChanged)
+    // While streaming system audio to the phone: keep playing on this
+    // computer's own output too (true), or go phone-only (false).
+    Q_PROPERTY(bool localPlayback READ localPlayback WRITE setLocalPlayback NOTIFY localPlaybackChanged)
+    // Software gain on the phone-mic input, percent (0-200, 100 = unity).
+    Q_PROPERTY(int micVolume READ micVolume WRITE setMicVolume NOTIFY micVolumeChanged)
+    // Software gain on the system-audio feed sent to the phone speaker.
+    Q_PROPERTY(int speakerVolume READ speakerVolume WRITE setSpeakerVolume NOTIFY speakerVolumeChanged)
     Q_PROPERTY(int appCapture READ appCapture WRITE setAppCapture NOTIFY appCaptureChanged)
     Q_PROPERTY(int sampleRate READ sampleRate WRITE setSampleRate NOTIFY sampleRateChanged)
     Q_PROPERTY(int bufferSize READ bufferSize WRITE setBufferSize NOTIFY bufferSizeChanged)
@@ -117,6 +124,12 @@ public:
 
     bool captureSystemAudio() const;
     void setCaptureSystemAudio(bool v);
+    bool localPlayback() const;
+    void setLocalPlayback(bool v);
+    int micVolume() const;
+    void setMicVolume(int v);
+    int speakerVolume() const;
+    void setSpeakerVolume(int v);
     int appCapture() const;
     void setAppCapture(int v);
     int sampleRate() const;
@@ -166,6 +179,9 @@ signals:
     void autoReconnectChanged();
     void restrictSubnetChanged();
     void captureSystemAudioChanged();
+    void localPlaybackChanged();
+    void micVolumeChanged();
+    void speakerVolumeChanged();
     void appCaptureChanged();
     void sampleRateChanged();
     void bufferSizeChanged();

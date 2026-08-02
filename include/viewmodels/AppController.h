@@ -11,6 +11,7 @@
 // Full includes (not forward declarations): the Q_PROPERTY pointer types
 // must be complete where the generated moc/registration code is compiled.
 #include "gpu/GpuBackend.h"
+#include "viewmodels/AudioViewModel.h"
 #include "viewmodels/CameraControlViewModel.h"
 #include "viewmodels/ConnectionViewModel.h"
 #include "viewmodels/DeviceListModel.h"
@@ -25,6 +26,9 @@ class Settings;
 class StreamReceiver;
 class DeviceDiscovery;
 class FrameDecoder;
+class VirtualMicSink;
+class SystemAudioCapture;
+class AudioEncoder;
 #ifdef __linux__
 class V4L2LoopbackWriter;
 #elif defined(_WIN32)
@@ -44,6 +48,7 @@ class AppController : public QObject {
     Q_PROPERTY(VirtualCamViewModel *virtualCam READ virtualCam CONSTANT)
     Q_PROPERTY(SettingsViewModel *settings READ settings CONSTANT)
     Q_PROPERTY(CameraControlViewModel *cameraControl READ cameraControl CONSTANT)
+    Q_PROPERTY(AudioViewModel *audio READ audio CONSTANT)
     Q_PROPERTY(FrameSource *frameSource READ frameSource CONSTANT)
     // Active GPU compute backend label (e.g. "CUDA · NVIDIA RTX 4050").
     Q_PROPERTY(QString gpuBackend READ gpuBackend NOTIFY gpuBackendChanged)
@@ -72,6 +77,7 @@ public:
     VirtualCamViewModel *virtualCam() const { return m_virtualCam.get(); }
     SettingsViewModel *settings() const { return m_settingsVm.get(); }
     CameraControlViewModel *cameraControl() const { return m_cameraControl.get(); }
+    AudioViewModel *audio() const { return m_audio.get(); }
     FrameSource *frameSource() const { return m_frameSource.get(); }
     QString gpuBackend() const { return m_gpuBackendLabel; }
     QString cudaVersion() const { return m_cudaVersion; }
@@ -111,6 +117,16 @@ private:
     void onImageReady(const QImage &image);
     void publishFrame(const QImage &frame);
     void scheduleReconnect();
+    // Start/stop the system-audio → phone speaker feed to match the current
+    // (connected && phone-capable && enabled) state.
+    void updateSpeakerCapture();
+    // Load/unload the "ViewCam Microphone" pipe source to match that same
+    // state. Never left loaded while idle — a writer-less pipe source
+    // destabilizes PipeWire and can break ALL system audio.
+    void updateMicSink();
+    // Software volume for the audio streams: percent 0-200, 100 = unity,
+    // s16 samples scaled with hard clip. Returns the input unchanged at 100.
+    static QByteArray applyGainPercent(const QByteArray &pcm, int percent);
 
     static AppController *s_instance;
 
@@ -125,11 +141,22 @@ private:
     std::unique_ptr<MFVirtualCamManager>  m_mfVirtualCam;
 #endif
 
+    std::unique_ptr<VirtualMicSink> m_micSink;
+    std::unique_ptr<SystemAudioCapture> m_sysAudio;
+    std::unique_ptr<AudioEncoder> m_speakerEnc;
+    // Phone's speaker codec preference from STATUS controls{} (spec §4.1).
+    bool m_speakerOpusWanted = false;
+    int m_speakerBitrate = 64000;
+    // Bitrate whose encoder open failed — latches PCM fallback until the
+    // phone asks for something new (no per-chunk retry spam).
+    int m_opusFailedBitrate = 0;
+
     std::unique_ptr<DeviceListModel> m_deviceModel;
     std::unique_ptr<ConnectionViewModel> m_connection;
     std::unique_ptr<VirtualCamViewModel> m_virtualCam;
     std::unique_ptr<SettingsViewModel> m_settingsVm;
     std::unique_ptr<CameraControlViewModel> m_cameraControl;
+    std::unique_ptr<AudioViewModel> m_audio;
     std::unique_ptr<FrameSource> m_frameSource;
 
     // Last frame published to preview/vcam (post-mirror) — the snapshot source.

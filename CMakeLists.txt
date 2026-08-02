@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(ViewCam
-    VERSION 1.0.8
+    VERSION 1.1.0
     DESCRIPTION "Turn your phone into a virtual webcam"
     HOMEPAGE_URL "https://viewcam.tech"
     LANGUAGES C CXX)
@@ -177,6 +177,9 @@ set(SOURCES
     src/network/DeviceDiscovery.cpp
     src/network/FrameDecoder.cpp
     src/network/H264Decoder.cpp
+    src/audio/VirtualMicSink.cpp
+    src/audio/SystemAudioCapture.cpp
+    src/audio/AudioEncoder.cpp
     src/gpu/GpuBackendFactory.cpp
     src/gpu/CudaBackend.cpp
     src/gpu/VulkanComputeBackend.cpp
@@ -192,6 +195,9 @@ set(HEADERS
     include/network/DeviceDiscovery.h
     include/network/FrameDecoder.h
     include/network/H264Decoder.h
+    include/audio/VirtualMicSink.h
+    include/audio/SystemAudioCapture.h
+    include/audio/AudioEncoder.h
     include/gpu/GpuBackend.h
     include/gpu/GpuFrameFilter.h
     include/gpu/CpuBackend.h
@@ -302,6 +308,8 @@ qt_add_qml_module(${PROJECT_NAME}
         src/viewmodels/ConnectionViewModel.cpp
         include/viewmodels/CameraControlViewModel.h
         src/viewmodels/CameraControlViewModel.cpp
+        include/viewmodels/AudioViewModel.h
+        src/viewmodels/AudioViewModel.cpp
         include/viewmodels/DeviceListModel.h
         src/viewmodels/DeviceListModel.cpp
         include/viewmodels/FrameView.h
@@ -349,6 +357,26 @@ if(UNIX AND SPDLOG_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${SPDLOG_LIBRARIES})
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog)
+endif()
+
+# ── PipeWire (OPTIONAL, Linux): native "ViewCam Microphone" source node ──────
+# Found → the virtual mic is a first-class pw_stream (lowest latency, crash-
+# safe). Not found (or no daemon at runtime) → pactl module-pipe-source
+# fallback, which also covers pure-PulseAudio systems.
+if(LINUX)
+    if(NOT PkgConfig_FOUND)
+        find_package(PkgConfig QUIET)
+    endif()
+    if(PkgConfig_FOUND)
+        pkg_check_modules(VC_PIPEWIRE IMPORTED_TARGET libpipewire-0.3)
+    endif()
+    if(VC_PIPEWIRE_FOUND)
+        target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::VC_PIPEWIRE)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE VIEWCAM_HAVE_PIPEWIRE)
+        message(STATUS "ViewCam: libpipewire found — native virtual mic ENABLED")
+    else()
+        message(STATUS "ViewCam: libpipewire NOT found — pactl pipe-source fallback")
+    endif()
 endif()
 
 # ── FFmpeg (OPTIONAL): H264 decode for the phone's hardware encoder ──────────
