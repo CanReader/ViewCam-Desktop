@@ -35,7 +35,7 @@ signals:
     void frameReceived(const FrameData &frame);          // VIDEO
     // Phone microphone AUDIO frame (format=5, spec §4.1): PCM s16le.
     void audioReceived(const QByteArray &pcm, int sampleRate, int channels);
-    // Phone can capture/play audio at all (HELLO "audio":true, phones ≥1.3.0).
+    // Phone can capture/play audio at all (HELLO "audio":true, phones ≥2.0.0).
     void audioCapableReceived(bool capable);
     void helloReceived(const QString &name, const QString &os,
                        int maxW, int maxH,

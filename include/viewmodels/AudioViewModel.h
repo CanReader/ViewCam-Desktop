@@ -28,7 +28,7 @@ class AudioViewModel : public QObject {
     // False when the phone reported RECORD_AUDIO is not granted — the UI can
     // then say WHY the mic is silent instead of "waiting" forever.
     Q_PROPERTY(bool micPermission READ micPermission NOTIFY micPermissionChanged)
-    // The connected phone can do audio at all (HELLO "audio":true, ≥1.3.0).
+    // The connected phone can do audio at all (HELLO "audio":true, ≥2.0.0).
     Q_PROPERTY(bool phoneAudioCapable READ phoneAudioCapable NOTIFY phoneAudioCapableChanged)
     // The desktop-side virtual microphone opened (Linux: pipe source loaded).
     Q_PROPERTY(bool virtualMicReady READ virtualMicReady NOTIFY virtualMicReadyChanged)
