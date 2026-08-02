@@ -19,3 +19,7 @@ compile_flags.txt
 
 # Update signing PRIVATE key — NEVER commit (public key + hex are safe to commit)
 release/update-signing-key.pem
+release/ftp.netrc
+
+# Staged third-party driver installers (VB-CABLE is not redistributable)
+tools/VBCABLE/
