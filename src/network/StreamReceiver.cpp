@@ -126,6 +126,19 @@ void StreamReceiver::sendControl(const QJsonObject &patch) {
 
 void StreamReceiver::sendAudio(const QByteArray &payload, int sampleRate,
                                int channels, vc::FrameFormat format) {
+    // Called from the GUI thread (system-audio chunkReady handler) at ~50
+    // chunks/s; the socket lives on the network thread. An unmarshaled write
+    // would interleave with the net thread's own control writes and corrupt
+    // the outgoing frame stream — same self-marshal as sendControl().
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(
+            this,
+            [this, payload, sampleRate, channels, format] {
+                sendAudio(payload, sampleRate, channels, format);
+            },
+            Qt::QueuedConnection);
+        return;
+    }
     if (!isConnected() || payload.isEmpty()) return;
     const QByteArray header = makeHeader(static_cast<quint32>(payload.size()),
                                          static_cast<quint16>(sampleRate),
