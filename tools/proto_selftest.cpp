@@ -14,7 +14,7 @@
 #include "virtualcam/V4L2LoopbackWriter.h"
 
 #include <QBuffer>
-#include <QCoreApplication>
+#include <QGuiApplication>
 #include <QImage>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -44,7 +44,11 @@ static QByteArray makeHeader(quint32 payloadLen, quint16 w, quint16 h,
 
 int main(int argc, char *argv[]) {
   Logger::init(Logger::Level::Info);
-  QCoreApplication app(argc, argv);
+  // QGuiApplication (offscreen), NOT QCoreApplication: the vcam writer draws
+  // the free-tier watermark with QFont, and the font database is fatal
+  // without a Gui application — headless runs abort inside writeFrame.
+  qputenv("QT_QPA_PLATFORM", "offscreen");
+  QGuiApplication app(argc, argv);
 
   const QString sample =
       argc > 1 ? argv[1]
