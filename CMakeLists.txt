@@ -178,6 +178,7 @@ set(SOURCES
     src/network/DeviceDiscovery.cpp
     src/network/FrameDecoder.cpp
     src/network/H264Decoder.cpp
+    src/network/AudioChannel.cpp
     src/audio/VirtualMicSink.cpp
     src/audio/SystemAudioCapture.cpp
     src/audio/AudioEncoder.cpp
@@ -198,6 +199,7 @@ set(HEADERS
     include/network/DeviceDiscovery.h
     include/network/FrameDecoder.h
     include/network/H264Decoder.h
+    include/network/AudioChannel.h
     include/audio/VirtualMicSink.h
     include/audio/SystemAudioCapture.h
     include/audio/AudioEncoder.h
