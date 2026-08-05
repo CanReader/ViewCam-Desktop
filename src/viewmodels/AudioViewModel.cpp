@@ -83,6 +83,18 @@ void AudioViewModel::setSpeakerActive(bool on) {
     emit speakerActiveChanged();
 }
 
+void AudioViewModel::setMicStats(const QString &codec, const QString &transport,
+                                 int latencyMs) {
+    // Quantize latency to 5 ms so the label doesn't flicker.
+    const int q = (latencyMs / 5) * 5;
+    if (codec == m_micCodec && transport == m_micTransport && q == m_micLatencyMs)
+        return;
+    m_micCodec = codec;
+    m_micTransport = transport;
+    m_micLatencyMs = q;
+    emit micStatsChanged();
+}
+
 void AudioViewModel::reportMicChunk(const QByteArray &pcm) {
     const auto *samples = reinterpret_cast<const qint16 *>(pcm.constData());
     const int n = int(pcm.size() / 2);

@@ -41,6 +41,11 @@ class AudioViewModel : public QObject {
     Q_PROPERTY(bool speakerCaptureRunning READ speakerCaptureRunning NOTIFY speakerCaptureRunningChanged)
     // Smoothed mic level 0..1 from real received PCM — drives the meters.
     Q_PROPERTY(double micLevel READ micLevel NOTIFY micLevelChanged)
+    // Live stream facts for the Sources row: codec ("Opus"/"PCM"), transport
+    // ("UDP"/"TCP"), and the current end-to-end-ish latency estimate.
+    Q_PROPERTY(QString micCodec READ micCodec NOTIFY micStatsChanged)
+    Q_PROPERTY(QString micTransport READ micTransport NOTIFY micStatsChanged)
+    Q_PROPERTY(int micLatencyMs READ micLatencyMs NOTIFY micStatsChanged)
 
 public:
     explicit AudioViewModel(Settings *settings, QObject *parent = nullptr);
@@ -54,6 +59,10 @@ public:
     bool micPermission() const { return m_micPermission; }
     bool phoneAudioCapable() const { return m_phoneAudioCapable; }
     bool virtualMicReady() const { return m_virtualMicReady; }
+    QString micCodec() const { return m_micCodec; }
+    QString micTransport() const { return m_micTransport; }
+    int micLatencyMs() const { return m_micLatencyMs; }
+    void setMicStats(const QString &codec, const QString &transport, int latencyMs);
     bool speakerCaptureRunning() const { return m_speakerCaptureRunning; }
     void setSpeakerCaptureRunning(bool running);
     double micLevel() const { return m_micLevel; }
@@ -81,6 +90,7 @@ signals:
     void micSinkDeviceChanged();
     void speakerCaptureRunningChanged();
     void micLevelChanged();
+    void micStatsChanged();
 
 private:
     void setMicActive(bool on);
@@ -97,5 +107,8 @@ private:
     QString m_micSinkDevice;
     bool m_speakerCaptureRunning = false;
     double m_micLevel = 0.0;
+    QString m_micCodec;
+    QString m_micTransport;
+    int m_micLatencyMs = 0;
     QElapsedTimer m_levelNotify; // throttles micLevelChanged to UI rates
 };

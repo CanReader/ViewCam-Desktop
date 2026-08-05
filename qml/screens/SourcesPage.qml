@@ -83,7 +83,12 @@ Flickable {
                             return qsTr("Muted · PCM 48 kHz");
                         if (!root.audio.micPermission)
                             return qsTr("Allow microphone access on the phone");
-                        return root.audio.micActive ? qsTr("Live · PCM 48 kHz mono")
+                        if (root.audio.micActive && root.audio.micCodec !== "")
+                            return qsTr("Live · %1 · %2 · ~%3 ms")
+                                .arg(root.audio.micCodec)
+                                .arg(root.audio.micTransport)
+                                .arg(root.audio.micLatencyMs);
+                        return root.audio.micActive ? qsTr("Live · 48 kHz")
                                                     : qsTr("Waiting for phone audio…");
                     }
                     Row {
