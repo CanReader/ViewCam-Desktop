@@ -244,10 +244,12 @@ bool StreamReceiver::parseFrame() {
         break;
     }
     case vc::FrameFormat::AudioPcm:
+    case vc::FrameFormat::AudioOpus:
         // Spec §4.1: width carries the sample rate, height the channel count.
-        VC_TRACE("AUDIO frame {} Hz x{}, {} bytes", width, height, payloadLen);
+        VC_TRACE("AUDIO frame fmt={} {} Hz x{}, {} bytes",
+                 static_cast<int>(format), width, height, payloadLen);
         if (width > 0 && height > 0 && payloadLen > 0)
-            emit audioReceived(payload, width, height);
+            emit audioReceived(payload, width, height, format);
         break;
     }
     return true;

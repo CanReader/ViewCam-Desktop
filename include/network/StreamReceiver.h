@@ -33,8 +33,11 @@ public:
 
 signals:
     void frameReceived(const FrameData &frame);          // VIDEO
-    // Phone microphone AUDIO frame (format=5, spec §4.1): PCM s16le.
-    void audioReceived(const QByteArray &pcm, int sampleRate, int channels);
+    // Phone microphone AUDIO frame (spec §4.1): format 5 = PCM s16le payload,
+    // format 6 = one Opus packet (phones ≥2.1 when the desktop advertised
+    // "opus" in audioCodecs).
+    void audioReceived(const QByteArray &payload, int sampleRate, int channels,
+                       vc::FrameFormat format);
     // Phone can capture/play audio at all (HELLO "audio":true, phones ≥2.0.0).
     void audioCapableReceived(bool capable);
     void helloReceived(const QString &name, const QString &os,
