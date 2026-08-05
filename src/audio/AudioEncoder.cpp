@@ -32,8 +32,8 @@ bool AudioEncoder::open(int sampleRate, int channels, int bitrate) {
     m_ctx->sample_fmt = AV_SAMPLE_FMT_S16;
     m_ctx->bit_rate = bitrate;
     m_ctx->time_base = AVRational{1, sampleRate};
-    // 20 ms frames to match the capture chunking 1:1.
-    av_opt_set_double(m_ctx->priv_data, "frame_duration", 20.0, 0);
+    // 10 ms frames to match the capture chunking 1:1 (half the framing delay).
+    av_opt_set_double(m_ctx->priv_data, "frame_duration", 10.0, 0);
     // Low-delay tuning: no lookahead worth blocking on for a live feed.
     av_opt_set(m_ctx->priv_data, "application", "lowdelay", 0);
 

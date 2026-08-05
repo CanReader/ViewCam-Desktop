@@ -65,8 +65,9 @@ bool SystemAudioCapture::start(int sampleRate, int channels, bool exclusive) {
         ? QStringLiteral("%1.monitor").arg(QLatin1String(kNullSinkName))
         : QStringLiteral("@DEFAULT_MONITOR@");
 
-    // 20 ms of interleaved s16le — one wire AUDIO frame per chunk.
-    m_chunkBytes = sampleRate / 50 * channels * 2;
+    // 10 ms of interleaved s16le — one wire AUDIO frame per chunk. Half the
+    // capture granularity = ~10 ms less end-to-end speaker latency.
+    m_chunkBytes = sampleRate / 100 * channels * 2;
     m_buffer.clear();
 
     m_proc = new QProcess(this);
@@ -89,7 +90,7 @@ bool SystemAudioCapture::start(int sampleRate, int channels, bool exclusive) {
                   {QStringLiteral("--format=s16le"),
                    QStringLiteral("--rate=%1").arg(sampleRate),
                    QStringLiteral("--channels=%1").arg(channels),
-                   QStringLiteral("--latency-msec=20"),
+                   QStringLiteral("--latency-msec=10"),
                    QStringLiteral("--raw"),
                    QStringLiteral("--device=%1").arg(device)});
     if (!m_proc->waitForStarted(3000)) {
@@ -277,7 +278,7 @@ bool SystemAudioCapture::start(int, int, bool exclusive) {
         VC_INFO("System audio capture started (WASAPI loopback, {} Hz mix, {} ch)",
                 fmt.rate, fmt.channels);
 
-        const int chunkBytes = fmt.rate / 50 * 2 /*ch*/ * 2 /*s16*/;
+        const int chunkBytes = fmt.rate / 100 * 2 /*ch*/ * 2 /*s16*/;
         QByteArray pending;
 
         while (state->run) {
