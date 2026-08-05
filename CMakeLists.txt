@@ -181,6 +181,7 @@ set(SOURCES
     src/audio/VirtualMicSink.cpp
     src/audio/SystemAudioCapture.cpp
     src/audio/AudioEncoder.cpp
+    src/audio/AudioDecoder.cpp
     src/gpu/GpuBackendFactory.cpp
     src/gpu/CudaBackend.cpp
     src/gpu/VulkanComputeBackend.cpp
@@ -200,6 +201,7 @@ set(HEADERS
     include/audio/VirtualMicSink.h
     include/audio/SystemAudioCapture.h
     include/audio/AudioEncoder.h
+    include/audio/AudioDecoder.h
     include/gpu/GpuBackend.h
     include/gpu/GpuFrameFilter.h
     include/gpu/CpuBackend.h
