@@ -25,12 +25,14 @@ class QJSEngine;
 
 class Settings;
 class StreamReceiver;
+class AudioChannel;
 class DeviceDiscovery;
 class FramePipeline;
 class FrameDecoder;
 class VirtualMicSink;
 class SystemAudioCapture;
 class AudioEncoder;
+class AudioDecoder;
 #ifdef __linux__
 class V4L2LoopbackWriter;
 #elif defined(_WIN32)
@@ -124,6 +126,10 @@ private:
     // state. Never left loaded while idle — a writer-less pipe source
     // destabilizes PipeWire and can break ALL system audio.
     void updateMicSink();
+    // Shared mic-audio ingest for both transports (TCP stream / UDP channel):
+    // optional Opus decode, gain, sink, meter, and the live stats label.
+    void onMicAudio(const QByteArray &payload, int sampleRate, int channels,
+                    vc::FrameFormat format, bool viaUdp);
     // Software volume for the audio streams: percent 0-200, 100 = unity,
     // s16 samples scaled with hard clip. Returns the input unchanged at 100.
     static QByteArray applyGainPercent(const QByteArray &pcm, int percent);
@@ -145,6 +151,8 @@ private:
     std::unique_ptr<VirtualMicSink> m_micSink;
     std::unique_ptr<SystemAudioCapture> m_sysAudio;
     std::unique_ptr<AudioEncoder> m_speakerEnc;
+    std::unique_ptr<AudioDecoder> m_micDec;
+    std::unique_ptr<AudioChannel> m_audioChannel;
     // Phone's speaker codec preference from STATUS controls{} (spec §4.1).
     bool m_speakerOpusWanted = false;
     int m_speakerBitrate = 64000;

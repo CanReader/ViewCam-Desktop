@@ -1,5 +1,6 @@
 #include "viewmodels/AppController.h"
 #include "ViewCamConfig.h"
+#include "audio/AudioDecoder.h"
 #include "audio/AudioEncoder.h"
 #include "audio/SystemAudioCapture.h"
 #include "audio/VirtualMicSink.h"
@@ -7,6 +8,7 @@
 #include "core/Logger.h"
 #include "core/Settings.h"
 #include "gpu/CudaBackend.h"
+#include "network/AudioChannel.h"
 #include "network/DeviceDiscovery.h"
 #include "network/FrameDecoder.h"
 #include "network/StreamReceiver.h"
@@ -49,6 +51,8 @@ AppController::AppController(QObject *parent)
       m_micSink(std::make_unique<VirtualMicSink>()),
       m_sysAudio(std::make_unique<SystemAudioCapture>(m_settings.get())),
       m_speakerEnc(std::make_unique<AudioEncoder>()),
+      m_micDec(std::make_unique<AudioDecoder>()),
+      m_audioChannel(std::make_unique<AudioChannel>()),
       m_deviceModel(std::make_unique<DeviceListModel>()),
       m_connection(std::make_unique<ConnectionViewModel>()),
       m_virtualCam(std::make_unique<VirtualCamViewModel>()),
@@ -210,6 +214,16 @@ void AppController::init() {
             if (m_audio->phoneAudioCapable()) {
               snap[QStringLiteral("micEnabled")] = m_audio->micEnabled();
               snap[QStringLiteral("speakerEnabled")] = m_audio->speakerEnabled();
+              // Mic uplink codecs this desktop can DECODE. A phone that sees
+              // "opus" switches its mic stream to Opus; without the key (or
+              // without FFmpeg here) it stays PCM.
+              QJsonArray audioCodecs{QStringLiteral("pcm")};
+              if (AudioDecoder::available())
+                audioCodecs.append(QStringLiteral("opus"));
+              snap[QStringLiteral("audioCodecs")] = audioCodecs;
+              // Our UDP audio port (spec §4.2) — where mic datagrams go.
+              if (m_audioChannel->localPort() > 0)
+                snap[QStringLiteral("audioPort")] = m_audioChannel->localPort();
             }
             m_receiver->sendControl(snap);
             updateSpeakerCapture();
@@ -253,14 +267,26 @@ void AppController::init() {
             m_audio->setPhoneAudioCapable(capable);
             updateMicSink();
           });
-  // Phone mic PCM -> input volume gain -> virtual mic device + level meter.
+  // Phone mic audio, both transports: the TCP stream (PCM, or Opus on old
+  // paths) and the UDP channel (Opus datagrams — no head-of-line blocking
+  // behind video). Both funnel into onMicAudio().
   connect(m_receiver.get(), &StreamReceiver::audioReceived, this,
-          [this](const QByteArray &pcm, int, int) {
-            if (!m_audio->micEnabled()) return; // mid-flight frames after mute
-            const QByteArray out =
-                applyGainPercent(pcm, m_settingsVm->micVolume());
-            m_micSink->writeAudio(out);
-            m_audio->reportMicChunk(out);
+          [this](const QByteArray &payload, int rate, int channels,
+                 vc::FrameFormat format) {
+            onMicAudio(payload, rate, channels, format, /*viaUdp=*/false);
+          });
+  connect(m_audioChannel.get(), &AudioChannel::frameReceived, this,
+          [this](const QByteArray &payload, int rate, int channels,
+                 vc::FrameFormat format) {
+            onMicAudio(payload, rate, channels, format, /*viaUdp=*/true);
+          });
+  // Phone's UDP audio port from HELLO — arm the channel toward the peer.
+  connect(m_receiver.get(), &StreamReceiver::audioPortReceived, this,
+          [this](int port) {
+            if (port > 0)
+              m_audioChannel->setPeer(QHostAddress(m_connection->host()), port);
+            else
+              m_audioChannel->clearPeer();
           });
   // Phone-acknowledged mic/speaker state (STATUS controls{}).
   connect(m_receiver.get(), &StreamReceiver::controlStateReceived,
@@ -320,9 +346,14 @@ void AppController::init() {
               }
               if (m_speakerEnc->isOpen()) {
                 const auto packets = m_speakerEnc->encode(out);
-                for (const QByteArray &p : packets)
-                  m_receiver->sendAudio(p, rate, channels,
-                                        vc::FrameFormat::AudioOpus);
+                for (const QByteArray &p : packets) {
+                  // Opus rides UDP when the phone opened a channel; TCP
+                  // otherwise (and for any packet that fails to send).
+                  if (!m_audioChannel->sendFrame(p, rate, channels,
+                                                 vc::FrameFormat::AudioOpus))
+                    m_receiver->sendAudio(p, rate, channels,
+                                          vc::FrameFormat::AudioOpus);
+                }
                 return;
               }
             } else if (!m_speakerOpusWanted && m_speakerEnc->isOpen()) {
@@ -356,6 +387,9 @@ void AppController::init() {
     m_audio->applyControlEcho(QJsonObject{{QStringLiteral("mic"), false},
                                           {QStringLiteral("speaker"), false},
                                           {QStringLiteral("micPermission"), true}});
+    m_micDec->close(); // per-session decoder state
+    m_audioChannel->clearPeer();
+    m_audio->setMicStats(QString(), QString(), 0);
     updateSpeakerCapture();
     updateMicSink();
     const bool wasConnected = m_connection->isConnected();
@@ -426,8 +460,10 @@ void AppController::init() {
           this, [this](const FrameData &) { m_receiveWatchdog.start(); });
   connect(m_receiver.get(), &StreamReceiver::heartbeatReceived,
           this, [this]() { m_receiveWatchdog.start(); });
-  connect(m_receiver.get(), &StreamReceiver::audioReceived,
-          this, [this](const QByteArray &, int, int) { m_receiveWatchdog.start(); });
+  connect(m_receiver.get(), &StreamReceiver::audioReceived, this,
+          [this](const QByteArray &, int, int, vc::FrameFormat) {
+            m_receiveWatchdog.start();
+          });
   connect(m_receiver.get(), &StreamReceiver::statusReceived,
           this, [this](int, bool) { m_receiveWatchdog.start(); });
   connect(m_receiver.get(), &StreamReceiver::disconnected,
@@ -672,6 +708,31 @@ void AppController::fixFirewall() {
         Qt::QueuedConnection);
   }).detach();
 #endif
+}
+
+void AppController::onMicAudio(const QByteArray &payload, int sampleRate,
+                               int channels, vc::FrameFormat format,
+                               bool viaUdp) {
+  if (!m_audio->micEnabled()) return; // mid-flight frames after mute
+  QByteArray pcm;
+  if (format == vc::FrameFormat::AudioOpus) {
+    if (!m_micDec->isOpen() && !m_micDec->open(sampleRate, channels))
+      return; // no decoder — negotiation should have prevented this
+    pcm = m_micDec->decode(payload);
+    if (pcm.isEmpty()) return; // one 10-20 ms packet lost — inaudible
+  } else {
+    pcm = payload;
+  }
+  const QByteArray out = applyGainPercent(pcm, m_settingsVm->micVolume());
+  m_micSink->writeAudio(out);
+  m_audio->reportMicChunk(out);
+  // Live stats: codec + transport + buffer-driven latency estimate
+  // (adaptive jitter target + ~one graph quantum).
+  m_audio->setMicStats(
+      format == vc::FrameFormat::AudioOpus ? QStringLiteral("Opus")
+                                           : QStringLiteral("PCM"),
+      viaUdp ? QStringLiteral("UDP") : QStringLiteral("TCP"),
+      m_micSink->currentTargetMs() + 21);
 }
 
 QByteArray AppController::applyGainPercent(const QByteArray &pcm, int percent) {
