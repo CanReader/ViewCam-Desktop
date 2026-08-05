@@ -1,6 +1,8 @@
 #include "audio/VirtualMicSink.h"
 #include "core/Logger.h"
 
+#include <QDateTime>
+
 #ifdef __linux__
 #include <QDir>
 #include <QProcess>
@@ -18,15 +20,24 @@
 
 namespace {
 constexpr const char *kSourceName = "viewcam_mic";
-// Jitter budget — sized for ZERO audible cuts, which outranks latency. Mic
-// chunks share the Wi-Fi socket with video frames, so they arrive in bursts
-// (a video frame can hold the link ~25 ms, a TCP retransmit far longer).
-//  - prime: buffered before (re)starting playback after start/underrun.
-//  - cap:   absolute ceiling; hard drop-oldest happens only while IDLE
-//           (nobody recording). While live, excess is shaved one sample per
-//           callback (~1 ms/s) — inaudible, unlike a chopped word.
+// ADAPTIVE jitter budget — zero audible cuts still outranks latency, but the
+// deep buffer is only kept while the network actually misbehaves. Mic chunks
+// share the Wi-Fi socket with video frames, so they arrive in bursts (a video
+// frame can hold the link ~25 ms, a TCP retransmit far longer).
+//  - target: current prime/steady-state depth. Grows fast on an underrun
+//    (×1.5 + 20 ms), decays by 10 ms per 5 s of calm back toward the floor.
+//    The floor must clear one 20 ms production chunk PLUS one ~21 ms graph
+//    quantum with margin, or the ring legitimately dips below a callback's
+//    demand every few cycles and "recovers" into chronic underrun.
+//  - excess above target drains SILENCE-AWARE in onProcess: a near-silent
+//    oldest stretch is dropped wholesale (speech pauses make post-burst
+//    recovery instant and inaudible); during speech only 1 frame/callback.
+//  - cap: absolute ceiling; hard drop-oldest only while nobody is recording.
 constexpr int kMaxQueuedMs = 250;
-constexpr int kPrimeMs = 80;
+constexpr int kMinTargetMs = 60;
+constexpr int kMaxTargetMs = 180;
+constexpr int kDecayStepMs = 10;
+constexpr qint64 kDecayIntervalMs = 5000;
 } // namespace
 
 VirtualMicSink::VirtualMicSink(QObject *parent) : QObject(parent) {
@@ -58,7 +69,7 @@ void VirtualMicSink::onStateChanged(void *userData, int, int newState,
     // inheriting the full idle cap, and re-prime for a clean start.
     if (newState == PW_STREAM_STATE_STREAMING) {
         QMutexLocker lock(&self->m_ringLock);
-        const int keep = self->m_maxRingBytes / 2;
+        const int keep = self->m_targetBytes;
         if (self->m_ring.size() > keep)
             self->m_ring.remove(0, self->m_ring.size() - keep);
         self->m_priming = true;
@@ -81,17 +92,37 @@ void VirtualMicSink::onProcess(void *userData) {
         int filled = 0;
         {
             QMutexLocker lock(&self->m_ringLock);
-            // Priming: after start/underrun, output silence until kPrimeMs is
-            // buffered — one clean gap instead of a burst of micro-cuts.
-            if (self->m_priming && self->m_ring.size() >= self->m_primeBytes)
+            const qint64 now = QDateTime::currentMSecsSinceEpoch();
+            // Calm decay: every interval without an underrun, walk the target
+            // back toward the floor — latency earned back on a healthy link.
+            if (now - self->m_lastAdaptMs >= kDecayIntervalMs) {
+                self->m_lastAdaptMs = now;
+                self->m_targetBytes =
+                    std::max(kMinTargetMs * self->m_bytesPerMs,
+                             self->m_targetBytes - kDecayStepMs * self->m_bytesPerMs);
+            }
+            // Priming: after start/underrun, output silence until the target
+            // is buffered — one clean gap instead of a burst of micro-cuts.
+            if (self->m_priming && self->m_ring.size() >= self->m_targetBytes)
                 self->m_priming = false;
             if (!self->m_priming) {
-                // Latency creep-down: bursts and clock drift slowly raise the
-                // buffered amount. Shave ONE frame per callback while above
-                // 1.5× prime — a ~1 ms/s correction nobody can hear, instead
-                // of a hard drop that cuts the voice.
-                if (self->m_ring.size() > self->m_primeBytes * 3 / 2)
-                    self->m_ring.remove(0, self->m_stride);
+                // Silence-aware drain: excess above target is dropped wholesale
+                // when the oldest stretch is near-silent (speech pauses make
+                // post-burst recovery instant and inaudible); during speech
+                // shave a single frame per callback.
+                int excess = self->m_ring.size() - self->m_targetBytes;
+                if (excess > 0) {
+                    const auto *smp =
+                        reinterpret_cast<const int16_t *>(self->m_ring.constData());
+                    const int n = excess / 2;
+                    bool quiet = true;
+                    for (int i = 0; i < n; i += 4) {
+                        if (smp[i] > 500 || smp[i] < -500) { quiet = false; break; }
+                    }
+                    const int drop =
+                        quiet ? excess - excess % self->m_stride : self->m_stride;
+                    self->m_ring.remove(0, drop);
+                }
                 filled = std::min<int>(int(want), self->m_ring.size());
                 if (filled > 0) {
                     std::memcpy(dst, self->m_ring.constData(), size_t(filled));
@@ -100,6 +131,11 @@ void VirtualMicSink::onProcess(void *userData) {
                 if (uint32_t(filled) < want) {
                     self->m_priming = true; // underrun — refill before resuming
                     self->m_underruns.fetch_add(1, std::memory_order_relaxed);
+                    // The link just proved it needs more headroom.
+                    self->m_targetBytes = std::min(
+                        kMaxTargetMs * self->m_bytesPerMs,
+                        self->m_targetBytes * 3 / 2 + 20 * self->m_bytesPerMs);
+                    self->m_lastAdaptMs = now; // no decay right after growth
                 }
             }
         }
@@ -217,12 +253,14 @@ bool VirtualMicSink::open(int sampleRate, int channels) {
     if (m_open) return true;
 
     m_stride = channels * 2;
-    m_maxRingBytes = sampleRate * m_stride / 1000 * kMaxQueuedMs;
-    m_primeBytes = sampleRate * m_stride / 1000 * kPrimeMs;
+    m_bytesPerMs = sampleRate * m_stride / 1000;
+    m_maxRingBytes = m_bytesPerMs * kMaxQueuedMs;
     {
         QMutexLocker lock(&m_ringLock);
         m_ring.clear();
         m_priming = true;
+        m_targetBytes = m_bytesPerMs * kMinTargetMs;
+        m_lastAdaptMs = QDateTime::currentMSecsSinceEpoch();
     }
 
     // A crash leaves the previous fallback module (and its FIFO reader)
@@ -416,12 +454,14 @@ struct WinMicBridge {
 bool VirtualMicSink::open(int sampleRate, int channels) {
     if (m_open) return true;
     m_stride = channels * 2;
-    m_maxRingBytes = sampleRate * m_stride / 1000 * kMaxQueuedMs;
-    m_primeBytes = sampleRate * m_stride / 1000 * kPrimeMs;
+    m_bytesPerMs = sampleRate * m_stride / 1000;
+    m_maxRingBytes = m_bytesPerMs * kMaxQueuedMs;
     {
         QMutexLocker lock(&m_ringLock);
         m_ring.clear();
         m_priming = true;
+        m_targetBytes = m_bytesPerMs * kMinTargetMs;
+        m_lastAdaptMs = QDateTime::currentMSecsSinceEpoch();
     }
 
     // Find any installed cable-style driver (VB-CABLE, Voicemeeter, VAC).

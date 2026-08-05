@@ -36,6 +36,12 @@ public:
                                       : m_deviceName;
     }
 
+    // Current adaptive jitter target in ms (UI stats).
+    int currentTargetMs() {
+        QMutexLocker lock(&m_ringLock);
+        return m_bytesPerMs > 0 ? m_targetBytes / m_bytesPerMs : 0;
+    }
+
     // Unload any viewcam_mic pipe-source a crashed previous run left behind
     // (a writer-less pipe source destabilizes PipeWire). Only relevant to the
     // pactl fallback — a native node can't outlive the process.
@@ -68,9 +74,13 @@ private:
     QMutex m_ringLock;
     QByteArray m_ring;       // pending PCM, capped at kMaxRingBytes
     int m_stride = 2;        // bytes per frame (channels * 2)
+    int m_bytesPerMs = 0;    // rate * stride / 1000, set at open()
     int m_maxRingBytes = 0;  // jitter cap at the open() rate/channels
-    int m_primeBytes = 0;    // min buffered before (re)starting playback
-    bool m_priming = true;   // guarded by m_ringLock
+    // Adaptive target depth (bytes): prime level AND steady-state goal.
+    // Grown on underruns, decayed while calm; guarded by m_ringLock.
+    int m_targetBytes = 0;
+    qint64 m_lastAdaptMs = 0; // last grow/decay wall-clock (QDateTime msecs)
+    bool m_priming = true;    // guarded by m_ringLock
     // Diagnostics: bumped on the RT thread per underrun, logged from
     // writeAudio — separates network stalls from phone-side gating.
     std::atomic<int> m_underruns{0};
