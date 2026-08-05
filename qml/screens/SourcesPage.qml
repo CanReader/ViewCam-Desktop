@@ -9,9 +9,15 @@ Flickable {
     readonly property var s: AppController.settings
     readonly property var audio: AppController.audio
     readonly property bool phoneAudioReady: AppController.connection.connected && audio.phoneAudioCapable
+    // Same entitlement source as RightPanel: the connected phone's Pro (or a
+    // debug build). Streaming is free; the tuning controls below are Pro —
+    // AppController enforces the same rule in the audio pipeline itself.
+    readonly property bool isPro: s.isPro || AppController.connection.pro
 
     // 0 = Input, 1 = Output
     property int subTab: 0
+
+    VcProGateDialog { id: proGate }
 
     contentHeight: content.y + content.implicitHeight + 128
     clip: true
@@ -108,6 +114,9 @@ Flickable {
                     icon: "volume"
                     title: qsTr("Input volume")
                     description: qsTr("Software gain on the phone microphone")
+                    pro: true
+                    isPro: root.isPro
+                    onProGateTapped: proGate.open()
                     Row {
                         spacing: 12
                         VcSlider {
@@ -266,6 +275,9 @@ Flickable {
                     icon: "volume-waves"
                     title: qsTr("Also play on this computer")
                     description: root.s.localPlayback ? qsTr("This computer's speakers stay on while streaming") : qsTr("Phone only — this computer goes silent while streaming")
+                    pro: true
+                    isPro: root.isPro
+                    onProGateTapped: proGate.open()
                     VcToggle {
                         checked: root.s.localPlayback
                         onToggled: c => root.s.localPlayback = c
@@ -299,6 +311,9 @@ Flickable {
                     icon: "volume"
                     title: qsTr("Speaker volume")
                     description: qsTr("Level of the feed sent to the phone")
+                    pro: true
+                    isPro: root.isPro
+                    onProGateTapped: proGate.open()
                     Row {
                         spacing: 12
                         VcSlider {

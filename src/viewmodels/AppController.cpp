@@ -254,11 +254,13 @@ void AppController::init() {
             updateMicSink();
           });
   // Phone mic PCM -> input volume gain -> virtual mic device + level meter.
+  // Volume tuning is Pro (read live per chunk, like the 4K cap): a free
+  // session runs unity gain no matter what the persisted slider says.
   connect(m_receiver.get(), &StreamReceiver::audioReceived, this,
           [this](const QByteArray &pcm, int, int) {
             if (!m_audio->micEnabled()) return; // mid-flight frames after mute
-            const QByteArray out =
-                applyGainPercent(pcm, m_settingsVm->micVolume());
+            const QByteArray out = applyGainPercent(
+                pcm, m_connection->pro() ? m_settingsVm->micVolume() : 100);
             m_micSink->writeAudio(out);
             m_audio->reportMicChunk(out);
           });
@@ -304,8 +306,8 @@ void AppController::init() {
           [this](const QByteArray &pcm) {
             const int rate = m_sysAudio->sampleRate();
             const int channels = m_sysAudio->channels();
-            const QByteArray out =
-                applyGainPercent(pcm, m_settingsVm->speakerVolume());
+            const QByteArray out = applyGainPercent(
+                pcm, m_connection->pro() ? m_settingsVm->speakerVolume() : 100);
             // Codec follows the phone's live preference (Audio tab Quality):
             // Opus at the chosen bitrate, PCM otherwise or when this build
             // has no encoder. A failed open latches to PCM until the request
@@ -711,8 +713,10 @@ void AppController::updateSpeakerCapture() {
                          m_audio->phoneAudioCapable() &&
                          m_audio->speakerEnabled();
   if (shouldRun && !m_sysAudio->isRunning()) {
-    m_sysAudio->start(vc::kAudioSampleRate, vc::kSpeakerChannels,
-                      /*exclusive=*/!m_settingsVm->localPlayback());
+    // Phone-only routing is Pro; free sessions always keep local playback.
+    const bool exclusive =
+        !m_settingsVm->localPlayback() && m_connection->pro();
+    m_sysAudio->start(vc::kAudioSampleRate, vc::kSpeakerChannels, exclusive);
   } else if (!shouldRun && m_sysAudio->isRunning()) {
     m_sysAudio->stop();
     m_speakerEnc->close();

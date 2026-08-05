@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(ViewCam
-    VERSION 1.2.0
+    VERSION 1.2.1
     DESCRIPTION "Turn your phone into a virtual webcam"
     HOMEPAGE_URL "https://viewcam.tech"
     LANGUAGES C CXX)
