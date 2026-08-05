@@ -290,6 +290,8 @@ void StreamReceiver::dispatchHello(const QByteArray &payload) {
     // Before helloReceived: AppController folds audio keys into the control
     // snapshot it sends from its helloReceived handler. Absent ⇒ video-only.
     emit audioCapableReceived(o.value("audio").toBool(false));
+    // UDP audio channel port (spec §4.2, phones ≥2.1). 0/absent ⇒ TCP only.
+    emit audioPortReceived(o.value("audioPort").toInt(0));
     emit helloReceived(name, os, maxW, maxH, battery, charging, lens, pro);
     emit proReceived(pro);
 

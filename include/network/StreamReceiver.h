@@ -40,6 +40,8 @@ signals:
                        vc::FrameFormat format);
     // Phone can capture/play audio at all (HELLO "audio":true, phones ≥2.0.0).
     void audioCapableReceived(bool capable);
+    // Phone's UDP audio port (HELLO "audioPort", spec §4.2); 0 = TCP only.
+    void audioPortReceived(int port);
     void helloReceived(const QString &name, const QString &os,
                        int maxW, int maxH,
                        int battery, bool charging,
