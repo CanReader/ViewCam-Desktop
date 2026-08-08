@@ -753,6 +753,7 @@ if(Qt6Test_FOUND)
     add_executable(vc_analytics_selftest
         tools/analytics_selftest.cpp
         include/analytics/AnalyticsEvent.h
+        src/analytics/EventQueue.cpp      include/analytics/EventQueue.h
         src/core/Logger.cpp
     )
     target_include_directories(vc_analytics_selftest PRIVATE
