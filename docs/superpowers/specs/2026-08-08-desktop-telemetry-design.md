@@ -106,9 +106,25 @@ packaging differs per distro.
 | `app_exited` | `session_seconds` | Session length |
 | `stream_connected` | `codec`, `resolution`, `discovery` | Does it work |
 | `stream_failed` | `reason` | Why it does not |
-| `virtualcam_status` | `ok` \| `v4l2loopback_missing` \| `permission_denied` \| `directshow_unregistered` | First-run drop-off |
+| `virtualcam_status` | `status` (see below), `hresult` on Windows failures | First-run drop-off |
 | `feature_used` | `name` (fixed set) | Mic, speaker, resolution, GPU usage |
 | `update_installed` | `from_version`, `to_version` | Update pipeline health |
+
+`virtualcam_status` is per-platform, because the two backends fail in entirely
+different ways and a shared vocabulary would collapse distinctions that decide
+what to fix. Both report `ok` on success.
+
+| Platform | Failure values |
+|---|---|
+| Linux (`V4L2LoopbackWriter`) | `not_installed`, `modprobe_failed`, `no_device`, `permission_denied`, `open_failed` |
+| Windows (`MFVirtualCamManager`) | `os_unsupported`, `mf_startup_failed`, `source_dll_missing`, `com_register_failed`, `create_failed` |
+
+Windows failures also carry `hresult` as an `0x%08x` string. An HRESULT is a
+fixed diagnostic code rather than an identifier, and it separates
+`E_ACCESSDENIED` (user has no admin rights) from `CO_E_CLASSSTRING` (the
+machine's FrameServer DLLs are version-mismatched and need a reboot) — two
+failures that are indistinguishable from the outcome slug alone and need
+completely different responses.
 
 `locale` is sent independently of GeoIP because the two answer different
 questions: GeoIP says where users are, locale says what language they read.
