@@ -108,6 +108,12 @@ void Analytics::init() {
             {{QStringLiteral("is_first_run"), !hadId},
              {QStringLiteral("locale"), QLocale::system().name()}});
 
+    // Persist immediately rather than waiting for the first 30s flush.
+    // app_installed fires exactly once in an install's lifetime, so losing it
+    // permanently undercounts installs — and a launch that crashes or is killed
+    // in its first 30 seconds is precisely the launch worth knowing about.
+    m_queue->save();
+
     m_heartbeat = new QTimer(this);
     m_heartbeat->setInterval(kHeartbeatMs);
     connect(m_heartbeat, &QTimer::timeout, this,
