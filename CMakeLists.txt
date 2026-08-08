@@ -196,6 +196,9 @@ set(SOURCES
     src/gpu/CudaBackend.cpp
     src/gpu/VulkanComputeBackend.cpp
     src/updater/UpdateChecker.cpp
+    src/analytics/Analytics.cpp
+    src/analytics/AnalyticsClient.cpp
+    src/analytics/EventQueue.cpp
 )
 
 set(HEADERS
@@ -219,6 +222,10 @@ set(HEADERS
     include/gpu/CudaBackend.h
     include/gpu/VulkanComputeBackend.h
     include/updater/UpdateChecker.h
+    include/analytics/Analytics.h
+    include/analytics/AnalyticsClient.h
+    include/analytics/AnalyticsEvent.h
+    include/analytics/EventQueue.h
 )
 
 # The CUDA proof-of-life kernel is compiled by nvcc only when CUDA is enabled.
@@ -764,6 +771,7 @@ if(Qt6Test_FOUND)
         include/analytics/AnalyticsEvent.h
         src/analytics/EventQueue.cpp      include/analytics/EventQueue.h
         src/analytics/AnalyticsClient.cpp include/analytics/AnalyticsClient.h
+        src/analytics/Analytics.cpp       include/analytics/Analytics.h
         src/core/Logger.cpp
     )
     target_include_directories(vc_analytics_selftest PRIVATE

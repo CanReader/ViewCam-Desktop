@@ -6,11 +6,14 @@
 // network path is not exercised here; that is what VIEWCAM_ANALYTICS_DEBUG=1
 // and the live end-to-end check are for.
 
+#include "analytics/Analytics.h"
 #include "analytics/AnalyticsClient.h"
 #include "analytics/AnalyticsEvent.h"
 #include "analytics/EventQueue.h"
 
 #include <QJsonArray>
+#include <QSettings>
+#include <QSysInfo>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -24,6 +27,9 @@ private slots:
     void takeRemovesOnlyWhatItReturns();
     void batchMatchesIngestWireFormat();
     void eventPropsNeverOverrideDistinctId();
+    void installIdIsStableAcrossCalls();
+    void superPropertiesCarryNoIdentifyingData();
+    void capturesNothingBeforeInit();
 };
 
 void AnalyticsSelfTest::eventRoundTripsThroughJson() {
@@ -159,6 +165,69 @@ void AnalyticsSelfTest::eventPropsNeverOverrideDistinctId() {
 
     QCOMPARE(props.value(QStringLiteral("distinct_id")).toString(),
              QStringLiteral("real-id"));
+}
+
+// The install ID is what makes DAU/MAU and retention computable, so it must be
+// stable across calls and clean enough to use as a distinct_id verbatim.
+void AnalyticsSelfTest::installIdIsStableAcrossCalls() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QSettings s(dir.filePath(QStringLiteral("s.ini")), QSettings::IniFormat);
+
+    const QString first  = Analytics::resolveInstallId(s);
+    const QString second = Analytics::resolveInstallId(s);
+
+    QVERIFY(!first.isEmpty());
+    QCOMPARE(first, second);
+    QVERIFY(!first.contains(QLatin1Char('{')));
+    QCOMPARE(first.length(), 36);
+}
+
+// The privacy guarantee, enforced rather than intended. This is the test that
+// should fail loudly if someone later attaches a hostname or device name.
+void AnalyticsSelfTest::superPropertiesCarryNoIdentifyingData() {
+    const QVariantMap p = Analytics::buildSuperProperties();
+
+    QVERIFY(p.contains(QStringLiteral("app_version")));
+    QVERIFY(p.contains(QStringLiteral("os")));
+    QVERIFY(p.contains(QStringLiteral("arch")));
+
+    const QStringList forbidden{
+        QStringLiteral("hostname"),  QStringLiteral("host_name"),
+        QStringLiteral("machine"),   QStringLiteral("mac"),
+        QStringLiteral("ip"),        QStringLiteral("user"),
+        QStringLiteral("username"),  QStringLiteral("path"),
+        QStringLiteral("device_name")};
+    for (const QString &key : forbidden)
+        QVERIFY2(!p.contains(key), qPrintable(QStringLiteral("leaked key: ") + key));
+
+    // Exact allow-list, not a deny-list: anything added to super-properties
+    // later fails here and forces a deliberate decision about whether it is
+    // safe to send on EVERY event.
+    //
+    // Deliberately NOT "no value equals QSysInfo::machineHostName()" — that
+    // heuristic false-positives whenever a machine is named after its distro
+    // (a host called "arch" collides with productType() == "arch"), which is
+    // exactly what happened on the development machine.
+    QStringList keys = p.keys();
+    keys.sort();
+    QStringList expected{QStringLiteral("app_version"), QStringLiteral("arch"),
+                         QStringLiteral("channel"),     QStringLiteral("os"),
+                         QStringLiteral("os_version")};
+    expected.sort();
+    QCOMPARE(keys, expected);
+}
+
+// Callers must be able to fire events from any error path, including before
+// init() has run, without guarding.
+void AnalyticsSelfTest::capturesNothingBeforeInit() {
+    Analytics &a = Analytics::instance();
+    a.capture(QStringLiteral("app_heartbeat"));
+    QCOMPARE(a.pendingCount(), 0);
+
+    a.setEnabled(false);
+    a.capture(QStringLiteral("stream_connected"));
+    QCOMPARE(a.pendingCount(), 0);
 }
 
 QTEST_GUILESS_MAIN(AnalyticsSelfTest)

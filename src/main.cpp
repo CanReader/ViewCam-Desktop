@@ -3,6 +3,7 @@
 #include <windows.h>
 #endif
 #include "ViewCamConfig.h"
+#include "analytics/Analytics.h"
 #include "core/Logger.h"
 #include "core/QmlDevMode.h"
 #include "updater/InstallLayout.h"
@@ -137,6 +138,12 @@ int main(int argc, char *argv[]) {
     app.setOrganizationName(QStringLiteral(VIEWCAM_ORG_NAME));
     app.setOrganizationDomain(QStringLiteral(VIEWCAM_ORG_DOMAIN));
 
+    // Anonymous usage analytics. Must come AFTER the identity block (QSettings
+    // resolution depends on org/app name) and BEFORE QML loads, so first-run
+    // and startup events are recorded even if the UI fails to come up. No-ops
+    // entirely when the user has opted out or no ingest key was built in.
+    Analytics::instance().init();
+
 #ifdef _WIN32
     // Hold a named mutex so the Inno Setup installer can detect + close this
     // running instance during an in-place upgrade (AppMutex / /CLOSEAPPLICATIONS).
@@ -212,6 +219,12 @@ int main(int argc, char *argv[]) {
     // verified, apply the staged update on exit (helper swaps + relaunches).
     QObject::connect(&app, &QGuiApplication::aboutToQuit, updater,
                      [updater]() { updater->applyPendingOnQuit(); });
+
+    // Record session length and persist anything still buffered. Writes to
+    // disk rather than posting — a network round-trip here would either be
+    // cancelled or delay exit; the queue drains on the next launch.
+    QObject::connect(&app, &QGuiApplication::aboutToQuit, &app,
+                     []() { Analytics::instance().shutdown(); });
 
     engine.loadFromModule("ViewCam.Studio", "Main");
 
