@@ -51,6 +51,13 @@ function(vc_load_dotenv path)
         if(_line MATCHES "^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
             set(_k "${CMAKE_MATCH_1}")
             set(_v "${CMAKE_MATCH_2}")
+            # An explicit -D creates a CACHE entry. The set() below is a NORMAL
+            # variable, and a normal variable shadows the cache for the rest of
+            # the configure — so without this guard .env would silently override
+            # -D, reversing the precedence documented above and in .env.example.
+            if(DEFINED CACHE{${_k}})
+                continue()
+            endif()
             # Strip optional surrounding quotes.
             string(REGEX REPLACE "^\"(.*)\"$" "\\1" _v "${_v}")
             string(REGEX REPLACE "^'(.*)'$"   "\\1" _v "${_v}")
