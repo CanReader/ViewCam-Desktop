@@ -33,6 +33,15 @@ set(VIEWCAM_UPDATE_CHANNEL "stable"
 set(VIEWCAM_UPDATE_MANIFEST_BASE "https://updates.viewcam.tech"
     CACHE STRING "Base URL for update manifests")
 
+# ── Anonymous usage analytics ingest ──────────────────────────
+# Empty key = analytics disabled, so dev builds never pollute production data.
+# Release builds pass -DVIEWCAM_ANALYTICS_KEY=... from the environment, the same
+# way the update signing key is kept out of the repo.
+set(VIEWCAM_ANALYTICS_HOST "https://eu.i.posthog.com"
+    CACHE STRING "Analytics ingest base URL")
+set(VIEWCAM_ANALYTICS_KEY ""
+    CACHE STRING "Analytics project API key (empty disables analytics)")
+
 # ── Gather Metadata ──────────────────────────────────
 
 # 1. Host Machine Information
@@ -754,6 +763,7 @@ if(Qt6Test_FOUND)
         tools/analytics_selftest.cpp
         include/analytics/AnalyticsEvent.h
         src/analytics/EventQueue.cpp      include/analytics/EventQueue.h
+        src/analytics/AnalyticsClient.cpp include/analytics/AnalyticsClient.h
         src/core/Logger.cpp
     )
     target_include_directories(vc_analytics_selftest PRIVATE

@@ -36,3 +36,10 @@
 #define VIEWCAM_UPDATE_PUBKEY         "@VIEWCAM_UPDATE_PUBKEY@"
 #define VIEWCAM_UPDATE_CHANNEL        "@VIEWCAM_UPDATE_CHANNEL@"
 #define VIEWCAM_UPDATE_MANIFEST_BASE  "@VIEWCAM_UPDATE_MANIFEST_BASE@"
+
+// Anonymous usage analytics ingest. The project key is a publishable,
+// write-only key — safe to embed in the client, like any web analytics
+// snippet. An empty key disables analytics entirely, which is what local and
+// developer builds get by default.
+#define VIEWCAM_ANALYTICS_HOST        "@VIEWCAM_ANALYTICS_HOST@"
+#define VIEWCAM_ANALYTICS_KEY         "@VIEWCAM_ANALYTICS_KEY@"

@@ -6,9 +6,11 @@
 // network path is not exercised here; that is what VIEWCAM_ANALYTICS_DEBUG=1
 // and the live end-to-end check are for.
 
+#include "analytics/AnalyticsClient.h"
 #include "analytics/AnalyticsEvent.h"
 #include "analytics/EventQueue.h"
 
+#include <QJsonArray>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -20,6 +22,8 @@ private slots:
     void queueEvictsOldestWhenFull();
     void queueSurvivesRestart();
     void takeRemovesOnlyWhatItReturns();
+    void batchMatchesIngestWireFormat();
+    void eventPropsNeverOverrideDistinctId();
 };
 
 void AnalyticsSelfTest::eventRoundTripsThroughJson() {
@@ -100,6 +104,61 @@ void AnalyticsSelfTest::takeRemovesOnlyWhatItReturns() {
     q.requeueFront(batch);
     QCOMPARE(q.size(), 4);
     QCOMPARE(q.take(1).at(0).name, QStringLiteral("e0"));
+}
+
+// buildBatch() is the single vendor-specific function in the subsystem, so its
+// output shape is pinned down here rather than discovered against a live API.
+void AnalyticsSelfTest::batchMatchesIngestWireFormat() {
+    AnalyticsEvent e;
+    e.name = QStringLiteral("app_heartbeat");
+    e.timestampMs = 1754640000000LL;
+    e.props.insert(QStringLiteral("streaming"), true);
+
+    QVariantMap super;
+    super.insert(QStringLiteral("app_version"), QStringLiteral("1.2.1"));
+    super.insert(QStringLiteral("os"), QStringLiteral("linux"));
+
+    const QJsonObject batch = AnalyticsClient::buildBatch(
+        QStringLiteral("phc_testkey"),
+        QStringLiteral("11111111-2222-3333-4444-555555555555"), {e}, super);
+
+    QCOMPARE(batch.value(QStringLiteral("api_key")).toString(),
+             QStringLiteral("phc_testkey"));
+
+    const QJsonArray arr = batch.value(QStringLiteral("batch")).toArray();
+    QCOMPARE(arr.size(), 1);
+
+    const QJsonObject ev = arr.at(0).toObject();
+    QCOMPARE(ev.value(QStringLiteral("event")).toString(),
+             QStringLiteral("app_heartbeat"));
+
+    const QJsonObject props = ev.value(QStringLiteral("properties")).toObject();
+    QCOMPARE(props.value(QStringLiteral("distinct_id")).toString(),
+             QStringLiteral("11111111-2222-3333-4444-555555555555"));
+    QCOMPARE(props.value(QStringLiteral("app_version")).toString(),
+             QStringLiteral("1.2.1"));
+    QCOMPARE(props.value(QStringLiteral("streaming")).toBool(), true);
+    QVERIFY(ev.value(QStringLiteral("timestamp")).toString().endsWith(QLatin1Char('Z')));
+}
+
+// A stray distinct_id in event props must not be able to reassign identity —
+// that would silently merge or split users and corrupt every active-user count.
+void AnalyticsSelfTest::eventPropsNeverOverrideDistinctId() {
+    AnalyticsEvent e;
+    e.name = QStringLiteral("stream_connected");
+    e.props.insert(QStringLiteral("distinct_id"), QStringLiteral("attacker"));
+
+    const QJsonObject batch = AnalyticsClient::buildBatch(
+        QStringLiteral("phc_testkey"), QStringLiteral("real-id"), {e}, {});
+    const QJsonObject props = batch.value(QStringLiteral("batch"))
+                                  .toArray()
+                                  .at(0)
+                                  .toObject()
+                                  .value(QStringLiteral("properties"))
+                                  .toObject();
+
+    QCOMPARE(props.value(QStringLiteral("distinct_id")).toString(),
+             QStringLiteral("real-id"));
 }
 
 QTEST_GUILESS_MAIN(AnalyticsSelfTest)
