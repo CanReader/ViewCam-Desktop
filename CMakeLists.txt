@@ -742,6 +742,32 @@ if(LINUX)
     endif()
 endif()
 
+# ── Analytics unit tests ─────────────────────────────────────
+# Pure-logic coverage for the analytics subsystem (serialisation, queue
+# eviction/persistence, payload shape, privacy guarantees). Build+run:
+#   cmake --build build --target vc_analytics_selftest && build/vc_analytics_selftest
+# Skipped entirely when Qt6::Test is not installed, so it can never break a
+# release build on a machine without the test module.
+find_package(Qt6 QUIET COMPONENTS Test)
+if(Qt6Test_FOUND)
+    add_executable(vc_analytics_selftest
+        tools/analytics_selftest.cpp
+        include/analytics/AnalyticsEvent.h
+        src/core/Logger.cpp
+    )
+    target_include_directories(vc_analytics_selftest PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}/generated)
+    target_link_libraries(vc_analytics_selftest PRIVATE
+        Qt6::Core Qt6::Network Qt6::Test)
+    if(UNIX AND SPDLOG_FOUND)
+        target_include_directories(vc_analytics_selftest PRIVATE ${SPDLOG_INCLUDE_DIRS})
+        target_link_libraries(vc_analytics_selftest PRIVATE ${SPDLOG_LIBRARIES})
+    else()
+        target_link_libraries(vc_analytics_selftest PRIVATE spdlog::spdlog)
+    endif()
+endif()
+
 # ── vc-updater helper (standalone, QtCore only) ───────────────
 # Lives at the install ROOT (bin/ in the dev deploy), NOT inside a version dir,
 # so it can atomically swap current/ and roll back. No Gui/Qml linkage.
