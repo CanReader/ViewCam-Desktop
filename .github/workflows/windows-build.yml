@@ -122,6 +122,13 @@ jobs:
       - name: Configure (CMake, Ninja + MSVC, CUDA-enabled)
         shell: pwsh
         run: |
+          # The analytics ingest key comes from the repo secret, NOT from .env:
+          # .env is gitignored, so it does not exist on the runner. Without the
+          # -D below the key is empty, and an empty key makes AnalyticsClient
+          # treat every batch as a successful no-op — so a shipped installer
+          # would silently report nothing, with no error to notice. If the
+          # secret is unset this degrades to exactly that, which is the correct
+          # behaviour for forks: they must not report into our project.
           cmake -S . -B build/release-msvc `
             -G Ninja `
             -DCMAKE_BUILD_TYPE=Release `
@@ -130,6 +137,7 @@ jobs:
             -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL `
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON `
             -DVIEWCAM_ENABLE_CUDA=ON `
+            -DVIEWCAM_ANALYTICS_KEY="${{ secrets.VIEWCAM_ANALYTICS_KEY }}" `
             -DCMAKE_CUDA_FLAGS="-allow-unsupported-compiler"
 
       - name: Build (Release)
@@ -186,12 +194,29 @@ jobs:
             "bin\ViewCamMFSource.dll",
             "bin\platforms\qwindows.dll",
             "bin\libcrypto-3-x64.dll",
-            "bin\libssl-3-x64.dll"
+            "bin\libssl-3-x64.dll",
+            # Qt's TLS backend. Analytics and the update check are both HTTPS,
+            # and without this plugin Qt cannot open a TLS socket at all — the
+            # requests fail at runtime with nothing in bin\ looking wrong.
+            "bin\tls\qschannelbackend.dll"
           )
           $missing = $need | Where-Object { -not (Test-Path $_) }
           if ($missing) { Write-Error "Missing from bin\: $($missing -join ', ')"; exit 1 }
           if (-not (Get-ChildItem "bin\cudart64_*.dll" -ErrorAction SilentlyContinue)) {
             Write-Error "cudart64_*.dll not bundled in bin\ — CUDA build would fail to start."; exit 1
+          }
+          # Analytics fails OPEN, not loud: an empty key is a deliberate no-op,
+          # so the only way to catch a missing secret is to look for the key in
+          # the binary. Fatal on a tag (that installer is the release), a
+          # warning on manual runs and forks, where reporting off is correct.
+          $exeText = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes("bin\ViewCam.exe"))
+          if ($exeText -match 'phc_[A-Za-z0-9]{20,}') {
+            Write-Host "Analytics: ingest key embedded."
+          } elseif ("${{ github.ref_type }}" -eq "tag") {
+            Write-Error "Analytics key missing from bin\ViewCam.exe — set the VIEWCAM_ANALYTICS_KEY repo secret. This release would silently report nothing."
+            exit 1
+          } else {
+            Write-Host "::warning::Analytics disabled in this build (no VIEWCAM_ANALYTICS_KEY secret)."
           }
           Write-Host "bin\ looks complete (incl. CUDA + OpenSSL runtime)."
 
