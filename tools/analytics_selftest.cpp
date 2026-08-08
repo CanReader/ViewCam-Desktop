@@ -10,10 +10,13 @@
 #include "analytics/AnalyticsClient.h"
 #include "analytics/AnalyticsEvent.h"
 #include "analytics/EventQueue.h"
+#include "core/Logger.h"
 
 #include <QJsonArray>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QSysInfo>
+#include <QThread>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -21,6 +24,7 @@ class AnalyticsSelfTest : public QObject {
     Q_OBJECT
 
 private slots:
+    void initTestCase();
     void eventRoundTripsThroughJson();
     void queueEvictsOldestWhenFull();
     void queueSurvivesRestart();
@@ -30,7 +34,18 @@ private slots:
     void installIdIsStableAcrossCalls();
     void superPropertiesCarryNoIdentifyingData();
     void capturesNothingBeforeInit();
+    void captureIsSafeFromWorkerThreads();
 };
+
+void AnalyticsSelfTest::initTestCase() {
+    // Analytics logs through VC_* on init; without a logger spdlog dereferences
+    // a null sink. The real app does this in main() before anything else.
+    Logger::init(Logger::Level::Info);
+    // Keep every test off the user's real settings, real queue file, and the
+    // real ingest endpoint.
+    QStandardPaths::setTestModeEnabled(true);
+    qputenv("VIEWCAM_ANALYTICS_DEBUG", "1");
+}
 
 void AnalyticsSelfTest::eventRoundTripsThroughJson() {
     AnalyticsEvent in;
@@ -236,6 +251,43 @@ void AnalyticsSelfTest::capturesNothingBeforeInit() {
     a.setEnabled(false);
     a.capture(QStringLiteral("stream_connected"));
     QCOMPARE(a.pendingCount(), 0);
+}
+
+// StreamReceiver, FramePipeline and the audio sinks all run on their own
+// threads, and they are exactly where stream_failed / virtualcam_status will be
+// captured from. Without marshalling, that is a data race on the queue plus
+// cross-thread use of QNetworkAccessManager.
+void AnalyticsSelfTest::captureIsSafeFromWorkerThreads() {
+    Analytics &a = Analytics::instance();
+    a.setEnabled(true);
+    a.init();
+    const int baseline = a.pendingCount();
+
+    // Stay under EventQueue's 200-event cap, or pendingCount() saturates
+    // and the comparison measures the cap rather than the marshalling.
+    constexpr int kThreads = 8;
+    constexpr int kPerThread = 15;
+
+    QVector<QThread *> threads;
+    for (int t = 0; t < kThreads; ++t) {
+        QThread *th = QThread::create([&a, t]() {
+            for (int i = 0; i < kPerThread; ++i) {
+                a.capture(QStringLiteral("worker_event"),
+                          {{QStringLiteral("thread"), t},
+                           {QStringLiteral("i"), i}});
+            }
+        });
+        threads.append(th);
+        th->start();
+    }
+    for (QThread *th : threads) {
+        QVERIFY(th->wait(10000));
+        delete th;
+    }
+
+    // Queued calls land on this thread's event loop, so pump it until they do.
+    const int expected = baseline + kThreads * kPerThread;
+    QTRY_COMPARE_WITH_TIMEOUT(a.pendingCount(), expected, 10000);
 }
 
 QTEST_GUILESS_MAIN(AnalyticsSelfTest)

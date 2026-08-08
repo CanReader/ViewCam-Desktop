@@ -55,7 +55,7 @@ inside the same class.
 
 | Component | Responsibility |
 |---|---|
-| `Analytics` | Facade singleton. `init()`, `capture(event, props)`, `setEnabled()`. Every call wrapped so a telemetry failure can never take down the app. All methods no-op until `init()`, so they are safe to call from anywhere including error paths. |
+| `Analytics` | Facade singleton. `init()`, `capture(event, props)`, `setEnabled()`. Every call wrapped so a telemetry failure can never take down the app. All methods no-op until `init()`, so they are safe to call from anywhere including error paths. **Thread-safe:** `capture()` marshals to the Analytics thread via a queued invocation, because `StreamReceiver`, `FramePipeline` and the audio sinks each run on their own threads and are exactly where errors surface. Without it the queue (a plain `QVector`) would race and `QNetworkAccessManager` would be touched cross-thread. Timestamps are taken at call time, not delivery time. `m_enabled`/`m_initialized` are atomic for the same reason mobile's `AppTelemetry` marks `isEnabled` `@Volatile`. |
 | `AnalyticsClient` | Owns a `QNetworkAccessManager`. Batches events and POSTs to PostHog `/batch/`. Fire-and-forget: an unreachable endpoint is a no-op, never a stall. Flush every 30s or 20 events. |
 | `EventQueue` | In-memory ring spilled to JSON under `QStandardPaths::AppDataLocation`. Survives crash and offline; flushed on next launch. Hard-capped at 200 events / 1 MB, dropping oldest, so an offline machine cannot grow it unbounded. |
 

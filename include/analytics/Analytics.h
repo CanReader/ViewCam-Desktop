@@ -4,6 +4,7 @@
 #include <QString>
 #include <QVariantMap>
 
+#include <atomic>
 #include <memory>
 
 class AnalyticsClient;
@@ -33,6 +34,10 @@ public:
     // Emits app_exited with session duration and flushes the queue to disk.
     void shutdown();
 
+    // Thread-safe: calls from any thread are marshalled onto the Analytics
+    // thread. The app runs StreamReceiver, FramePipeline and the audio sinks on
+    // their own threads, and those are precisely the places errors surface —
+    // so this has to be callable from them without the caller thinking about it.
     void capture(const QString &event, const QVariantMap &props = {});
 
     bool isEnabled() const { return m_enabled; }
@@ -53,10 +58,18 @@ private:
     explicit Analytics(QObject *parent = nullptr);
     ~Analytics() override;
 
+    // Runs on the Analytics thread only. capture() marshals here when called
+    // from elsewhere. Takes the timestamp as a parameter so it reflects when
+    // the event HAPPENED, not when the queued call was delivered.
+    void enqueue(const QString &event, const QVariantMap &props, qint64 tsMs);
+
     void flush();
 
-    bool                        m_enabled     = false;
-    bool                        m_initialized = false;
+    // Read from worker threads, written from the main thread. Atomic for the
+    // same reason mobile's AppTelemetry marks isEnabled @Volatile: a stale
+    // read there silently dropped reports from background error paths.
+    std::atomic<bool>           m_enabled{false};
+    std::atomic<bool>           m_initialized{false};
     bool                        m_debugOnly   = false;
     qint64                      m_startedMs   = 0;
     QString                     m_installId;

@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QSysInfo>
+#include <QThread>
 #include <QTimer>
 #include <QUuid>
 
@@ -152,13 +153,35 @@ void Analytics::init() {
 }
 
 void Analytics::capture(const QString &event, const QVariantMap &props) {
+    if (!m_initialized || !m_enabled)
+        return;
+
+    // Stamp NOW, before any hop: a queued call may be delivered milliseconds
+    // later, and an event's time should be when it happened.
+    const qint64 ts = QDateTime::currentMSecsSinceEpoch();
+
+    if (QThread::currentThread() != thread()) {
+        // The queue is a plain QVector and QNetworkAccessManager may only be
+        // touched from its owning thread, so cross-thread calls hop rather than
+        // mutate shared state. Queued, never blocking — a worker thread must
+        // never wait on analytics.
+        QMetaObject::invokeMethod(
+            this, [this, event, props, ts]() { enqueue(event, props, ts); },
+            Qt::QueuedConnection);
+        return;
+    }
+    enqueue(event, props, ts);
+}
+
+void Analytics::enqueue(const QString &event, const QVariantMap &props,
+                        qint64 tsMs) {
     if (!m_initialized || !m_enabled || !m_queue)
         return;
 
     AnalyticsEvent e;
     e.name        = event;
     e.props       = props;
-    e.timestampMs = QDateTime::currentMSecsSinceEpoch();
+    e.timestampMs = tsMs;
     m_queue->append(e);
 
     if (m_debugOnly) {
