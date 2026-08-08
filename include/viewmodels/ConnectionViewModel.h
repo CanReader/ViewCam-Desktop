@@ -104,6 +104,8 @@ private:
     void resetStats();
 
     State m_state = Disconnected;
+    // One stream_connected per session, fired on the first decoded frame.
+    bool m_reportedStreaming = false;
     QString m_deviceName;
     QString m_deviceOs;
     QString m_lens;

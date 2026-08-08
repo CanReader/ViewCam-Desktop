@@ -1,4 +1,5 @@
 #include "virtualcam/V4L2LoopbackWriter.h"
+#include "analytics/Analytics.h"
 #include "core/Logger.h"
 
 #include <QProcess>
@@ -30,6 +31,20 @@ V4L2LoopbackWriter::~V4L2LoopbackWriter() {
     close();
 }
 
+namespace {
+// Report how the virtual camera came up. This is the single most valuable
+// desktop metric we do not otherwise have: an install that never gets past
+// v4l2loopback is a user who downloaded ViewCam and could never use it, and
+// nothing in a download count reveals that.
+//
+// The device PATH is deliberately never sent — only the outcome.
+void reportVirtualCam(const char *status) {
+    Analytics::instance().capture(
+        QStringLiteral("virtualcam_status"),
+        {{QStringLiteral("status"), QString::fromLatin1(status)}});
+}
+} // namespace
+
 bool V4L2LoopbackWriter::open(const std::string &device) {
     if (m_fd >= 0) {
         VC_WARN("Virtual camera already open: {}", m_devicePath);
@@ -38,14 +53,20 @@ bool V4L2LoopbackWriter::open(const std::string &device) {
 
     std::string path = device;
     if (path.empty() && !detectDevice(path)) {
-        if (!ensureModuleLoaded())
+        if (!ensureModuleLoaded()) {
+            // Distinguishes "package not installed" from "user cancelled the
+            // pkexec prompt" — different problems needing different fixes.
+            reportVirtualCam(m_moduleInstalled ? "modprobe_failed"
+                                               : "not_installed");
             return false;
+        }
 
         // wait for udev to create the device node
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
         if (!detectDevice(path)) {
             VC_ERROR("v4l2loopback module loaded but no device appeared");
+            reportVirtualCam("no_device");
             return false;
         }
     }
@@ -53,6 +74,7 @@ bool V4L2LoopbackWriter::open(const std::string &device) {
     m_fd = ::open(path.c_str(), O_WRONLY);
     if (m_fd < 0) {
         VC_ERROR("Failed to open {}: {}", path, strerror(errno));
+        reportVirtualCam(errno == EACCES ? "permission_denied" : "open_failed");
         return false;
     }
 
@@ -60,6 +82,7 @@ bool V4L2LoopbackWriter::open(const std::string &device) {
     m_formatSet = false;
     m_disabled = false;
     VC_INFO("Virtual camera opened: {}", m_devicePath);
+    reportVirtualCam("ok");
     return true;
 }
 
@@ -97,6 +120,7 @@ bool V4L2LoopbackWriter::isModuleLoaded() const {
 bool V4L2LoopbackWriter::ensureModuleLoaded() {
     if (isModuleLoaded()) {
         VC_DEBUG("v4l2loopback module already loaded");
+        m_moduleInstalled = true;
         return true;
     }
 
@@ -106,8 +130,10 @@ bool V4L2LoopbackWriter::ensureModuleLoaded() {
     if (modinfo.exitCode() != 0) {
         VC_ERROR("v4l2loopback is not installed. "
                  "Install it with: sudo pacman -S v4l2loopback-dkms");
+        m_moduleInstalled = false;
         return false;
     }
+    m_moduleInstalled = true;
 
     VC_INFO("Loading v4l2loopback module...");
 

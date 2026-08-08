@@ -778,6 +778,12 @@ if(LINUX)
         src/network/FrameDecoder.cpp      include/network/FrameDecoder.h
         src/virtualcam/linux/V4L2LoopbackWriter.cpp include/virtualcam/V4L2LoopbackWriter.h
         src/core/Logger.cpp
+        # StreamReceiver and V4L2LoopbackWriter report funnel events, so the
+        # selftest needs the analytics subsystem to link. Analytics no-ops
+        # without init(), so this proof-of-path binary sends nothing.
+        src/analytics/Analytics.cpp       include/analytics/Analytics.h
+        src/analytics/AnalyticsClient.cpp include/analytics/AnalyticsClient.h
+        src/analytics/EventQueue.cpp      include/analytics/EventQueue.h
     )
     target_include_directories(vc_proto_selftest PRIVATE
         ${CMAKE_SOURCE_DIR}/include

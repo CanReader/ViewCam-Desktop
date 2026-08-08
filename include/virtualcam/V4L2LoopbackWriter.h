@@ -41,6 +41,10 @@ private:
     int m_requestedHeight = 0;
     bool m_formatSet = false;
     bool m_disabled = false;
+    // Set by ensureModuleLoaded(): whether v4l2loopback is present on the
+    // system at all. Lets a load failure be attributed to "not installed"
+    // versus "installed but modprobe was refused/cancelled".
+    bool m_moduleInstalled = false;
     bool m_watermarkEnabled = true;
     std::vector<uint8_t> m_yuyvBuffer;
     // Cached BGRA→YUYV422 converter (SIMD, one pass). Replaces the old
