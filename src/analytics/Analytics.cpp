@@ -89,8 +89,14 @@ void Analytics::init() {
     m_client->setSuperProperties(buildSuperProperties());
     connect(m_client, &AnalyticsClient::batchFinished, this,
             [this](bool ok, const QVector<AnalyticsEvent> &sent) {
-                if (!ok && m_queue)
+                if (!m_queue)
+                    return;
+                if (!ok)
                     m_queue->requeueFront(sent); // Retry on the next flush.
+                // Re-persist either way. Without this the pre-send snapshot
+                // stays on disk after a SUCCESSFUL send, so every event would
+                // be re-sent on the next launch and duplicate forever.
+                m_queue->save();
             });
 
     m_initialized = true;
@@ -144,11 +150,12 @@ void Analytics::flush() {
         return;
 
     // Persist BEFORE sending, not just on shutdown: a crash is exactly the
-    // case the disk queue exists for, and shutdown() never runs then.
+    // case the disk queue exists for, and shutdown() never runs then. The
+    // matching re-save on batchFinished is what clears sent events from disk.
     //
-    // The trade-off is deliberate. Crashing after take() but before the reply
-    // lands means the on-disk copy still holds those events and they are sent
-    // again next launch. Duplicate events are cheap — active-user counts are
+    // The remaining trade-off is deliberate and narrow: crashing between
+    // take() and the reply leaves those events on disk, so they send again
+    // next launch. Duplicates are cheap — active-user counts are
     // unique-by-distinct_id and unaffected — whereas losing the events that
     // immediately preceded a crash loses exactly the data worth having.
     m_queue->save();

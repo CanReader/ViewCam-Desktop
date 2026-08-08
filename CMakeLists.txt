@@ -33,14 +33,48 @@ set(VIEWCAM_UPDATE_CHANNEL "stable"
 set(VIEWCAM_UPDATE_MANIFEST_BASE "https://updates.viewcam.tech"
     CACHE STRING "Base URL for update manifests")
 
+# ── Local .env (gitignored) ───────────────────────────────────
+# Reads KEY=VALUE lines from Desktop/.env into normal variables, so ingest keys
+# and other local build config stay out of the repo. See .env.example.
+# Precedence: -D on the command line  >  .env  >  the defaults below.
+function(vc_load_dotenv path)
+    if(NOT EXISTS "${path}")
+        return()
+    endif()
+    file(STRINGS "${path}" _lines)
+    foreach(_line IN LISTS _lines)
+        string(STRIP "${_line}" _line)
+        # Skip blanks and comments.
+        if(_line STREQUAL "" OR _line MATCHES "^#")
+            continue()
+        endif()
+        if(_line MATCHES "^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
+            set(_k "${CMAKE_MATCH_1}")
+            set(_v "${CMAKE_MATCH_2}")
+            # Strip optional surrounding quotes.
+            string(REGEX REPLACE "^\"(.*)\"$" "\\1" _v "${_v}")
+            string(REGEX REPLACE "^'(.*)'$"   "\\1" _v "${_v}")
+            set("${_k}" "${_v}" PARENT_SCOPE)
+        endif()
+    endforeach()
+endfunction()
+vc_load_dotenv("${CMAKE_CURRENT_SOURCE_DIR}/.env")
+
 # ── Anonymous usage analytics ingest ──────────────────────────
-# Empty key = analytics disabled, so dev builds never pollute production data.
-# Release builds pass -DVIEWCAM_ANALYTICS_KEY=... from the environment, the same
-# way the update signing key is kept out of the repo.
-set(VIEWCAM_ANALYTICS_HOST "https://eu.i.posthog.com"
-    CACHE STRING "Analytics ingest base URL")
-set(VIEWCAM_ANALYTICS_KEY ""
-    CACHE STRING "Analytics project API key (empty disables analytics)")
+# Empty key = analytics disabled, so forks and local builds never pollute
+# production data. Normal (non-cache) set()s so a value from .env wins over the
+# default; an explicit -D still overrides both.
+if(NOT DEFINED VIEWCAM_ANALYTICS_HOST OR VIEWCAM_ANALYTICS_HOST STREQUAL "")
+    set(VIEWCAM_ANALYTICS_HOST "https://eu.i.posthog.com")
+endif()
+if(NOT DEFINED VIEWCAM_ANALYTICS_KEY)
+    set(VIEWCAM_ANALYTICS_KEY "")
+endif()
+if(VIEWCAM_ANALYTICS_KEY STREQUAL "")
+    message(STATUS "Analytics: DISABLED (no key; set VIEWCAM_ANALYTICS_KEY in .env)")
+else()
+    message(STATUS "Analytics: enabled -> ${VIEWCAM_ANALYTICS_HOST}")
+endif()
 
 # ── Gather Metadata ──────────────────────────────────
 

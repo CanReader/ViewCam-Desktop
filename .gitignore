@@ -19,6 +19,9 @@ compile_flags.txt
 
 # Update signing PRIVATE key — NEVER commit (public key + hex are safe to commit)
 release/update-signing-key.pem
+
+# Local build secrets / ingest keys. .env.example IS committed as the template.
+.env
 release/ftp.netrc
 
 # Staged third-party driver installers (VB-CABLE is not redistributable)
