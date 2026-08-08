@@ -65,6 +65,11 @@ private:
 
     void flush();
 
+    // Writes the queue to disk, EXCEPT in debug mode. Anything persisted under
+    // VIEWCAM_ANALYTICS_DEBUG=1 would be loaded and sent for real by the next
+    // ordinary run — which is precisely what that flag exists to prevent.
+    void persist();
+
     // Read from worker threads, written from the main thread. Atomic for the
     // same reason mobile's AppTelemetry marks isEnabled @Volatile: a stale
     // read there silently dropped reports from background error paths.

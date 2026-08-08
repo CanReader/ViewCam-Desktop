@@ -12,6 +12,7 @@
 #include "analytics/EventQueue.h"
 #include "core/Logger.h"
 
+#include <QFile>
 #include <QJsonArray>
 #include <QSettings>
 #include <QStandardPaths>
@@ -35,6 +36,7 @@ private slots:
     void superPropertiesCarryNoIdentifyingData();
     void capturesNothingBeforeInit();
     void captureIsSafeFromWorkerThreads();
+    void debugModeNeverWritesTheQueueFile();
 };
 
 void AnalyticsSelfTest::initTestCase() {
@@ -288,6 +290,33 @@ void AnalyticsSelfTest::captureIsSafeFromWorkerThreads() {
     // Queued calls land on this thread's event loop, so pump it until they do.
     const int expected = baseline + kThreads * kPerThread;
     QTRY_COMPARE_WITH_TIMEOUT(a.pendingCount(), expected, 10000);
+}
+
+// VIEWCAM_ANALYTICS_DEBUG=1 exists so schema changes can be verified without
+// polluting production data. That guarantee only holds if nothing reaches disk:
+// the queue file is loaded and SENT by the next ordinary run, so events left
+// behind by one debug session would silently arrive in live data later.
+//
+// Runs last on purpose — shutdown() de-initialises the singleton.
+void AnalyticsSelfTest::debugModeNeverWritesTheQueueFile() {
+    const QString path =
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) +
+        QStringLiteral("/analytics-queue.json");
+    QVERIFY(QFile::remove(path) || !QFile::exists(path));
+
+    Analytics &a = Analytics::instance();
+    a.setEnabled(true);
+    a.init(); // Already initialised by an earlier test; keeps this self-contained.
+    a.capture(QStringLiteral("app_heartbeat"));
+    QTRY_VERIFY(a.pendingCount() > 0);
+
+    // shutdown() is the path that persisted unconditionally before the fix, and
+    // it is the one every real debug run takes on the way out.
+    a.shutdown();
+
+    QVERIFY2(!QFile::exists(path),
+             "debug mode wrote the queue file — the next ordinary run would "
+             "load these events and send them to production");
 }
 
 QTEST_GUILESS_MAIN(AnalyticsSelfTest)

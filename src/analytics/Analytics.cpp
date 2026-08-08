@@ -110,7 +110,7 @@ void Analytics::init() {
                 // Re-persist either way. Without this the pre-send snapshot
                 // stays on disk after a SUCCESSFUL send, so every event would
                 // be re-sent on the next launch and duplicate forever.
-                m_queue->save();
+                persist();
             });
 
     m_initialized = true;
@@ -133,7 +133,7 @@ void Analytics::init() {
     // once in an install's lifetime, so losing it permanently undercounts
     // installs — and a launch that dies in its first 30 seconds is precisely
     // the launch worth knowing about.
-    m_queue->save();
+    persist();
 
     m_heartbeat = new QTimer(this);
     m_heartbeat->setInterval(kHeartbeatMs);
@@ -194,6 +194,16 @@ void Analytics::enqueue(const QString &event, const QVariantMap &props,
         flush();
 }
 
+void Analytics::persist() {
+    // Debug mode must never touch the queue file. Events are still appended in
+    // memory (that is the test seam for capture() marshalling) but they die
+    // with the process, so a schema-verification run cannot leave anything
+    // behind for the next ordinary launch to pick up and send.
+    if (m_debugOnly || !m_queue)
+        return;
+    m_queue->save();
+}
+
 void Analytics::flush() {
     if (!m_initialized || !m_enabled || m_debugOnly || !m_queue || !m_client)
         return;
@@ -207,7 +217,7 @@ void Analytics::flush() {
     // next launch. Duplicates are cheap — active-user counts are
     // unique-by-distinct_id and unaffected — whereas losing the events that
     // immediately preceded a crash loses exactly the data worth having.
-    m_queue->save();
+    persist();
 
     const QVector<AnalyticsEvent> batch = m_queue->take(kBatchSize);
     if (!batch.isEmpty())
@@ -227,6 +237,10 @@ void Analytics::setEnabled(bool on) {
             m_heartbeat->stop();
         if (m_queue) {
             m_queue->take(kMaxQueued);
+            // Deliberately save() and not persist(): the queue was just
+            // emptied, so this only ever writes "[]". An opt-out has to purge
+            // the real backlog left on disk by earlier ordinary runs, and
+            // skipping the write in debug mode would leave it there.
             m_queue->save();
         }
         VC_INFO("Analytics disabled by user; pending events discarded");
@@ -257,7 +271,6 @@ void Analytics::shutdown() {
     }
     // Persist rather than send: a POST on the quit path would either be
     // cancelled or delay exit. The queue flushes on the next launch.
-    if (m_queue)
-        m_queue->save();
+    persist();
     m_initialized = false;
 }
