@@ -67,9 +67,18 @@ inside the same class.
   values come from `ViewCamConfig.h`, as `UpdateChecker` already does.
 - **Install ID** — `QUuid::createUuid()` written once to `analytics/installId`.
   A missing key means first run, which emits `app_installed`.
-- **Heartbeat** — `QTimer` at 5-minute intervals emitting `app_heartbeat`.
-  Chosen so "active right now" has 15-minute resolution while staying at
-  ~288 events/device/day, well inside the free tier at 100× current installs.
+- **Heartbeat** — one beat fired immediately at init, then a `QTimer` at
+  5-minute intervals emitting `app_heartbeat`. The leading beat is essential:
+  without it, active-user metrics only count sessions longer than 5 minutes, so
+  a user who opens ViewCam for a 4-minute call never appears in DAU at all. The
+  5-minute interval gives "active right now" a 15-minute resolution at
+  ~288 events/device/day.
+- **Free-tier budget** — PostHog allows 1,000,000 events/month and the account
+  has no active subscription, so exceeding it *stops ingestion* rather than
+  billing. The heartbeat dominates volume: roughly 580 events/user/month at 2h
+  daily use, i.e. ~1,700 monthly active users before the cap. Past ~1,000 active
+  users, raise `kHeartbeatMs` to 15 minutes (3× headroom; only "active right
+  now" gets coarser, DAU/MAU are unaffected).
 - **Toggle** — `analytics/enabled`, default true, surfaced through
   `SettingsViewModel` as a `VcSettingRow` + `VcToggle` in `SettingsPage.qml`.
   Existing pattern; no new QML components.
@@ -78,9 +87,16 @@ inside the same class.
 
 ## Event schema
 
-Super-properties on every event: `app_version`, `os`, `arch`, `channel`.
-GeoIP properties (`$geoip_country_code`, `$geoip_country_name`, `$geoip_city_name`)
-are attached server-side at ingest — the client sends nothing for them.
+Super-properties on every event: `app_version`, `os`, `os_distro`, `os_version`,
+`arch`, `channel`. GeoIP properties (`$geoip_country_code`,
+`$geoip_country_name`, `$geoip_city_name`) are attached server-side at ingest —
+the client sends nothing for them. Verified working: events carry `TR`.
+
+`os` is the platform (`linux` / `windows` / `macos`), deliberately *not*
+`QSysInfo::productType()`, which returns the distro id on Linux (`arch`,
+`ubuntu`, `fedora`) and would make a Linux-vs-Windows breakdown unreadable. The
+distro is kept separately in `os_distro` — it matters because v4l2loopback
+packaging differs per distro.
 
 | Event | Properties | Answers |
 |---|---|---|
