@@ -1,5 +1,6 @@
 #include "updater/UpdateChecker.h"
 #include "ViewCamConfig.h"
+#include "analytics/Analytics.h"
 #include "core/Logger.h"
 #include "updater/InstallLayout.h"
 
@@ -777,6 +778,15 @@ void UpdateChecker::clearPendingVerifyIfJustUpdated(const QStringList &args) {
     const QString ver = (idx + 1 < args.size()) ? args.at(idx + 1) : QString{};
     VC_INFO("Started with --just-updated {} — clearing post-update sentinel",
             ver.toStdString());
+
+    // Reaching here means the self-update swapped, relaunched, AND booted far
+    // enough to run — i.e. the update actually succeeded rather than rolling
+    // back. Analytics::init() runs earlier in main(), so this is live.
+    Analytics::instance().capture(
+        QStringLiteral("update_installed"),
+        {{QStringLiteral("from_version"), ver},
+         {QStringLiteral("to_version"),
+          QString::fromLatin1(VIEWCAM_VERSION_STRING)}});
 
     const QString root = vcam::installRoot();
     const QString cur  = vcam::currentLink(root);

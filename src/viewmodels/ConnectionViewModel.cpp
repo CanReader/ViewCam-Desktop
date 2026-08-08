@@ -1,4 +1,5 @@
 #include "viewmodels/ConnectionViewModel.h"
+#include "analytics/Analytics.h"
 #include "core/Logger.h"
 
 ConnectionViewModel::ConnectionViewModel(QObject *parent) : QObject(parent) {
@@ -108,6 +109,7 @@ void ConnectionViewModel::setPowerStatus(int batteryPercent, bool charging) {
 void ConnectionViewModel::markConnected() {
   m_uptime.start();
   m_lastFrameTime.invalidate();
+  m_reportedStreaming = false; // arm stream_connected for this session
   resetStats();
   m_statsTimer.start();
   m_uptimeTimer.start();
@@ -174,6 +176,23 @@ void ConnectionViewModel::onFrame(const FrameData &frame) {
     m_frameWidth = w;
     m_frameHeight = h;
     emit statsChanged();
+  }
+
+  // Report on the FIRST decoded frame, not on markConnected(): a TCP connection
+  // that never delivers video is the blank-preview failure we have shipped
+  // before, and it should not be counted as a working stream. Reporting here
+  // also means codec and resolution are known rather than guessed.
+  //
+  // No host, IP, or phone name — see the spec's "never collected" list.
+  if (!m_reportedStreaming) {
+    m_reportedStreaming = true;
+    Analytics::instance().capture(
+        QStringLiteral("stream_connected"),
+        {{QStringLiteral("codec"), frame.format == 1
+                                       ? QStringLiteral("h264")
+                                       : QStringLiteral("mjpeg")},
+         {QStringLiteral("resolution"),
+          QStringLiteral("%1x%2").arg(w).arg(h)}});
   }
 }
 

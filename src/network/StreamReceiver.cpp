@@ -1,4 +1,5 @@
 #include "network/StreamReceiver.h"
+#include "analytics/Analytics.h"
 #include "core/Logger.h"
 #include <QtEndian>
 #include <QDateTime>
@@ -357,8 +358,33 @@ void StreamReceiver::onDisconnected() {
     emit disconnected();
 }
 
+namespace {
+// Map the socket error to a fixed, low-cardinality slug.
+//
+// Deliberately NOT QTcpSocket::errorString(): that text is localised and can
+// embed the peer host or IP, so sending it would leak network identifiers and
+// explode breakdown cardinality. The enum carries the same diagnostic value.
+const char *socketErrorSlug(QAbstractSocket::SocketError e) {
+    switch (e) {
+    case QAbstractSocket::ConnectionRefusedError:   return "refused";
+    case QAbstractSocket::RemoteHostClosedError:    return "remote_closed";
+    case QAbstractSocket::HostNotFoundError:        return "host_not_found";
+    case QAbstractSocket::SocketTimeoutError:       return "timeout";
+    case QAbstractSocket::NetworkError:             return "network_lost";
+    case QAbstractSocket::SocketAccessError:        return "access_denied";
+    case QAbstractSocket::AddressInUseError:        return "address_in_use";
+    default:                                        return "other";
+    }
+}
+} // namespace
+
 void StreamReceiver::onError(QAbstractSocket::SocketError error) {
     VC_ERROR("Socket error ({}): {}", static_cast<int>(error),
              m_socket->errorString().toStdString());
+    // Runs on the network thread; Analytics::capture marshals internally.
+    Analytics::instance().capture(
+        QStringLiteral("stream_failed"),
+        {{QStringLiteral("reason"),
+          QString::fromLatin1(socketErrorSlug(error))}});
     emit errorOccurred(m_socket->errorString());
 }

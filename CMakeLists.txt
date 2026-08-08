@@ -33,6 +33,56 @@ set(VIEWCAM_UPDATE_CHANNEL "stable"
 set(VIEWCAM_UPDATE_MANIFEST_BASE "https://updates.viewcam.tech"
     CACHE STRING "Base URL for update manifests")
 
+# ── Local .env (gitignored) ───────────────────────────────────
+# Reads KEY=VALUE lines from Desktop/.env into normal variables, so ingest keys
+# and other local build config stay out of the repo. See .env.example.
+# Precedence: -D on the command line  >  .env  >  the defaults below.
+function(vc_load_dotenv path)
+    if(NOT EXISTS "${path}")
+        return()
+    endif()
+    file(STRINGS "${path}" _lines)
+    foreach(_line IN LISTS _lines)
+        string(STRIP "${_line}" _line)
+        # Skip blanks and comments.
+        if(_line STREQUAL "" OR _line MATCHES "^#")
+            continue()
+        endif()
+        if(_line MATCHES "^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
+            set(_k "${CMAKE_MATCH_1}")
+            set(_v "${CMAKE_MATCH_2}")
+            # An explicit -D creates a CACHE entry. The set() below is a NORMAL
+            # variable, and a normal variable shadows the cache for the rest of
+            # the configure — so without this guard .env would silently override
+            # -D, reversing the precedence documented above and in .env.example.
+            if(DEFINED CACHE{${_k}})
+                continue()
+            endif()
+            # Strip optional surrounding quotes.
+            string(REGEX REPLACE "^\"(.*)\"$" "\\1" _v "${_v}")
+            string(REGEX REPLACE "^'(.*)'$"   "\\1" _v "${_v}")
+            set("${_k}" "${_v}" PARENT_SCOPE)
+        endif()
+    endforeach()
+endfunction()
+vc_load_dotenv("${CMAKE_CURRENT_SOURCE_DIR}/.env")
+
+# ── Anonymous usage analytics ingest ──────────────────────────
+# Empty key = analytics disabled, so forks and local builds never pollute
+# production data. Normal (non-cache) set()s so a value from .env wins over the
+# default; an explicit -D still overrides both.
+if(NOT DEFINED VIEWCAM_ANALYTICS_HOST OR VIEWCAM_ANALYTICS_HOST STREQUAL "")
+    set(VIEWCAM_ANALYTICS_HOST "https://eu.i.posthog.com")
+endif()
+if(NOT DEFINED VIEWCAM_ANALYTICS_KEY)
+    set(VIEWCAM_ANALYTICS_KEY "")
+endif()
+if(VIEWCAM_ANALYTICS_KEY STREQUAL "")
+    message(STATUS "Analytics: DISABLED (no key; set VIEWCAM_ANALYTICS_KEY in .env)")
+else()
+    message(STATUS "Analytics: enabled -> ${VIEWCAM_ANALYTICS_HOST}")
+endif()
+
 # ── Gather Metadata ──────────────────────────────────
 
 # 1. Host Machine Information
@@ -187,6 +237,9 @@ set(SOURCES
     src/gpu/CudaBackend.cpp
     src/gpu/VulkanComputeBackend.cpp
     src/updater/UpdateChecker.cpp
+    src/analytics/Analytics.cpp
+    src/analytics/AnalyticsClient.cpp
+    src/analytics/EventQueue.cpp
 )
 
 set(HEADERS
@@ -210,6 +263,10 @@ set(HEADERS
     include/gpu/CudaBackend.h
     include/gpu/VulkanComputeBackend.h
     include/updater/UpdateChecker.h
+    include/analytics/Analytics.h
+    include/analytics/AnalyticsClient.h
+    include/analytics/AnalyticsEvent.h
+    include/analytics/EventQueue.h
 )
 
 # The CUDA proof-of-life kernel is compiled by nvcc only when CUDA is enabled.
@@ -728,6 +785,12 @@ if(LINUX)
         src/network/FrameDecoder.cpp      include/network/FrameDecoder.h
         src/virtualcam/linux/V4L2LoopbackWriter.cpp include/virtualcam/V4L2LoopbackWriter.h
         src/core/Logger.cpp
+        # StreamReceiver and V4L2LoopbackWriter report funnel events, so the
+        # selftest needs the analytics subsystem to link. Analytics no-ops
+        # without init(), so this proof-of-path binary sends nothing.
+        src/analytics/Analytics.cpp       include/analytics/Analytics.h
+        src/analytics/AnalyticsClient.cpp include/analytics/AnalyticsClient.h
+        src/analytics/EventQueue.cpp      include/analytics/EventQueue.h
     )
     target_include_directories(vc_proto_selftest PRIVATE
         ${CMAKE_SOURCE_DIR}/include
@@ -739,6 +802,35 @@ if(LINUX)
         target_link_libraries(vc_proto_selftest PRIVATE ${SPDLOG_LIBRARIES})
     else()
         target_link_libraries(vc_proto_selftest PRIVATE spdlog::spdlog)
+    endif()
+endif()
+
+# ── Analytics unit tests ─────────────────────────────────────
+# Pure-logic coverage for the analytics subsystem (serialisation, queue
+# eviction/persistence, payload shape, privacy guarantees). Build+run:
+#   cmake --build build --target vc_analytics_selftest && build/vc_analytics_selftest
+# Skipped entirely when Qt6::Test is not installed, so it can never break a
+# release build on a machine without the test module.
+find_package(Qt6 QUIET COMPONENTS Test)
+if(Qt6Test_FOUND)
+    add_executable(vc_analytics_selftest
+        tools/analytics_selftest.cpp
+        include/analytics/AnalyticsEvent.h
+        src/analytics/EventQueue.cpp      include/analytics/EventQueue.h
+        src/analytics/AnalyticsClient.cpp include/analytics/AnalyticsClient.h
+        src/analytics/Analytics.cpp       include/analytics/Analytics.h
+        src/core/Logger.cpp
+    )
+    target_include_directories(vc_analytics_selftest PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}/generated)
+    target_link_libraries(vc_analytics_selftest PRIVATE
+        Qt6::Core Qt6::Network Qt6::Test)
+    if(UNIX AND SPDLOG_FOUND)
+        target_include_directories(vc_analytics_selftest PRIVATE ${SPDLOG_INCLUDE_DIRS})
+        target_link_libraries(vc_analytics_selftest PRIVATE ${SPDLOG_LIBRARIES})
+    else()
+        target_link_libraries(vc_analytics_selftest PRIVATE spdlog::spdlog)
     endif()
 endif()
 
