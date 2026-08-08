@@ -59,7 +59,20 @@ QVariantMap Analytics::buildSuperProperties() {
     QVariantMap p;
     p.insert(QStringLiteral("app_version"),
              QString::fromLatin1(VIEWCAM_VERSION_STRING));
-    p.insert(QStringLiteral("os"), QSysInfo::productType());
+
+    // `os` is the PLATFORM, deliberately not QSysInfo::productType(): that
+    // returns the distro id on Linux ("arch", "ubuntu", "fedora"), so a
+    // Linux-vs-Windows breakdown would be a soup of distro names. The distro is
+    // still useful — v4l2loopback packaging differs per distro — so it gets its
+    // own property instead of being conflated with the platform.
+#if defined(Q_OS_WIN)
+    p.insert(QStringLiteral("os"), QStringLiteral("windows"));
+#elif defined(Q_OS_MACOS)
+    p.insert(QStringLiteral("os"), QStringLiteral("macos"));
+#else
+    p.insert(QStringLiteral("os"), QStringLiteral("linux"));
+#endif
+    p.insert(QStringLiteral("os_distro"), QSysInfo::productType());
     p.insert(QStringLiteral("os_version"), QSysInfo::productVersion());
     p.insert(QStringLiteral("arch"), QSysInfo::currentCpuArchitecture());
     p.insert(QStringLiteral("channel"),
@@ -108,10 +121,17 @@ void Analytics::init() {
             {{QStringLiteral("is_first_run"), !hadId},
              {QStringLiteral("locale"), QLocale::system().name()}});
 
-    // Persist immediately rather than waiting for the first 30s flush.
-    // app_installed fires exactly once in an install's lifetime, so losing it
-    // permanently undercounts installs — and a launch that crashes or is killed
-    // in its first 30 seconds is precisely the launch worth knowing about.
+    // One heartbeat immediately, then every kHeartbeatMs. Without the leading
+    // beat, active-user metrics only count sessions longer than 5 minutes — so
+    // someone who opens ViewCam for a 4-minute call never appears in DAU at
+    // all. For a webcam app that is a normal session, not an edge case.
+    capture(QStringLiteral("app_heartbeat"));
+
+    // Persist immediately rather than waiting for the first 30s flush. Must
+    // come after ALL the startup captures above: app_installed fires exactly
+    // once in an install's lifetime, so losing it permanently undercounts
+    // installs — and a launch that dies in its first 30 seconds is precisely
+    // the launch worth knowing about.
     m_queue->save();
 
     m_heartbeat = new QTimer(this);

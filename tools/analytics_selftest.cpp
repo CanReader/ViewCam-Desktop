@@ -213,9 +213,17 @@ void AnalyticsSelfTest::superPropertiesCarryNoIdentifyingData() {
     keys.sort();
     QStringList expected{QStringLiteral("app_version"), QStringLiteral("arch"),
                          QStringLiteral("channel"),     QStringLiteral("os"),
-                         QStringLiteral("os_version")};
+                         QStringLiteral("os_distro"),   QStringLiteral("os_version")};
     expected.sort();
     QCOMPARE(keys, expected);
+
+    // `os` must be the PLATFORM, not the distro. QSysInfo::productType()
+    // returns "arch"/"ubuntu"/"fedora" on Linux, which makes a Linux-vs-Windows
+    // breakdown unreadable. The distro goes in its own property.
+    const QStringList platforms{QStringLiteral("linux"), QStringLiteral("windows"),
+                                QStringLiteral("macos")};
+    QVERIFY2(platforms.contains(p.value(QStringLiteral("os")).toString()),
+             qPrintable(p.value(QStringLiteral("os")).toString()));
 }
 
 // Callers must be able to fire events from any error path, including before
